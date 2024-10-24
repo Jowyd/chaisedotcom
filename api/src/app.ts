@@ -1,3 +1,4 @@
+require("dotenv").config("../.env");
 import express, { Application } from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";

@@ -7,66 +7,54 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"User": {
+			"UserOutputDTO": {
 				"properties": {
 					"id": {
 						"type": "number",
 						"format": "double"
 					},
-					"email": {
+					"username": {
 						"type": "string"
 					},
-					"name": {
+					"password": {
 						"type": "string"
-					},
-					"status": {
-						"type": "string",
-						"enum": [
-							"Happy",
-							"Sad"
-						]
-					},
-					"phoneNumbers": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
 					}
 				},
 				"required": [
 					"id",
-					"email",
-					"name",
-					"phoneNumbers"
+					"username",
+					"password"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Pick_User.email-or-name-or-phoneNumbers_": {
+			"UserInputDTO": {
 				"properties": {
-					"email": {
+					"username": {
 						"type": "string"
 					},
-					"name": {
+					"password": {
 						"type": "string"
-					},
-					"phoneNumbers": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
 					}
 				},
 				"required": [
-					"email",
-					"name",
-					"phoneNumbers"
+					"username",
+					"password"
 				],
 				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
+				"additionalProperties": false
 			},
-			"UserCreationParams": {
-				"$ref": "#/components/schemas/Pick_User.email-or-name-or-phoneNumbers_"
+			"UserInputPatchDTO": {
+				"properties": {
+					"username": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -80,49 +68,39 @@
 		"contact": {}
 	},
 	"paths": {
-		"/users/{userId}": {
+		"/users": {
 			"get": {
-				"operationId": "GetUser",
+				"operationId": "GetAllUsers",
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/User"
+									"items": {
+										"$ref": "#/components/schemas/UserOutputDTO"
+									},
+									"type": "array"
 								}
 							}
 						}
 					}
 				},
 				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "userId",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "name",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/users": {
+				"parameters": []
+			},
 			"post": {
 				"operationId": "CreateUser",
 				"responses": {
-					"201": {
-						"description": "Created"
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UserOutputDTO"
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -132,7 +110,93 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/UserCreationParams"
+								"$ref": "#/components/schemas/UserInputDTO"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{id}": {
+			"get": {
+				"operationId": "GetUserById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UserOutputDTO"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DeleteUser",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateUser",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UserOutputDTO"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UserInputPatchDTO"
 							}
 						}
 					}
