@@ -1,9 +1,12 @@
 /* tslint:disable */
 /* eslint-disable */
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { TsoaRoute, fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
+import type { TsoaRoute } from '@tsoa/runtime';
+import {  fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UsersController } from './../controllers/user.controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { MoveController } from './../controllers/move.controller';
 import type { Request as ExRequest, Response as ExResponse, RequestHandler, Router } from 'express';
 
 
@@ -31,6 +34,18 @@ const models: TsoaRoute.Models = {
     "UserCreationParams": {
         "dataType": "refAlias",
         "type": {"ref":"Pick_User.email-or-name-or-phoneNumbers_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MoveDTO": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"double"},
+            "gameId": {"dataType":"double","required":true},
+            "figure": {"dataType":"string","required":true},
+            "position": {"dataType":"string","required":true},
+            "timestamp": {"dataType":"datetime","required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 };
@@ -134,6 +149,35 @@ export function RegisterRoutes(app: Router) {
                 next,
                 validatedArgs,
                 successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/moves',
+            ...(fetchMiddlewares<RequestHandler>(MoveController)),
+            ...(fetchMiddlewares<RequestHandler>(MoveController.prototype.getAllMoves)),
+
+            async function MoveController_getAllMoves(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new MoveController();
+
+              await templateService.apiHandler({
+                methodName: 'getAllMoves',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
               });
             } catch (err) {
                 return next(err);

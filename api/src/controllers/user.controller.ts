@@ -10,7 +10,7 @@ import {
   SuccessResponse,
 } from "tsoa";
 import { User } from "../interfaces/users.interface";
-import { UsersService, UserCreationParams } from "../services/users.service";
+import { UsersService, UserCreationParams } from "../services/user.service";
 
 @Route("users")
 export class UsersController extends Controller {
