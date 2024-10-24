@@ -1,0 +1,39 @@
+{
+  "name": "tsoa-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsoa": "tsoa",
+    "tsoa:routes": "tsoa routes",
+    "tsoa:spec": "tsoa spec",
+    "generate": "npm run tsoa:routes && npm run tsoa:spec",
+    "start": "node dist/app.js",
+    "tsup": "tsup",
+    "build": "tsup src/app.ts --legacy-output --format cjs,esm --dts",
+    "dev": "tsup --config ./tsup.config.ts --watch --onSuccess \"node dist/src/app.js\"",
+    "swagger": "tsoa spec",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migration:run": "typeorm migration:run -d ./dist/src/config/datasource.js",
+    "migration:generate": "typeorm migration:generate -d ./dist/src/config/datasource.js",
+    "migration:revert": "typeorm migration:revert -d ./dist/src/config/datasource.js",
+    "migration:create": "typeorm migration:create"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tsoa/runtime": "^6.4.0",
+    "dotenv": "^16.4.5",
+    "express": "5.0.0",
+    "pg": "^8.13.0",
+    "tsoa": "^6.4.0",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.5",
+    "tsup": "^8.3.0"
+  }
+}
+
