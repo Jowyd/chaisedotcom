@@ -4,3 +4,22 @@ docker run --name some-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=cha
 psql -U postgres -d chaisedotcom
 ```
 
+# TODO
+- Models:
+  - User
+  - Game
+  - Move
+  - Figure
+- Routes:
+  - User
+    - Login
+    - Register
+    - Logout
+    - History
+  - Game:
+    - Create
+    - Play
+    - Get-moves
+  - Move:
+    - Get
+    - Create
