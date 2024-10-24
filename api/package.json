@@ -11,7 +11,7 @@
     "start": "node dist/app.js",
     "tsup": "tsup",
     "build": "tsup src/app.ts --legacy-output --format cjs,esm --dts",
-    "dev": "tsup --config ./tsup.config.ts --watch --onSuccess \"node dist/src/app.js\"",
+    "dev": "tsup --config ./tsup.config.ts --watch src/ --onSuccess \"node dist/src/app.js\"",
     "swagger": "tsoa spec",
     "test": "echo \"Error: no test specified\" && exit 1",
     "migration:run": "typeorm migration:run -d ./dist/src/config/datasource.js",
