@@ -1,19 +1,19 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database"; // Connexion à la base de données
+import { allow } from "joi";
+
 export interface UserAttributes {
   id?: number;
   username: string;
   password: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: number;
 }
 
 export class User extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
   public username!: string;
   public password!: string;
-  public createdAt!: Date;
-  public updatedAt!: Date;
+  public createdAt!: number;
 }
 
 User.init(
@@ -32,18 +32,12 @@ User.init(
       allowNull: false,
     },
     createdAt: {
-      type: DataTypes.STRING,
+      type: DataTypes.TIME,
       allowNull: false,
-      defaultValue: new Date(),
-    },
-    updatedAt: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: new Date(),
     },
   },
   {
     sequelize,
-    tableName: "User",
+    modelName: "users",
   }
 );

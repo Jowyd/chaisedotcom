@@ -1,5 +1,5 @@
 import { UserOutputDTO } from "../dto/user.dto";
-import { User } from "../models/users.model";
+import { User } from "../models/user.model";
 
 export class UserMapper {
   public static toOutputDto(user: User): UserOutputDTO {
