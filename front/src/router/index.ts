@@ -10,6 +10,10 @@ const routes = [
     path: '/register',
     component: () => import('@/views/RegisterView.vue'),
   },
+  {
+    path: '/dashboard',
+    component: () => import('@/views/DashboardView.vue'),
+  },
 ];
 
 const router = createRouter({
