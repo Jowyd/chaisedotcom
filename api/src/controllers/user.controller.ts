@@ -1,39 +1,60 @@
-// src/users/usersController.ts
 import {
-  Body,
   Controller,
   Get,
-  Path,
   Post,
-  Query,
+  Delete,
   Route,
-  SuccessResponse,
+  Path,
+  Body,
+  Tags,
+  Patch,
+  Security,
 } from "tsoa";
-import { User } from "../interfaces/users.interface";
-import { UsersService, UserCreationParams } from "../services/user.service";
+import { userService } from "../services/user.service";
+import {
+  UserInputDTO,
+  UserInputPatchDTO,
+  UserOutputDTO,
+} from "../dto/user.dto";
 
 @Route("users")
-export class UsersController extends Controller {
+@Tags("Users")
+@Security("jwt")
+export class UserController extends Controller {
+  // Récupère tous les utilisateurs
   @Get("/")
-  public async getUsers(): Promise<User[]> {
-    return new UsersService().getAll();
+  public async getAllUsers(): Promise<UserOutputDTO[]> {
+    return userService.getAllUsers();
   }
 
-  @Get("{userId}")
-  public async getUser(
-    @Path() userId: number,
-    @Query() name?: string
-  ): Promise<User> {
-    return new UsersService().get(userId, name);
+  // Récupère un utilisateur par ID
+  @Get("{id}")
+  public async getUserById(@Path() id: number): Promise<UserOutputDTO> {
+    return userService.getUserById(id);
   }
 
-  @SuccessResponse("201", "Created") // Custom success response
-  @Post()
+  // Crée un nouvel utilisateur
+  @Post("/")
   public async createUser(
-    @Body() requestBody: UserCreationParams
-  ): Promise<void> {
-    this.setStatus(201); // set return status 201
-    new UsersService().create(requestBody);
-    return;
+    @Body() requestBody: UserInputDTO
+  ): Promise<UserOutputDTO> {
+    const { username, password } = requestBody;
+    return userService.createUser(username, password);
+  }
+
+  // Supprime un utilisateur par ID
+  @Delete("{id}")
+  public async deleteUser(@Path() id: number): Promise<void> {
+    await userService.deleteUser(id);
+  }
+
+  // Met à jour un utilisateur par ID
+  @Patch("{id}")
+  public async updateUser(
+    @Path() id: number,
+    @Body() requestBody: UserInputPatchDTO
+  ): Promise<UserOutputDTO> {
+    const { username, password } = requestBody;
+    return userService.updateUser(id, username, password);
   }
 }

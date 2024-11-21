@@ -1,37 +1,61 @@
-// src/users/usersService.ts
-import { User } from "../interfaces/users.interface";
+import { UserOutputDTO } from "../dto/user.dto";
+import { notFound } from "../error/NotFoundError";
+import { UserMapper } from "../mapper/user.mapper";
+import { User } from "../models/user.model";
 
-// A post request should not contain an id.
-export type UserCreationParams = Pick<User, "email" | "name" | "phoneNumbers">;
-
-export class UsersService {
-  public getAll(): User[] {
-    return [
-      {
-        id: 1,
-        email: "test@gmail.com",
-        name: "Test User",
-        status: "Happy",
-        phoneNumbers: ["1234567890"],
-      },
-    ];
+export class UserService {
+  // Récupère tous les utilisateurs
+  public async getAllUsers(): Promise<UserOutputDTO[]> {
+    let userList = await User.findAll();
+    return UserMapper.toOutputDtoList(userList);
   }
 
-  public get(id: number, name?: string): User {
-    return {
-      id,
-      email: "jane@doe.com",
-      name: name ?? "Jane Doe",
-      status: "Happy",
-      phoneNumbers: [],
-    };
+  // Récupère un utilisateur par ID
+  public async getUserById(id: number): Promise<UserOutputDTO> {
+    let user = await User.findByPk(id);
+    if (user) {
+      return UserMapper.toOutputDto(user);
+    } else {
+      notFound("User");
+    }
   }
 
-  public create(userCreationParams: UserCreationParams): User {
-    return {
-      id: Math.floor(Math.random() * 10000), // Random
-      status: "Happy",
-      ...userCreationParams,
-    };
+  // Crée un nouvel utilisateur
+  public async createUser(
+    username: string,
+    password: string
+  ): Promise<UserOutputDTO> {
+    return UserMapper.toOutputDto(
+      await User.create({ username: username, password: password })
+    );
+  }
+
+  // Supprime un utilisateur par ID
+  public async deleteUser(id: number): Promise<void> {
+    const user = await User.findByPk(id);
+    if (user) {
+      user.destroy();
+    } else {
+      notFound("User");
+    }
+  }
+
+  // Met à jour un utilisateur
+  public async updateUser(
+    id: number,
+    username?: string,
+    password?: string
+  ): Promise<UserOutputDTO> {
+    const user = await User.findByPk(id);
+    if (user) {
+      if (username) user.username = username;
+      if (password) user.password = password;
+      await user.save();
+      return UserMapper.toOutputDto(user);
+    } else {
+      notFound("User");
+    }
   }
 }
+
+export const userService = new UserService();

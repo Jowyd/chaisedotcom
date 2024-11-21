@@ -1,44 +1,52 @@
 {
-  "name": "tsoa-test",
+  "name": "express-typescript",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "tsoa": "tsoa",
     "tsoa:routes": "tsoa routes",
     "tsoa:spec": "tsoa spec",
     "generate": "npm run tsoa:routes && npm run tsoa:spec",
-    "start": "node dist/app.js",
-    "tsup": "tsup",
-    "build": "tsup src/app.ts --legacy-output --format cjs,esm --dts",
-    "dev": "tsup --config ./tsup.config.ts --watch src/ --onSuccess \"node dist/app.js\"",
+    "start": "node build/app.js",
+    "predev": "npm run swagger",
+    "prebuild": "npm run swagger",
+    "build": "tsc",
+    "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec\"",
     "swagger": "tsoa spec",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "migration:run": "npx sequelize-cli db:migrate",
-    "migration:generate": "npx sequelize-cli migration:generate",
-    "migration:revert": "npx sequelize-cli db:migrate:undo",
-    "migration:create": "npx sequelize-cli migration:generate"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "exec": "npm run generate && ts-node src/app.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@tsoa/runtime": "^6.4.0",
-    "dotenv": "^16.4.5",
-    "express": "5.0.0",
+    "express": "^4.21.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mariadb": "^3.4.0",
     "morgan": "^1.10.0",
-    "pg": "^8.13.0",
-    "sequelize": "^6.37.4",
-    "sequelize-cli": "^6.6.2",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7",
     "swagger-ui-express": "^5.0.1",
-    "tsoa": "^6.4.0"
+    "tsoa": "^6.5.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/morgan": "^1.9.9",
-    "@types/node": "^22.5.5",
-    "@types/swagger-ui-express": "^4.1.6",
-    "tsup": "^8.3.0"
+    "@types/sequelize": "^4.28.20",
+    "@types/swagger-ui-express": "^4.1.7",
+    "concurrently": "^9.0.1",
+    "nodemon": "^3.1.5",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2"
   }
 }
-
