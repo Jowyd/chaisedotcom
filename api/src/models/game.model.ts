@@ -8,6 +8,7 @@ export class Game extends Model {
   public whitePlayerName!: string;
   public blackPlayerName!: string;
   public isPublic!: boolean;
+  public winner!: string | null;
   public status!:
     | "in_progress"
     | "checkmate"
@@ -38,6 +39,10 @@ Game.init(
     isPublic: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    winner: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     status: {
       type: DataTypes.ENUM(

@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS games (
     user_id INT NOT NULL,
     whitePlayerName VARCHAR(50) NOT NULL,
     blackPlayerName VARCHAR(50) NOT NULL,
-    is_public BOOLEAN NOT NULL DEFAULT FALSE,
+    isPublic BOOLEAN NOT NULL DEFAULT FALSE,
+    winner VARCHAR(50),
     status ENUM(
         'in_progress',
         'checkmate',
@@ -58,6 +59,7 @@ INSERT INTO
         whitePlayerName,
         blackPlayerName,
         is_public,
+        winner,
         status
     )
 VALUES (
