@@ -56,41 +56,50 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"MoveDTO": {
+			"CreateGameRequest": {
 				"properties": {
-					"id": {
+					"whitePlayerId": {
 						"type": "number",
 						"format": "double"
 					},
-					"gameId": {
+					"blackPlayerId": {
 						"type": "number",
 						"format": "double"
 					},
-					"figure": {
-						"type": "string"
-					},
-					"position": {
-						"type": "string"
-					},
-					"timestamp": {
-						"type": "string",
-						"format": "date-time"
+					"isPublic": {
+						"type": "boolean"
 					}
 				},
 				"required": [
-					"gameId",
-					"figure",
-					"position",
-					"timestamp"
+					"whitePlayerId",
+					"blackPlayerId",
+					"isPublic"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"AuthenticationInputDTO": {
+			"ChessMove": {
 				"properties": {
-					"grant_type": {
+					"from": {
 						"type": "string"
 					},
+					"to": {
+						"type": "string"
+					},
+					"piece": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"from",
+					"to",
+					"piece"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"LoginRequest": {
+				"properties": {
 					"username": {
 						"type": "string"
 					},
@@ -99,7 +108,34 @@
 					}
 				},
 				"required": [
-					"grant_type",
+					"username",
+					"password"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterResponse": {
+				"properties": {
+					"user": {
+						"$ref": "#/components/schemas/UserOutputDTO"
+					}
+				},
+				"required": [
+					"user"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RegisterRequest": {
+				"properties": {
+					"username": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					}
+				},
+				"required": [
 					"username",
 					"password"
 				],
@@ -124,6 +160,25 @@
 		"contact": {}
 	},
 	"paths": {
+		"/users/info": {
+			"get": {
+				"operationId": "GetUserInfo",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"tags": [
+					"Users"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/users": {
 			"get": {
 				"operationId": "GetAllUsers",
@@ -188,40 +243,6 @@
 			}
 		},
 		"/users/{id}": {
-			"get": {
-				"operationId": "GetUserById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/UserOutputDTO"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Users"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			},
 			"delete": {
 				"operationId": "DeleteUser",
 				"responses": {
@@ -294,9 +315,54 @@
 				}
 			}
 		},
-		"/moves": {
+		"/games": {
+			"post": {
+				"operationId": "CreateGame",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"gameId": {
+											"type": "number",
+											"format": "double"
+										}
+									},
+									"required": [
+										"gameId"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Games"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateGameRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/games/moves/{gameId}": {
 			"get": {
-				"operationId": "GetAllMoves",
+				"operationId": "GetMoves",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -304,7 +370,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/MoveDTO"
+										"$ref": "#/components/schemas/ChessMove"
 									},
 									"type": "array"
 								}
@@ -313,15 +379,73 @@
 					}
 				},
 				"tags": [
-					"Moves"
+					"Games"
 				],
-				"security": [],
-				"parameters": []
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "gameId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		},
-		"/auth": {
+		"/games/{gameId}": {
+			"delete": {
+				"operationId": "DeleteGame",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Games"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "gameId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/auth/login": {
 			"post": {
-				"operationId": "Authenticate",
+				"operationId": "Login",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -349,7 +473,36 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/AuthenticationInputDTO"
+								"$ref": "#/components/schemas/LoginRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/register": {
+			"post": {
+				"operationId": "Register",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RegisterResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterRequest"
 							}
 						}
 					}

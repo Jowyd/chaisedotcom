@@ -21,7 +21,7 @@
       "src"
     ],
     "ext": "ts",
-    "exec": "npm run generate && ts-node src/app.ts",
+    "exec": "ts-node src/app.ts",
     "ignore": [
       "src/routes/index.ts"
     ]

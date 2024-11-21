@@ -1,69 +1,61 @@
-import { Model, DataTypes } from "sequelize";
-import sequelize from "../config/database"; // Connexion à la base de données
-import { FigureType } from "../enums/figureType.enum";
+import { DataTypes, Model } from "sequelize";
+import sequelize from "../config/database";
 import { Game } from "./game.model";
 
-export interface MoveAttributes {
-  id?: number;
-  gameId: number;
-  figure: FigureType;
-  position: string;
-  timestamp: Date;
-}
-
-export class Move extends Model<MoveAttributes> implements MoveAttributes {
-  public id?: number;
+class Move extends Model {
+  public id!: number;
   public gameId!: number;
-  public figure!: FigureType;
-  public position!: string;
-  public timestamp!: Date;
+  public fromSquare!: string;
+  public toSquare!: string;
+  public piece!: string;
+  public isCapture?: boolean;
+  public isPromotion?: boolean;
+  public isCheck?: boolean;
+  public isCheckmate?: boolean;
 }
 
 Move.init(
   {
     id: {
       type: DataTypes.INTEGER,
-      autoIncrement: true,
       primaryKey: true,
+      autoIncrement: true,
     },
-    gameId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    figure: {
-      type: DataTypes.ENUM(
-        "PAWN1",
-        "PAWN2",
-        "PAWN3",
-        "PAWN4",
-        "PAWN5",
-        "PAWN6",
-        "PAWN7",
-        "PAWN8",
-        "ROOK1",
-        "ROOK2",
-        "KNIGHT1",
-        "KNIGHT2",
-        "BISHOP1",
-        "BISHOP2",
-        "QUEEN",
-        "KING"
-      ),
-      allowNull: false,
-    },
-    position: {
+    fromSquare: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    timestamp: {
-      type: DataTypes.DATE,
+    toSquare: {
+      type: DataTypes.STRING,
       allowNull: false,
+    },
+    piece: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    isCapture: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isPromotion: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isCheck: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isCheckmate: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {
     sequelize,
-    tableName: "Author",
+    modelName: "Move",
   }
 );
 
-Move.belongsTo(Game, { foreignKey: "gameId", as: "game" });
+Move.belongsTo(Game, { foreignKey: "gameId" });
+
+export default Move;

@@ -7,14 +7,14 @@ export interface UserAttributes {
   id?: number;
   username: string;
   password: string;
-  createdAt?: number;
+  created_at?: number;
 }
 
 export class User extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
   public username!: string;
   public password!: string;
-  public createdAt!: number;
+  public created_at!: number;
 
   public async validatePassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);
@@ -41,9 +41,8 @@ User.init(
         this.setDataValue("password", hash);
       },
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.TIME,
-      allowNull: false,
     },
   },
   {

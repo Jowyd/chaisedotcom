@@ -9,7 +9,7 @@ import {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-} from "../models/auth.model";
+} from "../dto/auth.dto";
 
 class AuthenticationService {
   // Méthode pour authentifier un utilisateur
@@ -28,14 +28,18 @@ class AuthenticationService {
       throw error;
     }
 
-    const token = generateToken(user.id);
+    const token_user = {
+      id: user.id,
+      username: user.username,
+    };
+    const token = generateToken(token_user);
     return { token, user };
   }
 
   public async registerUser(
     request: RegisterRequest
   ): Promise<RegisterResponse> {
-    const { username, email, password } = request;
+    const { username, password } = request;
 
     const existingUser = await User.findOne({
       where: {
@@ -50,7 +54,7 @@ class AuthenticationService {
     }
 
     const user = await User.create({ username, password });
-    return { id: user.id };
+    return { user };
   }
 }
 
