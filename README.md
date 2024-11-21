@@ -9,7 +9,6 @@ psql -U postgres -d chaisedotcom
   - User
   - Game
   - Move
-  - Figure
 - Routes:
   - User
     - Login

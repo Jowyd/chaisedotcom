@@ -264,25 +264,6 @@
 				}
 			}
 		},
-		"/users/me": {
-			"get": {
-				"operationId": "GetMe",
-				"responses": {
-					"204": {
-						"description": "No content"
-					}
-				},
-				"tags": [
-					"Users"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": []
-			}
-		},
 		"/auth": {
 			"post": {
 				"operationId": "Authenticate",
