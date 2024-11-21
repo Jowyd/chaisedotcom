@@ -52,8 +52,8 @@ const models: TsoaRoute.Models = {
     "CreateGameRequest": {
         "dataType": "refObject",
         "properties": {
-            "whitePlayerId": {"dataType":"double","required":true},
-            "blackPlayerId": {"dataType":"double"},
+            "whitePlayerName": {"dataType":"string","required":true},
+            "blackPlayerName": {"dataType":"string","required":true},
             "isPublic": {"dataType":"boolean","required":true},
         },
         "additionalProperties": false,
@@ -65,6 +65,18 @@ const models: TsoaRoute.Models = {
             "from": {"dataType":"string","required":true},
             "to": {"dataType":"string","required":true},
             "piece": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "GameHistoryDTO": {
+        "dataType": "refObject",
+        "properties": {
+            "gameId": {"dataType":"double","required":true},
+            "whitePlayerName": {"dataType":"string","required":true},
+            "blackPlayerName": {"dataType":"string","required":true},
+            "isPublic": {"dataType":"boolean","required":true},
+            "status": {"dataType":"string","required":true},
         },
         "additionalProperties": false,
     },
@@ -318,6 +330,69 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getMoves',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.delete('/games/:gameId',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(GameController)),
+            ...(fetchMiddlewares<RequestHandler>(GameController.prototype.deleteGame)),
+
+            async function GameController_deleteGame(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    gameId: {"in":"path","name":"gameId","required":true,"dataType":"double"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new GameController();
+
+              await templateService.apiHandler({
+                methodName: 'deleteGame',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/games/history',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(GameController)),
+            ...(fetchMiddlewares<RequestHandler>(GameController.prototype.getHistory)),
+
+            async function GameController_getHistory(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new GameController();
+
+              await templateService.apiHandler({
+                methodName: 'getHistory',
                 controller,
                 response,
                 next,

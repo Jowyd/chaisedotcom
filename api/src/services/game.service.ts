@@ -2,6 +2,7 @@ import { Game } from "../models/game.model";
 import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
+import { GameHistoryDTO } from "../dto/game.dto";
 
 export interface ChessMove {
   from: string;
@@ -82,6 +83,30 @@ class GameService {
     const game = await this.getGameById(gameId);
     await game.destroy();
   }
+
+  async getHistory(userId: number): Promise<GameHistoryDTO[]> {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new Error("Utilisateur non trouvé");
+    }
+    const games = await Game.findAll({
+      where: {
+        [Op.or]: [
+          { whitePlayerName: user.username },
+          { blackPlayerName: user.username },
+        ],
+      },
+      order: [["created_at", "DESC"]],
+    });
+    return games.map((game) => ({
+      gameId: game.id,
+      whitePlayerName: game.whitePlayerName,
+      blackPlayerName: game.blackPlayerName,
+      isPublic: game.isPublic,
+      status: game.status
+    }));
+  }
+
 
   private getInitialChessBoard(): string[][] {
     return [

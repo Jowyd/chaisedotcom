@@ -96,6 +96,35 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"GameHistoryDTO": {
+				"properties": {
+					"gameId": {
+						"type": "number",
+						"format": "double"
+					},
+					"whitePlayerName": {
+						"type": "string"
+					},
+					"blackPlayerName": {
+						"type": "string"
+					},
+					"isPublic": {
+						"type": "boolean"
+					},
+					"status": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"gameId",
+					"whitePlayerName",
+					"blackPlayerName",
+					"isPublic",
+					"status"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"LoginRequest": {
 				"properties": {
 					"username": {
@@ -439,6 +468,35 @@
 						}
 					}
 				]
+			}
+		},
+		"/games/history": {
+			"get": {
+				"operationId": "GetHistory",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/GameHistoryDTO"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Games"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
 			}
 		},
 		"/auth/login": {

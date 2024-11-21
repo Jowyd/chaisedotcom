@@ -14,6 +14,7 @@ import {
 import { gameService, ChessMove } from "../services/game.service";
 import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
+import { GameHistoryDTO } from "../dto/game.dto";
 
 interface CreateGameRequest {
   whitePlayerName: string;
@@ -108,6 +109,13 @@ export class GameController extends Controller {
       this.setStatus(404);
       throw error;
     }
+  }
+
+  @Get("/history")
+  @Security("jwt")
+  public async getHistory(@Request() req: AuthRequest): Promise<GameHistoryDTO[]> {
+    const user = req.user;
+    return await gameService.getHistory(user.id);
   }
 }
 

@@ -33,7 +33,7 @@ Game.init(
     },
     blackPlayerName: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     isPublic: {
       type: DataTypes.BOOLEAN,
