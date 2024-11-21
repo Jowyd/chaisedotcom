@@ -44,9 +44,17 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-<<<<<<< HEAD
-			"UserCreationParams": {
-				"$ref": "#/components/schemas/Pick_User.email-or-name-or-phoneNumbers_"
+			"UserInputPatchDTO": {
+				"properties": {
+					"username": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"MoveDTO": {
 				"properties": {
@@ -74,16 +82,7 @@
 					"figure",
 					"position",
 					"timestamp"
-=======
-			"UserInputPatchDTO": {
-				"properties": {
-					"username": {
-						"type": "string"
-					},
-					"password": {
-						"type": "string"
-					}
-				},
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -103,7 +102,6 @@
 					"grant_type",
 					"username",
 					"password"
->>>>>>> users
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -127,51 +125,6 @@
 	},
 	"paths": {
 		"/users": {
-<<<<<<< HEAD
-			"get": {
-				"operationId": "GetUsers",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/User"
-									},
-									"type": "array"
-								}
-							}
-						}
-					}
-				},
-				"security": [],
-				"parameters": []
-			},
-			"post": {
-				"operationId": "CreateUser",
-				"responses": {
-					"201": {
-						"description": "Created"
-					}
-				},
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UserCreationParams"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/users/{userId}": {
-=======
->>>>>>> users
 			"get": {
 				"operationId": "GetAllUsers",
 				"responses": {
@@ -341,28 +294,40 @@
 				}
 			}
 		},
-<<<<<<< HEAD
 		"/moves": {
 			"get": {
 				"operationId": "GetAllMoves",
-=======
-		"/auth": {
-			"post": {
-				"operationId": "Authenticate",
->>>>>>> users
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
-<<<<<<< HEAD
 									"items": {
 										"$ref": "#/components/schemas/MoveDTO"
 									},
 									"type": "array"
 								}
-=======
+							}
+						}
+					}
+				},
+				"tags": [
+					"Moves"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/auth": {
+			"post": {
+				"operationId": "Authenticate",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
 									"properties": {
 										"token": {
 											"type": "string"
@@ -385,16 +350,10 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/AuthenticationInputDTO"
->>>>>>> users
 							}
 						}
 					}
-				},
-				"tags": [
-					"Moves"
-				],
-				"security": [],
-				"parameters": []
+				}
 			}
 		}
 	},
