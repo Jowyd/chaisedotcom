@@ -1,21 +1,26 @@
 import { Route, Controller, Post, Body } from "tsoa";
 import { AuthenticationInputDTO } from "../dto/authentication.dto";
 import { authService } from "../services/authentication.service";
+import { generateToken } from "../utils/JwtToken";
+import {
+  LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
+} from "../models/auth.model";
 
 @Route("auth")
-export class AuthenticationController extends Controller {
-  @Post("/")
-  public async authenticate(
-    @Body() body: AuthenticationInputDTO
-  ) {
-    const { grant_type, username, password } = body;
-    if (grant_type !== "password") {
-      let error = new Error("Invalid grant_type");
-      (error as any).status = 400;
-      throw error;
-    }
-    const token = await authService.authenticate(username, password);
+export class AuthController extends Controller {
+  @Post("/login")
+  public async login(
+    @Body() request: LoginRequest
+  ): Promise<{ token: string }> {
+    return await authService.authenticateUser(request);
+  }
 
-    return { token };
+  @Post("/register")
+  public async register(
+    @Body() request: RegisterRequest
+  ): Promise<RegisterResponse> {
+    return await authService.registerUser(request);
   }
 }

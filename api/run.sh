@@ -27,3 +27,6 @@ if [ "$(docker ps -a -q -f name=mariadb-$DB_NAME)" ]; then
 fi
 
 docker run --detach -p $DB_PORT:3306 --name mariadb-$DB_NAME --env MARIADB_USER=$DB_USER --env MARIADB_PASSWORD=$DB_PASSWORD --env MARIADB_DATABASE=$DB_NAME --env MARIADB_ROOT_PASSWORD=$DB_PASSWORD -v ./db.sql:/docker-entrypoint-initdb.d/init.sql mariadb:latest
+
+
+npm run dev
