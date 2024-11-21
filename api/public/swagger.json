@@ -58,21 +58,19 @@
 			},
 			"CreateGameRequest": {
 				"properties": {
-					"whitePlayerId": {
-						"type": "number",
-						"format": "double"
+					"whitePlayerName": {
+						"type": "string"
 					},
-					"blackPlayerId": {
-						"type": "number",
-						"format": "double"
+					"blackPlayerName": {
+						"type": "string"
 					},
 					"isPublic": {
 						"type": "boolean"
 					}
 				},
 				"required": [
-					"whitePlayerId",
-					"blackPlayerId",
+					"whitePlayerName",
+					"blackPlayerName",
 					"isPublic"
 				],
 				"type": "object",
