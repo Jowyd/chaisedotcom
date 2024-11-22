@@ -103,10 +103,30 @@ class GameService {
       whitePlayerName: game.whitePlayerName,
       blackPlayerName: game.blackPlayerName,
       isPublic: game.isPublic,
+      winner: game.winner,
       status: game.status
     }));
   }
 
+  async getStats(username: string): Promise<number> {
+    const user = await Game.findOne({
+      where: {
+        [Op.or]: [
+          { whitePlayerName: username },
+          { blackPlayerName: username },
+        ],
+      },
+    });
+    if (!user) {
+      throw new Error("Utilisateur non trouvé");
+    }
+    const games = await Game.findAll({
+      where: {
+        [Op.or]: [{winner:username}]
+      }
+    });
+    return games.length;
+  }
 
   private getInitialChessBoard(): string[][] {
     return [

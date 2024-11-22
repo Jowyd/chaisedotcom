@@ -3,5 +3,6 @@ export interface GameHistoryDTO {
     whitePlayerName: string;
     blackPlayerName: string;
     isPublic: boolean;
+    winner: string | null;
     status: string;
   }

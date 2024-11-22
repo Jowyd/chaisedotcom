@@ -76,6 +76,7 @@ const models: TsoaRoute.Models = {
             "whitePlayerName": {"dataType":"string","required":true},
             "blackPlayerName": {"dataType":"string","required":true},
             "isPublic": {"dataType":"boolean","required":true},
+            "winner": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},
             "status": {"dataType":"string","required":true},
         },
         "additionalProperties": false,
@@ -393,6 +394,37 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getHistory',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/games/stats/:username',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(GameController)),
+            ...(fetchMiddlewares<RequestHandler>(GameController.prototype.getStats)),
+
+            async function GameController_getStats(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    username: {"in":"path","name":"username","required":true,"dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new GameController();
+
+              await templateService.apiHandler({
+                methodName: 'getStats',
                 controller,
                 response,
                 next,

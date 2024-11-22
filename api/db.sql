@@ -58,7 +58,7 @@ INSERT INTO
         user_id,
         whitePlayerName,
         blackPlayerName,
-        is_public,
+        isPublic,
         winner,
         status
     )
@@ -67,13 +67,15 @@ VALUES (
         'root',
         'magnus_carlsen',
         true,
-        'in_progress'
+        'root',
+        'surrender'
     ),
     (
         1,
         'jowyd',
         'root',
         false,
+        'jowyd',
         'checkmate'
     ),
     (
@@ -81,6 +83,7 @@ VALUES (
         'bob_jones',
         'bobby_fischer',
         true,
+        'draw',
         'draw'
     );
 
@@ -102,6 +105,3 @@ VALUES (1, 'P', 'e2', 'e4', 1),
     (3, 'P', 'e2', 'e4', 1),
     (3, 'P', 'c7', 'c5', 2),
     (3, 'N', 'b1', 'c3', 3);
-
-ALTER TABLE games
-CHANGE COLUMN is_public isPublic BOOLEAN NOT NULL DEFAULT FALSE;

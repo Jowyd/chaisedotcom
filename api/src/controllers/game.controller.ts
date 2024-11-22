@@ -117,6 +117,13 @@ export class GameController extends Controller {
     const user = req.user;
     return await gameService.getHistory(user.id);
   }
+
+  @Get("/stats/{username}")
+  @Security("jwt")
+  public async getStats(@Path() username: string): Promise<{ stats: number }> {
+    const stats = await gameService.getStats(username);
+    return {stats};
+  }
 }
 
 export default GameController;

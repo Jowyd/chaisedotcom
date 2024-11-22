@@ -111,6 +111,10 @@
 					"isPublic": {
 						"type": "boolean"
 					},
+					"winner": {
+						"type": "string",
+						"nullable": true
+					},
 					"status": {
 						"type": "string"
 					}
@@ -120,6 +124,7 @@
 					"whitePlayerName",
 					"blackPlayerName",
 					"isPublic",
+					"winner",
 					"status"
 				],
 				"type": "object",
@@ -497,6 +502,50 @@
 					}
 				],
 				"parameters": []
+			}
+		},
+		"/games/stats/{username}": {
+			"get": {
+				"operationId": "GetStats",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"stats": {
+											"type": "number",
+											"format": "double"
+										}
+									},
+									"required": [
+										"stats"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Games"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "username",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/auth/login": {
