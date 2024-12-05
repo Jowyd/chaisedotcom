@@ -298,70 +298,62 @@ watch(capturedPieces, (newValue) => {
     <!-- Échiquier existant -->
     <div class="chess-board">
       <!-- Files labels (top) -->
-      <div class="files-labels top">
-        <div
-          v-for="file in playerColor === 'black' ? [...files].reverse() : files"
-          :key="`top-${file}`"
-          class="label"
-        >
-          {{ file }}
-        </div>
-      </div>
 
       <!-- Ranks labels (left) -->
-      <div class="ranks-labels left">
+      <div class="left">
+        <div class="square"></div>
         <div
           v-for="rank in playerColor === 'black' ? ranks : [...ranks].reverse()"
           :key="`left-${rank}`"
-          class="label"
+          class="label square"
         >
           {{ rank }}
         </div>
       </div>
 
-      <!-- Chess board -->
-      <div class="board">
-        <div v-for="(row, rowIndex) in boardView" :key="`row-${rowIndex}`" class="board-row">
+      <div class="flex">
+        <div class="flex top">
           <div
-            v-for="(square, colIndex) in row"
-            :key="`square-${rowIndex}-${colIndex}`"
-            class="square"
-            :class="[
-              getSquareColor(
-                playerColor === 'black' ? 7 - rowIndex : rowIndex,
-                playerColor === 'black' ? 7 - colIndex : colIndex,
-              ),
-              {
-                selected:
-                  selectedPiece?.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
-                  selectedPiece?.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
-                'valid-move': validMoves.some(
-                  (move) =>
-                    move.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
-                    move.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
-                ),
-              },
-            ]"
-            @click="handleSquareClick(rowIndex, colIndex)"
+            v-for="file in playerColor === 'black' ? [...files].reverse() : files"
+            :key="`top-${file}`"
+            class="label square"
           >
-            <span v-if="square" class="piece" :class="square.color">{{ square.symbol }}</span>
+            {{ file }}
+          </div>
+        </div>
+        <div class="board">
+          <div v-for="(row, rowIndex) in boardView" :key="`row-${rowIndex}`" class="board-row">
+            <div
+              v-for="(square, colIndex) in row"
+              :key="`square-${rowIndex}-${colIndex}`"
+              class="square"
+              :class="[
+                getSquareColor(
+                  playerColor === 'black' ? 7 - rowIndex : rowIndex,
+                  playerColor === 'black' ? 7 - colIndex : colIndex,
+                ),
+                {
+                  selected:
+                    selectedPiece?.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
+                    selectedPiece?.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
+                  'valid-move': validMoves.some(
+                    (move) =>
+                      move.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
+                      move.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
+                  ),
+                },
+              ]"
+              @click="handleSquareClick(rowIndex, colIndex)"
+            >
+              <span v-if="square" class="piece" :class="square.color">{{ square.symbol }}</span>
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- Ranks labels (right) -->
-      <div class="ranks-labels right">
-        <div
-          v-for="rank in playerColor === 'black' ? ranks : [...ranks].reverse()"
-          :key="`right-${rank}`"
-          class="label"
-        >
-          {{ rank }}
-        </div>
-      </div>
+      <!-- Chess board -->
 
       <!-- Files labels (bottom) -->
-      <div class="files-labels bottom">
+      <!-- <div class="files-labels bottom">
         <div
           v-for="file in playerColor === 'black' ? [...files].reverse() : files"
           :key="`bottom-${file}`"
@@ -369,7 +361,7 @@ watch(capturedPieces, (newValue) => {
         >
           {{ file }}
         </div>
-      </div>
+      </div> -->
     </div>
 
     <!-- Pièces capturées par les noirs -->

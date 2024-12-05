@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
 
 // Simulation des données
 let mockGameState: GameState = {
@@ -47,7 +47,7 @@ export const GameService = {
   },
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
-    await delay(200);
+    axios.post(`${API_URL}games/${gameId}/move`, move);
 
     // Mise à jour du state du jeu
     mockGameState = {
@@ -98,4 +98,4 @@ export const GameService = {
       status: 'active',
     };
   },
-}; 
+};

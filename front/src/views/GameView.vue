@@ -80,10 +80,10 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
           <div class="flex align-items-center gap-3">
             <span class="text-xl font-bold">Live Game</span>
             <!-- Bouton pour changer la perspective -->
-            <Button 
-              icon="pi pi-refresh" 
-              text 
-              @click="togglePlayerColor" 
+            <Button
+              icon="pi pi-refresh"
+              text
+              @click="togglePlayerColor"
               v-tooltip.bottom="'Flip board'"
             />
           </div>
@@ -94,7 +94,7 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
       <div class="col-12 md:col-9 p-3">
         <div class="game-container surface-section border-round shadow-1 p-3">
           <!-- Black Player Info -->
-          <div 
+          <div
             class="player-info flex justify-content-between align-items-center mb-3"
             :class="{ 'order-1': playerColor === 'black' }"
           >
@@ -111,13 +111,10 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
           </div>
 
           <!-- Chess Board avec la prop playerColor et l'événement captured-pieces -->
-          <ChessBoard 
-            :player-color="playerColor" 
-            v-model:captured-pieces="capturedPieces"
-          />
+          <ChessBoard :player-color="playerColor" v-model:captured-pieces="capturedPieces" />
 
           <!-- White Player Info -->
-          <div 
+          <div
             class="player-info flex justify-content-between align-items-center mt-3"
             :class="{ 'order-0': playerColor === 'black' }"
           >
@@ -148,7 +145,7 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
       </div>
 
       <!-- Game Chat & Moves -->
-      <div class="col-12 md:col-3 p-3">
+      <!-- <div class="col-12 md:col-3 p-3">
         <TabView>
           <TabPanel header="Moves" :value="0">
             <div class="moves-list surface-section border-round p-3 h-30rem overflow-y-auto">
@@ -160,7 +157,7 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
             </div>
           </TabPanel>
         </TabView>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
