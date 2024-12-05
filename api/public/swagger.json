@@ -198,7 +198,7 @@
 			},
 			"GameHistoryDTO": {
 				"properties": {
-					"gameId": {
+					"game_id": {
 						"type": "number",
 						"format": "double"
 					},
@@ -220,7 +220,7 @@
 					}
 				},
 				"required": [
-					"gameId",
+					"game_id",
 					"whitePlayerName",
 					"blackPlayerName",
 					"isPublic",
@@ -437,13 +437,13 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"gameId": {
+										"game_id": {
 											"type": "number",
 											"format": "double"
 										}
 									},
 									"required": [
-										"gameId"
+										"game_id"
 									],
 									"type": "object"
 								}
@@ -468,7 +468,7 @@
 				}
 			}
 		},
-		"/games/{gameId}/moves": {
+		"/games/{game_id}/moves": {
 			"get": {
 				"operationId": "GetMoves",
 				"responses": {
@@ -493,7 +493,7 @@
 				"parameters": [
 					{
 						"in": "path",
-						"name": "gameId",
+						"name": "game_id",
 						"required": true,
 						"schema": {
 							"format": "double",
@@ -503,7 +503,7 @@
 				]
 			}
 		},
-		"/games/{gameId}/move": {
+		"/games/{game_id}/move": {
 			"post": {
 				"operationId": "MakeMove",
 				"responses": {
@@ -525,7 +525,7 @@
 				"parameters": [
 					{
 						"in": "path",
-						"name": "gameId",
+						"name": "game_id",
 						"required": true,
 						"schema": {
 							"format": "double",
@@ -545,7 +545,7 @@
 				}
 			}
 		},
-		"/games/{gameId}": {
+		"/games/{game_id}": {
 			"delete": {
 				"operationId": "DeleteGame",
 				"responses": {
@@ -575,7 +575,7 @@
 				"parameters": [
 					{
 						"in": "path",
-						"name": "gameId",
+						"name": "game_id",
 						"required": true,
 						"schema": {
 							"format": "double",

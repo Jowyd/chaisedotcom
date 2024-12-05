@@ -7,10 +7,8 @@ import { MoveOptions } from "../interfaces/move.interface";
 import { MakeMoveDTO, MoveCreateDTO } from "../dto/move.dto";
 import { MoveReturnDTO } from "../dto/move.dto";
 
-
 export class MoveService {
-
-  async createMove(dto:MoveCreateDTO){
+  async createMove(dto: MoveCreateDTO) {
     return Move.create({
       game_id: dto.game_id,
       from: dto.from,
@@ -21,8 +19,10 @@ export class MoveService {
       isCheckmate: dto.isCheckmate,
       turn: dto.turn,
     });
-  } 
+  }
 
+  private readonly INITIAL_FEN =
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
   private initialBoard: ChessBoard = {
     a1: { type: "ROOK", color: "WHITE" },
@@ -58,14 +58,13 @@ export class MoveService {
     g7: { type: "PAWN", color: "BLACK" },
     h7: { type: "PAWN", color: "BLACK" },
   };
-  
+
   public getInitialBoard(): ChessBoard {
     return this.initialBoard;
   }
 
   private COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   private ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
 
   private validatePawnMove(
     board: ChessBoard,
@@ -203,13 +202,13 @@ export class MoveService {
     return colDiff <= 1 && rowDiff <= 1;
   }
 
-  async reconstructGameState(gameId: number): Promise<{
+  async reconstructGameState(game_id: number): Promise<{
     board: ChessBoard;
     moves: Move[];
   }> {
     const moves = await Move.findAll({
-      where: { gameId },
-      order: [["createdAt", "ASC"]],
+      where: { game_id },
+      order: [["created_at", "ASC"]],
     });
 
     let board = { ...this.initialBoard };
@@ -233,10 +232,10 @@ export class MoveService {
     return whitePieces.length !== blackPieces.length ? "WHITE" : "BLACK";
   }
 
-  async getGameReplay(gameId: number): Promise<Move[]> {
+  async getGameReplay(game_id: number): Promise<Move[]> {
     return Move.findAll({
-      where: { gameId },
-      order: [["createdAt", "ASC"]],
+      where: { game_id },
+      order: [["created_at", "ASC"]],
     });
   }
 
@@ -248,11 +247,13 @@ export class MoveService {
     options: MoveOptions = {}
   ): boolean {
     const piece = board[from];
+    console.log("piece", piece, currentPlayerColor);
 
     if (!piece || piece.color !== currentPlayerColor) {
       return false;
     }
 
+    console.log("piece", piece, "options", options);
     // Vérification des mouvements spéciaux
     if (options.isCastle) {
       return this.validateCastle(
@@ -264,6 +265,7 @@ export class MoveService {
       );
     }
 
+    console.log("options", options);
     if (options.isEnPassant) {
       return this.validateEnPassant(board, from, to, currentPlayerColor);
     }
@@ -271,6 +273,7 @@ export class MoveService {
     // Validation standard du mouvement
     const baseValidation = this.baseValidateMove(board, from, to, piece);
 
+    console.log("option", options);
     // Validation de promotion
     if (options.isPromotion) {
       return (
@@ -278,6 +281,7 @@ export class MoveService {
       );
     }
 
+    console.log("baseValidation", baseValidation);
     // Vérification finale qu'un mouvement ne met pas le roi en échec
     if (baseValidation) {
       const newBoard = this.simulateMove(board, from, to);
@@ -294,6 +298,7 @@ export class MoveService {
     to: string,
     piece: ChessPiece
   ): boolean {
+    console.log("piece", piece);
     switch (piece.type) {
       case "PAWN":
         return this.validatePawnMove(board, from, to, piece.color);
@@ -463,86 +468,6 @@ export class MoveService {
     return newBoard;
   }
 
-  // Méthode d'enregistrement de mouvement enrichie
-  async recordMove(
-    gameId: number,
-    fromSquare: string,
-    toSquare: string,
-    piece: ChessPiece,
-    options: MoveOptions = {}
-  ): Promise<Move> {
-    const game = await Game.findByPk(gameId);
-    if (!game) throw new Error("Partie non trouvée");
-
-    const { board } = await this.reconstructGameState(gameId);
-
-    const currentPlayerColor = this.getNextPlayerColor(board);
-    const isValidMove = this.validateMove(
-      board,
-      fromSquare,
-      toSquare,
-      currentPlayerColor,
-      options
-    );
-
-    if (!isValidMove) {
-      throw new Error("Mouvement invalide");
-    }
-
-    // Gestion des mouvements spéciaux
-    if (options.isCastle) {
-      // Logique de déplacement de la tour lors du roque
-      const rank = currentPlayerColor === "WHITE" ? "1" : "8";
-      const rookFromCol = options.isCastle === "KINGSIDE" ? "h" : "a";
-      const rookToCol = options.isCastle === "KINGSIDE" ? "f" : "d";
-      const rookFromSquare = `${rookFromCol}${rank}`;
-      const rookToSquare = `${rookToCol}${rank}`;
-
-      await Move.create({
-        gameId,
-        fromSquare: rookFromSquare,
-        toSquare: rookToSquare,
-        piece: "ROOK",
-      });
-    }
-
-    if (options.isEnPassant) {
-      // Supprimer le pion capturé en passant
-      const capturedPawnSquare = `${toSquare[0]}${fromSquare[1]}`;
-      await Move.create({
-        gameId,
-        fromSquare: capturedPawnSquare,
-        toSquare: capturedPawnSquare,
-        piece: "PAWN",
-        isCapture: true,
-      });
-    }
-
-    if (options.isPromotion) {
-      // Promotion du pion
-      options.promotionPiece = options.promotionPiece || "QUEEN";
-    }
-
-    const move = await Move.create({
-      gameId,
-      fromSquare,
-      toSquare,
-      piece: options.isPromotion ? options.promotionPiece : piece.type,
-    });
-
-    // Vérifier l'état final (échec et mat ou pat)
-    const newBoard = this.simulateMove(board, fromSquare, toSquare);
-    const opponentColor = currentPlayerColor === "WHITE" ? "BLACK" : "WHITE";
-
-    if (this.isCheckmate(newBoard, opponentColor)) {
-      await game.update({ status: "CHECKMATE" });
-    } else if (this.isStalemate(newBoard, opponentColor)) {
-      await game.update({ status: "DRAW" });
-    }
-
-    return move;
-  }
-
   // Vérification d'échec et mat
   private isCheckmate(board: ChessBoard, color: "WHITE" | "BLACK"): boolean {
     // Vérifier si le roi est en échec
@@ -592,35 +517,38 @@ export class MoveService {
     return squares;
   }
 
-  async makeMove(gameId: number, moveDto: MakeMoveDTO): Promise<MoveReturnDTO> {
+  async makeMove(
+    game_id: number,
+    moveDto: MakeMoveDTO
+  ): Promise<MoveReturnDTO> {
     // Récupérer l'état actuel du jeu
-    const { board, moves } = await this.reconstructGameState(gameId);
-    
+    const { board, moves } = await this.reconstructGameState(game_id);
+
     // Déterminer le tour actuel
-    const currentPlayerColor = this.getNextPlayerColor(board);
-    
+    const currentPlayerColor = "WHITE"; //this.getNextPlayerColor(board);
+
     // Vérifier si le mouvement est valide
     const piece = board[moveDto.from];
     if (!piece) {
-        throw new Error("Aucune pièce à cette position");
+      throw new Error("Aucune pièce à cette position");
     }
-    
+
     const isValidMove = this.validateMove(
-        board,
-        moveDto.from,
-        moveDto.to,
-        currentPlayerColor
+      board,
+      moveDto.from,
+      moveDto.to,
+      currentPlayerColor
     );
 
     if (!isValidMove) {
-        throw new Error("Mouvement invalide");
+      throw new Error("Mouvement invalide");
     }
 
     // Capturer la pièce si présente sur la case de destination
     const piecesTaken: ChessPiece[] = [];
     const capturedPiece = board[moveDto.to];
     if (capturedPiece) {
-        piecesTaken.push(capturedPiece);
+      piecesTaken.push(capturedPiece);
     }
 
     // Effectuer le mouvement
@@ -628,90 +556,89 @@ export class MoveService {
     newBoard[moveDto.to] = newBoard[moveDto.from];
     newBoard[moveDto.from] = null;
 
-    // Enregistrer le mouvement dans la base de données
-    await this.recordMove(gameId, moveDto.from, moveDto.to, piece);
-
     // Vérifier l'état du jeu après le mouvement
     const nextPlayerColor = currentPlayerColor === "WHITE" ? "BLACK" : "WHITE";
-    const game = await Game.findByPk(gameId);
+    const game = await Game.findByPk(game_id);
 
     let check = false;
     let checkmate = false;
     if (this.isCheckmate(newBoard, nextPlayerColor)) {
-        check = true;
-        await game?.update({ status: "CHECKMATE" });
+      check = true;
+      await game?.update({ status: "CHECKMATE" });
     } else if (this.isStalemate(newBoard, nextPlayerColor)) {
-        checkmate = true;
-        await game?.update({ status: "DRAW" });
+      checkmate = true;
+      await game?.update({ status: "DRAW" });
     }
 
     const moveCreate: MoveCreateDTO = {
-        game_id: gameId,
-        from: moveDto.from,
-        to: moveDto.to,
-        piece: piece.type,
-        type: "normal",
-        isCheck: check,
-        isCheckmate: checkmate,
-        turn: currentPlayerColor,
+      game_id: game_id,
+      from: moveDto.from,
+      to: moveDto.to,
+      piece: piece.type,
+      type: "normal",
+      isCheck: check,
+      isCheckmate: checkmate,
+      turn: currentPlayerColor,
     };
 
     await this.createMove(moveCreate);
 
     const moveReturn = {
-        id: gameId.toString(),
-        fen: this.generateFEN(newBoard),
-        moves: [
-            {
-                from: moveDto.from,
-                to: moveDto.to,
-                piece: piece.type.toLowerCase(),
-                color: currentPlayerColor.toLowerCase()
-            }
-        ],
-        isCheck: this.isKingInCheck(newBoard, nextPlayerColor),
-        isCheckmate: this.isCheckmate(newBoard, nextPlayerColor),
-        status: game?.status || "active",
-        whitePlayer: {
-            username: game?.whitePlayerName || "Unknown"
+      id: game_id.toString(),
+      fen: this.generateFEN(newBoard),
+      moves: [
+        {
+          from: moveDto.from,
+          to: moveDto.to,
+          piece: piece.type.toLowerCase(),
+          color: currentPlayerColor.toLowerCase(),
         },
-        blackPlayer: {
-            username: game?.blackPlayerName || "Unknown"
-        }
+      ],
+      isCheck: this.isKingInCheck(newBoard, nextPlayerColor),
+      isCheckmate: this.isCheckmate(newBoard, nextPlayerColor),
+      status: game?.status || "active",
+      whitePlayer: {
+        username: game?.whitePlayerName || "Unknown",
+      },
+      blackPlayer: {
+        username: game?.blackPlayerName || "Unknown",
+      },
     };
 
     return moveReturn;
   }
 
-
   // Méthode pour générer la chaîne FEN à partir du plateau
   private generateFEN(board: ChessBoard): string {
     const rows: string[] = [];
     for (let row = 8; row >= 1; row--) {
-        let rowString = '';
-        let emptyCount = 0;
-        for (const col of this.COLUMNS) {
-            const square = `${col}${row}`;
-            const piece = board[square];
-            if (piece) {
-                if (emptyCount > 0) {
-                    rowString += emptyCount.toString();
-                    emptyCount = 0;
-                }
-                rowString += piece.type.charAt(0).toUpperCase();
-            } else {
-                emptyCount++;
-            }
-        }
-        if (emptyCount > 0) {
+      let rowString = "";
+      let emptyCount = 0;
+      for (const col of this.COLUMNS) {
+        const square = `${col}${row}`;
+        const piece = board[square];
+        if (piece) {
+          if (emptyCount > 0) {
             rowString += emptyCount.toString();
+            emptyCount = 0;
+          }
+          rowString += piece.type.charAt(0).toUpperCase();
+        } else {
+          emptyCount++;
         }
-        rows.push(rowString);
+      }
+      if (emptyCount > 0) {
+        rowString += emptyCount.toString();
+      }
+      rows.push(rowString);
     }
-    const fen = rows.join('/') + ' ' + (this.getNextPlayerColor(board) === "WHITE" ? 'w' : 'b') + ' - - 0 1';
+    const fen =
+      rows.join("/") +
+      " " +
+      (this.getNextPlayerColor(board) === "WHITE" ? "w" : "b") +
+      " - - 0 1";
     return fen;
   }
-
 }
 
 export default new MoveService();

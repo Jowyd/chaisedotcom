@@ -16,8 +16,6 @@ let mockGameState: GameState = {
 export interface Move {
   from: string;
   to: string;
-  piece: string;
-  color: 'white' | 'black';
 }
 
 export interface GameState {
@@ -47,24 +45,25 @@ export const GameService = {
   },
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
-    axios.post(`${API_URL}games/${gameId}/move`, move);
+    try {
+      const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
+      console.log('response', respose);
 
-    // Mise à jour du state du jeu
-    mockGameState = {
-      ...mockGameState,
-      fen: updateFenAfterMove(move),
-      moves: [...mockGameState.moves, move],
-      turn: mockGameState.turn === 'white' ? 'black' : 'white',
-      isCheck: Math.random() < 0.2, // 20% de chance d'être en échec
-      isCheckmate: false,
-    };
+      // Mise à jour du state du jeu
+      mockGameState = {
+        ...mockGameState,
+        fen: updateFenAfterMove(move),
+        moves: [...mockGameState.moves, move],
+        turn: mockGameState.turn === 'white' ? 'black' : 'white',
+        isCheck: Math.random() < 0.2, // 20% de chance d'être en échec
+        isCheckmate: false,
+      };
 
-    // Simule une réponse d'erreur aléatoire
-    if (Math.random() < 0.1) {
-      throw new Error('Invalid move');
+      return mockGameState;
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-
-    return mockGameState;
   },
 
   async resign(gameId: string): Promise<void> {

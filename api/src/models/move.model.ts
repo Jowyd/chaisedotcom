@@ -61,6 +61,6 @@ Move.init(
   }
 );
 
-Move.belongsTo(Game, { foreignKey: "gameId" });
+Move.belongsTo(Game, { foreignKey: "game_id" });
 
 export default Move;

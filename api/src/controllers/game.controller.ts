@@ -23,57 +23,57 @@ import moveService from "../services/move.service";
 @Tags("Games")
 //@Security("jwt")
 export class GameController extends Controller {
-
   @Post("/")
   public async createGame(
     @Body() dto: CreateGameDTO
-  ): Promise<{ gameId: number }> {
+  ): Promise<{ game_id: number }> {
     try {
       const game = await gameService.createGame(dto);
 
-      return { gameId: game.id };
+      return { game_id: game.id };
     } catch (error) {
       this.setStatus(400);
       throw error;
     }
   }
 
-  @Get("/{gameId}/moves")
-  public async getMoves(@Path() gameId: number): Promise<ChessMove[]> {
+  @Get("/{game_id}/moves")
+  public async getMoves(@Path() game_id: number): Promise<ChessMove[]> {
     try {
-      return await gameService.getMovesByGame(gameId);
+      return await gameService.getMovesByGame(game_id);
     } catch (error) {
       this.setStatus(404);
       throw error;
     }
   }
 
-  @Post("/{gameId}/move")
+  @Post("/{game_id}/move")
   public async makeMove(
-    @Path() gameId: number,
+    @Path() game_id: number,
     @Body() move: MakeMoveDTO
   ): Promise<MoveReturnDTO> {
-    if (!gameId || !move.from || !move.to) {
+    console.log(move);
+    if (!game_id || !move.from || !move.to) {
       this.setStatus(400);
       throw new Error("Missing required fields");
     }
-    console.log("gameId", gameId, "move", move);
-    return await moveService.makeMove(gameId, move);
+    console.log("game_id", game_id, "move", move);
+    return await moveService.makeMove(game_id, move);
   }
 
-  @Delete("/{gameId}")
+  @Delete("/{game_id}")
   public async deleteGame(
-    @Path() gameId: number,
+    @Path() game_id: number,
     @Request() req: AuthRequest
   ): Promise<{ message: string }> {
     try {
       const user = req.user;
-      const game = await gameService.getGameById(gameId);
+      const game = await gameService.getGameById(game_id);
       if (game.user_id !== user.id) {
         this.setStatus(403);
         throw new Error("You are not allowed to delete this game");
       }
-      await gameService.deleteGame(gameId);
+      await gameService.deleteGame(game_id);
       return { message: "Game removed successfully" };
     } catch (error) {
       this.setStatus(404);

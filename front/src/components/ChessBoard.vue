@@ -162,8 +162,6 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
       const move: Move = {
         from: toAlgebraic(from.row, from.col),
         to: toAlgebraic(row, col),
-        piece: board.value[from.row][from.col]!.type,
-        color: board.value[from.row][from.col]!.color,
       };
       console.log('Making move:', move);
 

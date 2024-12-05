@@ -11,15 +11,8 @@ import { MoveReturnDTO } from "../dto/move.dto";
 import { ChessBoard } from "../interfaces/chess.interface";
 import moveService from "./move.service";
 
-
 class GameService {
-
-
-
-  async createGame(
-    dto: CreateGameDTO
-  ): Promise<Game> {
-
+  async createGame(dto: CreateGameDTO): Promise<Game> {
     return Game.create({
       user_id: dto.userId,
       whitePlayerName: dto.whitePlayerName,
@@ -28,8 +21,8 @@ class GameService {
     });
   }
 
-  async getGameById(gameId: number): Promise<Game> {
-    const game = await Game.findByPk(gameId);
+  async getGameById(game_id: number): Promise<Game> {
+    const game = await Game.findByPk(game_id);
 
     if (!game) {
       throw new Error("Partie non trouvée");
@@ -38,10 +31,10 @@ class GameService {
     return game;
   }
 
-  async getMovesByGame(gameId: number): Promise<ChessMove[]> {
+  async getMovesByGame(game_id: number): Promise<ChessMove[]> {
     const moves = await Move.findAll({
       where: {
-        gameId: gameId,
+        game_id: game_id,
       },
     });
     const chessMoves: ChessMove[] = moves.map((move) => {
@@ -64,8 +57,8 @@ class GameService {
     });
   }
 
-  async deleteGame(gameId: number): Promise<void> {
-    const game = await this.getGameById(gameId);
+  async deleteGame(game_id: number): Promise<void> {
+    const game = await this.getGameById(game_id);
     await game.destroy();
   }
 
@@ -84,7 +77,7 @@ class GameService {
       order: [["created_at", "DESC"]],
     });
     return games.map((game) => ({
-      gameId: game.id,
+      game_id: game.id,
       whitePlayerName: game.whitePlayerName,
       blackPlayerName: game.blackPlayerName,
       isPublic: game.isPublic,
@@ -96,10 +89,7 @@ class GameService {
   async getStats(username: string): Promise<number> {
     const user = await Game.findOne({
       where: {
-        [Op.or]: [
-          { whitePlayerName: username },
-          { blackPlayerName: username },
-        ],
+        [Op.or]: [{ whitePlayerName: username }, { blackPlayerName: username }],
       },
     });
     if (!user) {
@@ -107,13 +97,11 @@ class GameService {
     }
     const games = await Game.findAll({
       where: {
-        [Op.or]: [{winner:username}]
-      }
+        [Op.or]: [{ winner: username }],
+      },
     });
     return games.length;
   }
-
-
 }
 
 export const gameService = new GameService();
