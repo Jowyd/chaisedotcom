@@ -56,8 +56,12 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CreateGameRequest": {
+			"CreateGameDTO": {
 				"properties": {
+					"userId": {
+						"type": "number",
+						"format": "double"
+					},
 					"whitePlayerName": {
 						"type": "string"
 					},
@@ -69,6 +73,7 @@
 					}
 				},
 				"required": [
+					"userId",
 					"whitePlayerName",
 					"blackPlayerName",
 					"isPublic"
@@ -96,68 +101,81 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ChessPiece": {
-				"properties": {
-					"type": {
-						"type": "string",
-						"enum": [
-							"PAWN",
-							"ROOK",
-							"KNIGHT",
-							"BISHOP",
-							"QUEEN",
-							"KING"
-						]
-					},
-					"color": {
-						"type": "string",
-						"enum": [
-							"WHITE",
-							"BLACK"
-						]
-					},
-					"hasMoved": {
-						"type": "boolean"
-					}
-				},
-				"required": [
-					"type",
-					"color"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ChessBoard": {
-				"properties": {},
-				"type": "object",
-				"additionalProperties": {
-					"allOf": [
-						{
-							"$ref": "#/components/schemas/ChessPiece"
-						}
-					],
-					"nullable": true
-				}
-			},
 			"MoveReturnDTO": {
 				"properties": {
-					"board": {
-						"$ref": "#/components/schemas/ChessBoard"
-					},
-					"turn": {
+					"id": {
 						"type": "string"
 					},
-					"piecesTaken": {
+					"fen": {
+						"type": "string"
+					},
+					"moves": {
 						"items": {
-							"$ref": "#/components/schemas/ChessPiece"
+							"properties": {
+								"color": {
+									"type": "string"
+								},
+								"piece": {
+									"type": "string"
+								},
+								"to": {
+									"type": "string"
+								},
+								"from": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"color",
+								"piece",
+								"to",
+								"from"
+							],
+							"type": "object"
 						},
 						"type": "array"
+					},
+					"isCheck": {
+						"type": "boolean"
+					},
+					"isCheckmate": {
+						"type": "boolean"
+					},
+					"status": {
+						"type": "string"
+					},
+					"whitePlayer": {
+						"properties": {
+							"username": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"username"
+						],
+						"type": "object"
+					},
+					"blackPlayer": {
+						"properties": {
+							"username": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"username"
+						],
+						"type": "object"
 					}
 				},
 				"required": [
-					"board",
-					"turn",
-					"piecesTaken"
+					"id",
+					"fen",
+					"moves",
+					"isCheck",
+					"isCheckmate",
+					"status",
+					"whitePlayer",
+					"blackPlayer"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -443,7 +461,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/CreateGameRequest"
+								"$ref": "#/components/schemas/CreateGameDTO"
 							}
 						}
 					}

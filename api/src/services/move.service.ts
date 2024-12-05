@@ -587,25 +587,25 @@ export class MoveService {
     // Vérifier si le mouvement est valide
     const piece = board[moveDto.from];
     if (!piece) {
-      throw new Error("Aucune pièce à cette position");
+        throw new Error("Aucune pièce à cette position");
     }
     
     const isValidMove = this.validateMove(
-      board,
-      moveDto.from,
-      moveDto.to,
-      currentPlayerColor
+        board,
+        moveDto.from,
+        moveDto.to,
+        currentPlayerColor
     );
 
     if (!isValidMove) {
-      throw new Error("Mouvement invalide");
+        throw new Error("Mouvement invalide");
     }
 
     // Capturer la pièce si présente sur la case de destination
     const piecesTaken: ChessPiece[] = [];
     const capturedPiece = board[moveDto.to];
     if (capturedPiece) {
-      piecesTaken.push(capturedPiece);
+        piecesTaken.push(capturedPiece);
     }
 
     // Effectuer le mouvement
@@ -621,19 +621,63 @@ export class MoveService {
     const game = await Game.findByPk(gameId);
 
     if (this.isCheckmate(newBoard, nextPlayerColor)) {
-      await game?.update({ status: "CHECKMATE" });
+        await game?.update({ status: "CHECKMATE" });
     } else if (this.isStalemate(newBoard, nextPlayerColor)) {
-      await game?.update({ status: "DRAW" });
+        await game?.update({ status: "DRAW" });
     }
 
     // Préparer la réponse
-    const moveReturn: MoveReturnDTO = {
-      board: newBoard,
-      turn: nextPlayerColor,
-      piecesTaken: piecesTaken
+    const moveReturn = {
+        id: gameId.toString(),
+        fen: this.generateFEN(newBoard),
+        moves: [
+            {
+                from: moveDto.from,
+                to: moveDto.to,
+                piece: piece.type.toLowerCase(),
+                color: currentPlayerColor.toLowerCase()
+            }
+        ],
+        isCheck: this.isKingInCheck(newBoard, nextPlayerColor),
+        isCheckmate: this.isCheckmate(newBoard, nextPlayerColor),
+        status: game?.status || "active",
+        whitePlayer: {
+            username: game?.whitePlayerName || "Unknown"
+        },
+        blackPlayer: {
+            username: game?.blackPlayerName || "Unknown"
+        }
     };
 
     return moveReturn;
+  }
+
+  // Méthode pour générer la chaîne FEN à partir du plateau
+  private generateFEN(board: ChessBoard): string {
+    const rows: string[] = [];
+    for (let row = 8; row >= 1; row--) {
+        let rowString = '';
+        let emptyCount = 0;
+        for (const col of this.COLUMNS) {
+            const square = `${col}${row}`;
+            const piece = board[square];
+            if (piece) {
+                if (emptyCount > 0) {
+                    rowString += emptyCount.toString();
+                    emptyCount = 0;
+                }
+                rowString += piece.type.charAt(0).toUpperCase(); // Utiliser la première lettre du type
+            } else {
+                emptyCount++;
+            }
+        }
+        if (emptyCount > 0) {
+            rowString += emptyCount.toString();
+        }
+        rows.push(rowString);
+    }
+    const fen = rows.join('/') + ' ' + (this.getNextPlayerColor(board) === "WHITE" ? 'w' : 'b') + ' - - 0 1';
+    return fen;
   }
 
 }

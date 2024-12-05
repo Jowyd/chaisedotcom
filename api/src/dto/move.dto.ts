@@ -14,8 +14,23 @@ export interface MakeMoveDTO {
 }
 
 export interface MoveReturnDTO {
-    board: ChessBoard;
-    turn: string;
-    piecesTaken: ChessPiece[];
+    id: string;
+    fen: string;
+    moves: {
+        from: string;
+        to: string;
+        piece: string;
+        color: string;
+    }[];
+    isCheck: boolean;
+    isCheckmate: boolean;
+    status: string;
+    whitePlayer: {
+        username: string;
+    };
+    blackPlayer: {
+        username: string;
+    };
 }
+
 
