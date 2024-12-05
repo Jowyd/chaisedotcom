@@ -63,6 +63,7 @@ watch(isDialogVisible, (newVal) => {
   <Dialog
     v-model:visible="isDialogVisible"
     modal
+    appendTo=""
     header="Create New Game"
     :style="{ width: '90%', maxWidth: '500px' }"
     :closable="true"
