@@ -1,19 +1,18 @@
 import { createApp } from 'vue';
-import App from './App.vue';
 import PrimeVue from 'primevue/config';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
-import Sidebar from 'primevue/sidebar';
-import Menu from 'primevue/menu';
 import Avatar from 'primevue/avatar';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
 import Lara from '@primevue/themes/lara';
+
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+import App from './App.vue';
+import router from './router';
+
 import 'primeicons/primeicons.css';
-import 'primeflex/primeflex.css';
-import router from '@/router';
 import './styles.css';
+import Tooltip from 'primevue/tooltip';
 
 const app = createApp(App);
 
@@ -23,17 +22,13 @@ app.use(PrimeVue, {
   },
 });
 app.use(router);
-app.use(PrimeVue, {
-  theme: {
-    preset: Lara,
-  },
-});
+
 app.component('Button', Button);
 app.component('Card', Card);
-app.component('Sidebar', Sidebar);
-app.component('Menu', Menu);
 app.component('Avatar', Avatar);
-app.component('Dialog', Dialog);
-app.component('InputText', InputText);
-app.component('Dropdown', Dropdown);
+app.component('TabView', TabView);
+app.component('TabPanel', TabPanel);
+
+app.directive('tooltip', Tooltip);
+
 app.mount('#app');

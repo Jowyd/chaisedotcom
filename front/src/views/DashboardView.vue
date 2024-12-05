@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import CreateGameDialog from '@/components/CreateGameDialog.vue';
+import ChessBoard from '@/components/ChessBoard.vue';
 
 const showCreateGame = ref(false);
 
@@ -82,8 +83,40 @@ const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }
           </Card>
         </div>
 
-        <!-- Recent Games -->
+        <!-- Chess Board -->
         <div class="col-12 lg:col-8">
+          <Card>
+            <template #title>Current Game</template>
+            <template #content>
+              <ChessBoard />
+            </template>
+          </Card>
+        </div>
+
+        <!-- Achievements -->
+        <div class="col-12 lg:col-4">
+          <Card>
+            <template #title>Achievements</template>
+            <template #content>
+              <div class="flex flex-column gap-3">
+                <div
+                  v-for="achievement in achievements"
+                  :key="achievement.name"
+                  class="flex align-items-center p-3 border-round surface-ground"
+                >
+                  <i :class="achievement.icon" class="text-xl mr-3 text-primary"></i>
+                  <div>
+                    <div class="font-medium">{{ achievement.name }}</div>
+                    <div class="text-500">{{ achievement.description }}</div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </Card>
+        </div>
+
+        <!-- Recent Games -->
+        <div class="col-12">
           <Card>
             <template #title>Recent Games</template>
             <template #content>
@@ -110,28 +143,6 @@ const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }
                       >{{ game.result }}</span
                     >
                     <span class="font-medium">{{ game.rating }}</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </Card>
-        </div>
-
-        <!-- Achievements -->
-        <div class="col-12 lg:col-4">
-          <Card>
-            <template #title>Achievements</template>
-            <template #content>
-              <div class="flex flex-column gap-3">
-                <div
-                  v-for="achievement in achievements"
-                  :key="achievement.name"
-                  class="flex align-items-center p-3 border-round surface-ground"
-                >
-                  <i :class="achievement.icon" class="text-xl mr-3 text-primary"></i>
-                  <div>
-                    <div class="font-medium">{{ achievement.name }}</div>
-                    <div class="text-500">{{ achievement.description }}</div>
                   </div>
                 </div>
               </div>
