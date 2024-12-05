@@ -275,7 +275,7 @@ watch(capturedPieces, (newValue) => {
 </script>
 
 <template>
-  <div class="chess-board-container">
+  <div class="chess-board-container m-auto">
     <!-- Pièces capturées par les blancs -->
     <div class="captured-pieces white mb-2">
       <div class="captured-pieces-header">
@@ -311,7 +311,7 @@ watch(capturedPieces, (newValue) => {
         </div>
       </div>
 
-      <div class="flex col">
+      <div class="flex flex-column">
         <div class="top flex">
           <div
             v-for="file in playerColor === 'black' ? [...files].reverse() : files"
@@ -351,17 +351,6 @@ watch(capturedPieces, (newValue) => {
         </div>
       </div>
       <!-- Chess board -->
-
-      <!-- Files labels (bottom) -->
-      <!-- <div class="files-labels bottom">
-        <div
-          v-for="file in playerColor === 'black' ? [...files].reverse() : files"
-          :key="`bottom-${file}`"
-          class="label"
-        >
-          {{ file }}
-        </div>
-      </div> -->
     </div>
 
     <!-- Pièces capturées par les noirs -->

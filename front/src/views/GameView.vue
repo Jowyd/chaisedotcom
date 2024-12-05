@@ -91,22 +91,39 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
         </div>
       </div>
 
-      <div class="col-12 md:col-9 p-3">
+      <div class="col-12 md:col-9 p-3 w-full">
         <div class="game-container surface-section border-round shadow-1 p-3">
           <!-- Black Player Info -->
-          <div
-            class="player-info flex justify-content-between align-items-center mb-3"
-            :class="{ 'order-1': playerColor === 'black' }"
-          >
-            <div class="flex align-items-center gap-3">
-              <Avatar icon="pi pi-user" size="large" />
-              <div>
-                <div class="text-xl font-bold">{{ gameInfo.opponent }}</div>
-                <div class="text-500">Rating: {{ gameInfo.opponentRating }}</div>
+          <div class="flex justify-content-between align-items-center">
+            <div
+              class="player-info flex justify-content-between align-items-center p-2 border-round-md"
+              :class="{ 'order-1': playerColor === 'black' }"
+            >
+              <div class="flex align-items-center gap-3">
+                <Avatar icon="pi pi-user" size="large" />
+                <div>
+                  <div class="text-xl font-bold">{{ gameInfo.opponent }}</div>
+                  <div class="text-500">Rating: {{ gameInfo.opponentRating }}</div>
+                </div>
+              </div>
+              <div class="time-display text-3xl font-bold">
+                {{ formatTime(gameInfo.timeBlack) }}
               </div>
             </div>
-            <div class="time-display text-3xl font-bold">
-              {{ formatTime(gameInfo.timeBlack) }}
+            <div
+              class="player-info flex justify-content-between align-items-center p-2 border-round-md active-player"
+              :class="{ 'order-0': playerColor === 'black' }"
+            >
+              <div class="flex align-items-center gap-3">
+                <Avatar icon="pi pi-user" size="large" />
+                <div>
+                  <div class="text-xl font-bold">You</div>
+                  <div class="text-500">Rating: 1500</div>
+                </div>
+              </div>
+              <div class="time-display text-3xl font-bold">
+                {{ formatTime(gameInfo.timeWhite) }}
+              </div>
             </div>
           </div>
 
@@ -114,21 +131,6 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
           <ChessBoard :player-color="playerColor" v-model:captured-pieces="capturedPieces" />
 
           <!-- White Player Info -->
-          <div
-            class="player-info flex justify-content-between align-items-center mt-3"
-            :class="{ 'order-0': playerColor === 'black' }"
-          >
-            <div class="flex align-items-center gap-3">
-              <Avatar icon="pi pi-user" size="large" />
-              <div>
-                <div class="text-xl font-bold">You</div>
-                <div class="text-500">Rating: 1500</div>
-              </div>
-            </div>
-            <div class="time-display text-3xl font-bold">
-              {{ formatTime(gameInfo.timeWhite) }}
-            </div>
-          </div>
 
           <!-- Game Controls -->
           <div class="game-controls flex justify-content-center gap-3 mt-4">
@@ -188,5 +190,9 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
 
 .order-1 {
   order: 1;
+}
+
+.active-player {
+  border: 2px solid white;
 }
 </style>
