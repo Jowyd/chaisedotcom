@@ -57,6 +57,7 @@ Move.init(
   {
     sequelize,
     modelName: "Move",
+    tableName: "moves",
   }
 );
 

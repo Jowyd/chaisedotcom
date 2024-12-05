@@ -19,8 +19,6 @@ import { ChessMove } from "../interfaces/chess.interface";
 import { MakeMoveDTO, MoveReturnDTO } from "../dto/move.dto";
 import moveService from "../services/move.service";
 
-
-
 @Route("games")
 @Tags("Games")
 //@Security("jwt")
@@ -50,16 +48,18 @@ export class GameController extends Controller {
     }
   }
 
-
   @Post("/{gameId}/move")
-  public async makeMove(@Path() gameId: number ,@Body() move: MakeMoveDTO): Promise<MoveReturnDTO> {
+  public async makeMove(
+    @Path() gameId: number,
+    @Body() move: MakeMoveDTO
+  ): Promise<MoveReturnDTO> {
     if (!gameId || !move.from || !move.to) {
       this.setStatus(400);
       throw new Error("Missing required fields");
     }
+    console.log("gameId", gameId, "move", move);
     return await moveService.makeMove(gameId, move);
   }
-
 
   @Delete("/{gameId}")
   public async deleteGame(
