@@ -2,7 +2,7 @@ import { Game } from "../models/game.model";
 import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
-import { GameHistoryDTO } from "../dto/game.dto";
+import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
 import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
 import { GameState } from "../interfaces/game.interface";
 import { MoveOptions } from "../interfaces/move.interface";
@@ -17,18 +17,14 @@ class GameService {
 
 
   async createGame(
-    whitePlayerName: string,
-    blackPlayerName: string,
-    isPublic: boolean = false
+    dto: CreateGameDTO
   ): Promise<Game> {
-    const initialBoard = moveService.getInitialBoard();
 
     return Game.create({
-      whitePlayerName,
-      blackPlayerName,
-      isPublic,
-      status: "in_progress",
-      currentState: JSON.stringify(initialBoard),
+      user_id: dto.userId,
+      whitePlayerName: dto.whitePlayerName,
+      blackPlayerName: dto.blackPlayerName,
+      isPublic: dto.isPublic,
     });
   }
 

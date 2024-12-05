@@ -56,6 +56,46 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"CreateGameRequest": {
+				"properties": {
+					"whitePlayerName": {
+						"type": "string"
+					},
+					"blackPlayerName": {
+						"type": "string"
+					},
+					"isPublic": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"whitePlayerName",
+					"blackPlayerName",
+					"isPublic"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ChessMove": {
+				"properties": {
+					"from": {
+						"type": "string"
+					},
+					"to": {
+						"type": "string"
+					},
+					"piece": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"from",
+					"to",
+					"piece"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ChessPiece": {
 				"properties": {
 					"type": {
@@ -124,61 +164,16 @@
 			},
 			"MakeMoveDTO": {
 				"properties": {
-					"gameId": {
-						"type": "number",
-						"format": "double"
-					},
 					"from": {
 						"type": "string"
 					},
 					"to": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"gameId",
-					"from",
-					"to"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"CreateGameRequest": {
-				"properties": {
-					"whitePlayerName": {
-						"type": "string"
-					},
-					"blackPlayerName": {
-						"type": "string"
-					},
-					"isPublic": {
-						"type": "boolean"
-					}
-				},
-				"required": [
-					"whitePlayerName",
-					"blackPlayerName",
-					"isPublic"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ChessMove": {
-				"properties": {
-					"from": {
-						"type": "string"
-					},
-					"to": {
-						"type": "string"
-					},
-					"piece": {
 						"type": "string"
 					}
 				},
 				"required": [
 					"from",
-					"to",
-					"piece"
+					"to"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -414,38 +409,6 @@
 				}
 			}
 		},
-		"/moves": {
-			"post": {
-				"operationId": "MakeMove",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/MoveReturnDTO"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Moves"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/MakeMoveDTO"
-							}
-						}
-					}
-				}
-			}
-		},
 		"/games": {
 			"post": {
 				"operationId": "CreateGame",
@@ -530,7 +493,9 @@
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {
+									"$ref": "#/components/schemas/MoveReturnDTO"
+								}
 							}
 						}
 					}

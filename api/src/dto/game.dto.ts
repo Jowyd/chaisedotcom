@@ -6,3 +6,11 @@ export interface GameHistoryDTO {
     winner: string | null;
     status: string;
   }
+
+export interface CreateGameDTO {
+    userId: number;
+    whitePlayerName: string;
+    blackPlayerName: string;
+    isPublic: boolean;
+}
+

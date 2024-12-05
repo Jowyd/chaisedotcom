@@ -14,10 +14,9 @@ import {
 import { gameService } from "../services/game.service";
 import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
-import { GameHistoryDTO } from "../dto/game.dto";
+import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
 import { ChessMove } from "../interfaces/chess.interface";
 import { MakeMoveDTO, MoveReturnDTO } from "../dto/move.dto";
-import { CreateGameRequest } from "../interfaces/game.interface";
 import moveService from "../services/move.service";
 
 
@@ -26,20 +25,17 @@ import moveService from "../services/move.service";
 @Tags("Games")
 //@Security("jwt")
 export class GameController extends Controller {
+
   @Post("/")
   public async createGame(
-    @Body() request: CreateGameRequest
+    @Body() dto: CreateGameDTO
   ): Promise<{ gameId: number }> {
     try {
-      const game = await gameService.createGame(
-        request.whitePlayerName,
-        request.blackPlayerName,
-        request.isPublic
-      );
+      const game = await gameService.createGame(dto);
 
       return { gameId: game.id };
     } catch (error) {
-      this.setStatus(500);
+      this.setStatus(400);
       throw error;
     }
   }
