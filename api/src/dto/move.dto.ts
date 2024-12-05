@@ -9,7 +9,6 @@ export interface MoveDTO {
 }
 
 export interface MakeMoveDTO {
-    gameId: number;
     from: string;
     to: string;
 }

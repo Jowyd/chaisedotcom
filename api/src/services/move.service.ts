@@ -43,6 +43,10 @@ export class MoveService {
     g7: { type: "PAWN", color: "BLACK" },
     h7: { type: "PAWN", color: "BLACK" },
   };
+  
+  public getInitialBoard(): ChessBoard {
+    return this.initialBoard;
+  }
 
   private COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   private ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -573,9 +577,9 @@ export class MoveService {
     return squares;
   }
 
-  async makeMove(moveDto: MakeMoveDTO): Promise<MoveReturnDTO> {
+  async makeMove(gameId: number, moveDto: MakeMoveDTO): Promise<MoveReturnDTO> {
     // Récupérer l'état actuel du jeu
-    const { board, moves } = await this.reconstructGameState(moveDto.gameId);
+    const { board, moves } = await this.reconstructGameState(gameId);
     
     // Déterminer le tour actuel
     const currentPlayerColor = this.getNextPlayerColor(board);
@@ -610,11 +614,11 @@ export class MoveService {
     newBoard[moveDto.from] = null;
 
     // Enregistrer le mouvement dans la base de données
-    await this.recordMove(moveDto.gameId, moveDto.from, moveDto.to, piece);
+    await this.recordMove(gameId, moveDto.from, moveDto.to, piece);
 
     // Vérifier l'état du jeu après le mouvement
     const nextPlayerColor = currentPlayerColor === "WHITE" ? "BLACK" : "WHITE";
-    const game = await Game.findByPk(moveDto.gameId);
+    const game = await Game.findByPk(gameId);
 
     if (this.isCheckmate(newBoard, nextPlayerColor)) {
       await game?.update({ status: "CHECKMATE" });

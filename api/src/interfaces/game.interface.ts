@@ -6,3 +6,9 @@ export interface GameState {
     moveHistory: ChessMove[];
     status: "in_progress" | "checkmate" | "stalemate" | "draw";
   }
+
+  export interface CreateGameRequest {
+    whitePlayerName: string;
+    blackPlayerName: string;
+    isPublic: boolean;
+  }

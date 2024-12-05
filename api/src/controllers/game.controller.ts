@@ -16,13 +16,11 @@ import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
 import { GameHistoryDTO } from "../dto/game.dto";
 import { ChessMove } from "../interfaces/chess.interface";
-import { MakeMoveDTO } from "../dto/move.dto";
+import { MakeMoveDTO, MoveReturnDTO } from "../dto/move.dto";
+import { CreateGameRequest } from "../interfaces/game.interface";
+import moveService from "../services/move.service";
 
-interface CreateGameRequest {
-  whitePlayerName: string;
-  blackPlayerName: string;
-  isPublic: boolean;
-}
+
 
 @Route("games")
 @Tags("Games")
@@ -56,54 +54,16 @@ export class GameController extends Controller {
     }
   }
 
-  @Post("{gameId}/move")
-  public async makeMove(
-    @Path() gameId: number,
-    @Body() moveData: MakeMoveDTO
-  ): Promise<any> {
-    try {
-      console.log("gameId", gameId, "moveData", moveData);
-      //  return await gameService.makeMove(gameId, moveData);
-    } catch (error) {
+
+  @Post("/{gameId}/move")
+  public async makeMove(@Path() gameId: number ,@Body() move: MakeMoveDTO): Promise<MoveReturnDTO> {
+    if (!gameId || !move.from || !move.to) {
       this.setStatus(400);
-      throw error;
+      throw new Error("Missing required fields");
     }
+    return await moveService.makeMove(gameId, move);
   }
-  //   @Get("/{gameId}")
-  //   @Security("jwt")
-  //   public async getGame(@Path() gameId: number): Promise<Game> {
-  //     try {
-  //       return await GameService.getGameById(gameId);
-  //     } catch (error) {
-  //       this.setStatus(404);
-  //       throw error;
-  //     }
-  //   }
 
-  //   @Put("/{gameId}/move")
-  //   @Security("jwt")
-  //   public async makeMove(
-  //     @Path() gameId: number,
-  //     @Body() moveData: ChessMove
-  //   ): Promise<Game> {
-  //     try {
-  //       return await GameService.makeMove(gameId, moveData);
-  //     } catch (error) {
-  //       this.setStatus(400);
-  //       throw error;
-  //     }
-  //   }
-
-  //   @Get("/user/{userId}")
-  //   @Security("jwt")
-  //   public async getUserGames(@Path() userId: number): Promise<Game[]> {
-  //     try {
-  //       return await GameService.getUserGames(userId);
-  //     } catch (error) {
-  //       this.setStatus(500);
-  //       throw error;
-  //     }
-  //   }
 
   @Delete("/{gameId}")
   public async deleteGame(
