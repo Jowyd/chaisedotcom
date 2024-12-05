@@ -22,7 +22,7 @@ import { AuthRequest } from "../dto/auth.dto";
 
 @Route("users")
 @Tags("Users")
-@Security("jwt")
+// @Security("jwt")
 export class UserController extends Controller {
   // Récupère tous les utilisateurs
 

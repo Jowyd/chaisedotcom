@@ -1,23 +1,12 @@
 import { Op } from "sequelize";
 import { Game } from "../models/game.model";
 import Move from "../models/move.model";
+import { ChessMove } from "../interfaces/chess.interface";
+import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
+import { MoveOptions } from "../interfaces/move.interface";
+import { MakeMoveDTO } from "../dto/move.dto";
+import { MoveReturnDTO } from "../dto/move.dto";
 
-interface ChessPiece {
-  type: "PAWN" | "ROOK" | "KNIGHT" | "BISHOP" | "QUEEN" | "KING";
-  color: "WHITE" | "BLACK";
-  hasMoved?: boolean;
-}
-
-interface ChessBoard {
-  [square: string]: ChessPiece | null;
-}
-
-interface MoveOptions {
-  isPromotion?: boolean;
-  promotionPiece?: "QUEEN" | "ROOK" | "KNIGHT" | "BISHOP";
-  isCastle?: "KINGSIDE" | "QUEENSIDE" | null;
-  isEnPassant?: boolean;
-}
 
 export class MoveService {
   private initialBoard: ChessBoard = {
@@ -57,6 +46,7 @@ export class MoveService {
 
   private COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   private ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
+
 
   private validatePawnMove(
     board: ChessBoard,
@@ -582,6 +572,66 @@ export class MoveService {
     }
     return squares;
   }
+
+  async makeMove(moveDto: MakeMoveDTO): Promise<MoveReturnDTO> {
+    // Récupérer l'état actuel du jeu
+    const { board, moves } = await this.reconstructGameState(moveDto.gameId);
+    
+    // Déterminer le tour actuel
+    const currentPlayerColor = this.getNextPlayerColor(board);
+    
+    // Vérifier si le mouvement est valide
+    const piece = board[moveDto.from];
+    if (!piece) {
+      throw new Error("Aucune pièce à cette position");
+    }
+    
+    const isValidMove = this.validateMove(
+      board,
+      moveDto.from,
+      moveDto.to,
+      currentPlayerColor
+    );
+
+    if (!isValidMove) {
+      throw new Error("Mouvement invalide");
+    }
+
+    // Capturer la pièce si présente sur la case de destination
+    const piecesTaken: ChessPiece[] = [];
+    const capturedPiece = board[moveDto.to];
+    if (capturedPiece) {
+      piecesTaken.push(capturedPiece);
+    }
+
+    // Effectuer le mouvement
+    const newBoard = { ...board };
+    newBoard[moveDto.to] = newBoard[moveDto.from];
+    newBoard[moveDto.from] = null;
+
+    // Enregistrer le mouvement dans la base de données
+    await this.recordMove(moveDto.gameId, moveDto.from, moveDto.to, piece);
+
+    // Vérifier l'état du jeu après le mouvement
+    const nextPlayerColor = currentPlayerColor === "WHITE" ? "BLACK" : "WHITE";
+    const game = await Game.findByPk(moveDto.gameId);
+
+    if (this.isCheckmate(newBoard, nextPlayerColor)) {
+      await game?.update({ status: "CHECKMATE" });
+    } else if (this.isStalemate(newBoard, nextPlayerColor)) {
+      await game?.update({ status: "DRAW" });
+    }
+
+    // Préparer la réponse
+    const moveReturn: MoveReturnDTO = {
+      board: newBoard,
+      turn: nextPlayerColor,
+      piecesTaken: piecesTaken
+    };
+
+    return moveReturn;
+  }
+
 }
 
 export default new MoveService();

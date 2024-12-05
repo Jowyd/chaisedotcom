@@ -3,19 +3,9 @@ import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
 import { GameHistoryDTO } from "../dto/game.dto";
+import { ChessMove } from "../interfaces/chess.interface";
+import { GameState } from "../interfaces/game.interface";
 
-export interface ChessMove {
-  from: string;
-  to: string;
-  piece: string;
-}
-
-export interface GameState {
-  board: string[][];
-  currentPlayer: "white" | "black";
-  moveHistory: ChessMove[];
-  status: "in_progress" | "checkmate" | "stalemate" | "draw";
-}
 
 class GameService {
   async createGame(
@@ -104,7 +94,7 @@ class GameService {
       blackPlayerName: game.blackPlayerName,
       isPublic: game.isPublic,
       winner: game.winner,
-      status: game.status
+      status: game.status,
     }));
   }
 

@@ -11,10 +11,12 @@ import {
   Tags,
   Request,
 } from "tsoa";
-import { gameService, ChessMove } from "../services/game.service";
+import { gameService } from "../services/game.service";
 import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
 import { GameHistoryDTO } from "../dto/game.dto";
+import { ChessMove } from "../interfaces/chess.interface";
+
 
 interface CreateGameRequest {
   whitePlayerName: string;
@@ -24,7 +26,7 @@ interface CreateGameRequest {
 
 @Route("games")
 @Tags("Games")
-@Security("jwt")
+//@Security("jwt")
 export class GameController extends Controller {
   @Post("/")
   public async createGame(
@@ -45,7 +47,6 @@ export class GameController extends Controller {
   }
 
   @Get("/moves/{gameId}")
-  @Security("jwt")
   public async getMoves(@Path() gameId: number): Promise<ChessMove[]> {
     try {
       return await gameService.getMovesByGame(gameId);
@@ -91,7 +92,6 @@ export class GameController extends Controller {
   //   }
 
   @Delete("/{gameId}")
-  @Security("jwt")
   public async deleteGame(
     @Path() gameId: number,
     @Request() req: AuthRequest
@@ -112,14 +112,12 @@ export class GameController extends Controller {
   }
 
   @Get("/history")
-  @Security("jwt")
   public async getHistory(@Request() req: AuthRequest): Promise<GameHistoryDTO[]> {
     const user = req.user;
     return await gameService.getHistory(user.id);
   }
 
   @Get("/stats/{username}")
-  @Security("jwt")
   public async getStats(@Path() username: string): Promise<{ stats: number }> {
     const stats = await gameService.getStats(username);
     return {stats};

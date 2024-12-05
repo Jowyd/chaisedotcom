@@ -56,6 +56,93 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ChessPiece": {
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"PAWN",
+							"ROOK",
+							"KNIGHT",
+							"BISHOP",
+							"QUEEN",
+							"KING"
+						]
+					},
+					"color": {
+						"type": "string",
+						"enum": [
+							"WHITE",
+							"BLACK"
+						]
+					},
+					"hasMoved": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"type",
+					"color"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ChessBoard": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"allOf": [
+						{
+							"$ref": "#/components/schemas/ChessPiece"
+						}
+					],
+					"nullable": true
+				}
+			},
+			"MoveReturnDTO": {
+				"properties": {
+					"board": {
+						"$ref": "#/components/schemas/ChessBoard"
+					},
+					"turn": {
+						"type": "string"
+					},
+					"piecesTaken": {
+						"items": {
+							"$ref": "#/components/schemas/ChessPiece"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"board",
+					"turn",
+					"piecesTaken"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MakeMoveDTO": {
+				"properties": {
+					"gameId": {
+						"type": "number",
+						"format": "double"
+					},
+					"from": {
+						"type": "string"
+					},
+					"to": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"gameId",
+					"from",
+					"to"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CreateGameRequest": {
 				"properties": {
 					"whitePlayerName": {
@@ -203,11 +290,7 @@
 				"tags": [
 					"Users"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": []
 			}
 		},
@@ -232,11 +315,7 @@
 				"tags": [
 					"Users"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": []
 			},
 			"post": {
@@ -256,11 +335,7 @@
 				"tags": [
 					"Users"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -285,11 +360,7 @@
 				"tags": [
 					"Users"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
@@ -319,11 +390,7 @@
 				"tags": [
 					"Users"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
@@ -341,6 +408,38 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/UserInputPatchDTO"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/moves": {
+			"post": {
+				"operationId": "MakeMove",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MoveReturnDTO"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Moves"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MakeMoveDTO"
 							}
 						}
 					}
@@ -374,11 +473,7 @@
 				"tags": [
 					"Games"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -413,11 +508,7 @@
 				"tags": [
 					"Games"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
@@ -457,11 +548,7 @@
 				"tags": [
 					"Games"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
@@ -496,11 +583,7 @@
 				"tags": [
 					"Games"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": []
 			}
 		},
@@ -531,11 +614,7 @@
 				"tags": [
 					"Games"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
