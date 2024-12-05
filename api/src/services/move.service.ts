@@ -4,11 +4,26 @@ import Move from "../models/move.model";
 import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
 import { MoveOptions } from "../interfaces/move.interface";
-import { MakeMoveDTO } from "../dto/move.dto";
+import { MakeMoveDTO, MoveCreateDTO } from "../dto/move.dto";
 import { MoveReturnDTO } from "../dto/move.dto";
 
 
 export class MoveService {
+
+  async createMove(dto:MoveCreateDTO){
+    return Move.create({
+      game_id: dto.game_id,
+      from: dto.from,
+      to: dto.to,
+      piece: dto.piece,
+      type: dto.type,
+      isCheck: dto.isCheck,
+      isCheckmate: dto.isCheckmate,
+      turn: dto.turn,
+    });
+  } 
+
+
   private initialBoard: ChessBoard = {
     a1: { type: "ROOK", color: "WHITE" },
     b1: { type: "KNIGHT", color: "WHITE" },
@@ -200,8 +215,8 @@ export class MoveService {
     let board = { ...this.initialBoard };
 
     for (const move of moves) {
-      board[move.toSquare] = board[move.fromSquare];
-      board[move.fromSquare] = null;
+      board[move.to] = board[move.from];
+      board[move.from] = null;
     }
 
     return { board, moves };
@@ -400,7 +415,7 @@ export class MoveService {
     const kingSquare = this.findKingSquare(board, color);
     if (!kingSquare) return false;
 
-    // Vérifier si le roi est attaqué par n'importe quelle pièce adverse
+    // Vérifier si le roi est attaqué par n'importe quelle pi��ce adverse
     return this.isSquareUnderAttack(board, kingSquare, color);
   }
 
@@ -620,13 +635,29 @@ export class MoveService {
     const nextPlayerColor = currentPlayerColor === "WHITE" ? "BLACK" : "WHITE";
     const game = await Game.findByPk(gameId);
 
+    let check = false;
+    let checkmate = false;
     if (this.isCheckmate(newBoard, nextPlayerColor)) {
+        check = true;
         await game?.update({ status: "CHECKMATE" });
     } else if (this.isStalemate(newBoard, nextPlayerColor)) {
+        checkmate = true;
         await game?.update({ status: "DRAW" });
     }
 
-    // Préparer la réponse
+    const moveCreate: MoveCreateDTO = {
+        game_id: gameId,
+        from: moveDto.from,
+        to: moveDto.to,
+        piece: piece.type,
+        type: "normal",
+        isCheck: check,
+        isCheckmate: checkmate,
+        turn: currentPlayerColor,
+    };
+
+    await this.createMove(moveCreate);
+
     const moveReturn = {
         id: gameId.toString(),
         fen: this.generateFEN(newBoard),
@@ -652,6 +683,7 @@ export class MoveService {
     return moveReturn;
   }
 
+
   // Méthode pour générer la chaîne FEN à partir du plateau
   private generateFEN(board: ChessBoard): string {
     const rows: string[] = [];
@@ -666,7 +698,7 @@ export class MoveService {
                     rowString += emptyCount.toString();
                     emptyCount = 0;
                 }
-                rowString += piece.type.charAt(0).toUpperCase(); // Utiliser la première lettre du type
+                rowString += piece.type.charAt(0).toUpperCase();
             } else {
                 emptyCount++;
             }

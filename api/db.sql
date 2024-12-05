@@ -29,9 +29,12 @@ CREATE TABLE IF NOT EXISTS moves (
     id INT AUTO_INCREMENT PRIMARY KEY,
     game_id INT NOT NULL,
     piece VARCHAR(10) NOT NULL,
-    from_pos VARCHAR(5) NOT NULL,
-    to_pos VARCHAR(5) NOT NULL,
-    turn INT NOT NULL,
+    `from` VARCHAR(5) NOT NULL,
+    `to` VARCHAR(5) NOT NULL,
+    `type` VARCHAR(255) DEFAULT 'normal',
+    isCheck BOOLEAN DEFAULT FALSE,
+    isCheckmate BOOLEAN DEFAULT FALSE,
+    turn VARCHAR(25) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (game_id) REFERENCES games (id)
 );

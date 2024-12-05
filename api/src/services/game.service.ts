@@ -46,8 +46,8 @@ class GameService {
     });
     const chessMoves: ChessMove[] = moves.map((move) => {
       return {
-        from: move.fromSquare,
-        to: move.toSquare,
+        from: move.from,
+        to: move.to,
         piece: move.piece,
       };
     });

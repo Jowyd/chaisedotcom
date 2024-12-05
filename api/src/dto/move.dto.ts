@@ -33,4 +33,14 @@ export interface MoveReturnDTO {
     };
 }
 
+export interface MoveCreateDTO{
+    game_id: number;
+    from: string;
+    to: string;
+    piece: string;
+    type: string;
+    isCheck?: boolean;
+    isCheckmate?: boolean;
+    turn: string
+}
 

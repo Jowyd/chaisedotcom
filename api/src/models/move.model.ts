@@ -4,14 +4,14 @@ import { Game } from "./game.model";
 
 class Move extends Model {
   public id!: number;
-  public gameId!: number;
-  public fromSquare!: string;
-  public toSquare!: string;
+  public game_id!: number;
+  public from!: string;
+  public to!: string;
   public piece!: string;
-  public isCapture?: boolean;
-  public isPromotion?: boolean;
+  public type!: string;
   public isCheck?: boolean;
   public isCheckmate?: boolean;
+  public turn!: string;
 }
 
 Move.init(
@@ -21,25 +21,25 @@ Move.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    fromSquare: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    toSquare: {
-      type: DataTypes.STRING,
+    game_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     piece: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    isCapture: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    from: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    isPromotion: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    to: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     isCheck: {
       type: DataTypes.BOOLEAN,
@@ -48,6 +48,10 @@ Move.init(
     isCheckmate: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    turn: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   },
   {
