@@ -12,6 +12,7 @@ import router from './router';
 
 import 'primeicons/primeicons.css';
 import './styles.css';
+import Tooltip from 'primevue/tooltip';
 
 const app = createApp(App);
 
@@ -27,5 +28,7 @@ app.component('Card', Card);
 app.component('Avatar', Avatar);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
+
+app.directive('tooltip', Tooltip);
 
 app.mount('#app');

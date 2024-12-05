@@ -46,6 +46,14 @@ const handleDrawOffer = async () => {
     console.error('Error offering draw:', error);
   }
 };
+
+// Ajout d'une ref pour la couleur du joueur
+const playerColor = ref<'white' | 'black'>('white');
+
+// Fonction pour changer la couleur du joueur
+const togglePlayerColor = () => {
+  playerColor.value = playerColor.value === 'white' ? 'black' : 'white';
+};
 </script>
 
 <template>
@@ -55,7 +63,16 @@ const handleDrawOffer = async () => {
       <div class="col-12 surface-section shadow-1 p-3">
         <div class="flex justify-content-between align-items-center">
           <Button icon="pi pi-arrow-left" text @click="$router.back()" />
-          <span class="text-xl font-bold">Live Game</span>
+          <div class="flex align-items-center gap-3">
+            <span class="text-xl font-bold">Live Game</span>
+            <!-- Bouton pour changer la perspective -->
+            <Button 
+              icon="pi pi-refresh" 
+              text 
+              @click="togglePlayerColor" 
+              v-tooltip.bottom="'Flip board'"
+            />
+          </div>
           <Button icon="pi pi-cog" text />
         </div>
       </div>
@@ -63,7 +80,10 @@ const handleDrawOffer = async () => {
       <div class="col-12 md:col-9 p-3">
         <div class="game-container surface-section border-round shadow-1 p-3">
           <!-- Black Player Info -->
-          <div class="player-info flex justify-content-between align-items-center mb-3">
+          <div 
+            class="player-info flex justify-content-between align-items-center mb-3"
+            :class="{ 'order-1': playerColor === 'black' }"
+          >
             <div class="flex align-items-center gap-3">
               <Avatar icon="pi pi-user" size="large" />
               <div>
@@ -76,11 +96,14 @@ const handleDrawOffer = async () => {
             </div>
           </div>
 
-          <!-- Chess Board -->
-          <ChessBoard />
+          <!-- Chess Board avec la prop playerColor -->
+          <ChessBoard :player-color="playerColor" />
 
           <!-- White Player Info -->
-          <div class="player-info flex justify-content-between align-items-center mt-3">
+          <div 
+            class="player-info flex justify-content-between align-items-center mt-3"
+            :class="{ 'order-0': playerColor === 'black' }"
+          >
             <div class="flex align-items-center gap-3">
               <Avatar icon="pi pi-user" size="large" />
               <div>
@@ -143,5 +166,13 @@ const handleDrawOffer = async () => {
 
 :deep(.p-tabview-panels) {
   padding: 0;
+}
+
+.order-0 {
+  order: 0;
+}
+
+.order-1 {
+  order: 1;
 }
 </style>

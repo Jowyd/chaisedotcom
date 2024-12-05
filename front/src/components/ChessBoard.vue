@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { GameService, type Move, type GameState } from '@/services/GameService';
 
@@ -23,7 +23,38 @@ const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const validMoves = ref<Position[]>([]);
 const gameState = ref<GameState | null>(null);
-const isPlayerTurn = ref(true); // À mettre à jour avec la vraie logique de tour
+
+// Ajout d'une prop pour contrôler la couleur du joueur
+const props = defineProps<{
+  playerColor?: 'white' | 'black';
+}>();
+
+// Détermine si c'est le tour du joueur
+const isPlayerTurn = computed(() => {
+  return true;
+  //   return gameState.value?.turn === (props.playerColor || 'white' );
+});
+
+// Fonction pour retourner l'échiquier selon la couleur du joueur
+const boardView = computed(() => {
+  const currentBoard = board.value;
+  if (!currentBoard || props.playerColor !== 'black') {
+    return currentBoard;
+  }
+  // Retourne l'échiquier pour les noirs
+  return [...currentBoard].reverse().map((row) => [...row].reverse());
+});
+
+// Ajuste les coordonnées en fonction de la couleur du joueur
+const adjustCoordinates = (row: number, col: number): { row: number; col: number } => {
+  if (props.playerColor === 'black') {
+    return {
+      row: 7 - row,
+      col: 7 - col,
+    };
+  }
+  return { row, col };
+};
 
 // Convertit les coordonnées de l'échiquier en notation algébrique
 const toAlgebraic = (row: number, col: number): string => {
@@ -86,21 +117,21 @@ const isValidMove = (from: Position, to: Position): boolean => {
   return true;
 };
 
-const handleSquareClick = async (row: number, col: number) => {
+// Mise à jour de handleSquareClick pour utiliser les coordonnées ajustées
+const handleSquareClick = async (displayRow: number, displayCol: number) => {
+  console.log('handleSquareClick', isPlayerTurn.value, displayRow, displayCol);
   if (!isPlayerTurn.value) return;
 
+  const { row, col } = adjustCoordinates(displayRow, displayCol);
   const piece = board.value[row][col];
 
-  // Si aucune pièce n'est sélectionnée
   if (!selectedPiece.value) {
     if (piece && piece.color === (gameState.value?.turn || 'white')) {
       selectedPiece.value = { row, col };
-      // Calculer les mouvements valides ici
     }
     return;
   }
 
-  // Si une pièce est déjà sélectionnée
   const from = selectedPiece.value;
   const to = { row, col };
 
@@ -121,12 +152,10 @@ const handleSquareClick = async (row: number, col: number) => {
       board.value[row][col] = piece;
       board.value[from.row][from.col] = null;
 
-      // Mettre à jour l'état du jeu
       gameState.value = newGameState;
-      isPlayerTurn.value = newGameState.turn === 'white';
+      console.log(newGameState);
     } catch (error) {
       console.error('Error making move:', error);
-      // Optionnel : afficher un message d'erreur à l'utilisateur
     }
   }
 
@@ -172,7 +201,7 @@ const updateBoardFromGameState = (state: GameState) => {
   });
 
   board.value = newBoard;
-  isPlayerTurn.value = state.turn === 'white';
+  gameState.value = state;
 };
 
 const loadGame = async () => {
@@ -198,27 +227,46 @@ onMounted(() => {
     <div class="chess-board">
       <!-- Files labels (top) -->
       <div class="files-labels top">
-        <div v-for="file in files" :key="`top-${file}`" class="label">{{ file }}</div>
+        <div
+          v-for="file in playerColor === 'black' ? [...files].reverse() : files"
+          :key="`top-${file}`"
+          class="label"
+        >
+          {{ file }}
+        </div>
       </div>
 
       <!-- Ranks labels (left) -->
       <div class="ranks-labels left">
-        <div v-for="rank in ranks" :key="`left-${rank}`" class="label">{{ rank }}</div>
+        <div
+          v-for="rank in playerColor === 'black' ? ranks : [...ranks].reverse()"
+          :key="`left-${rank}`"
+          class="label"
+        >
+          {{ rank }}
+        </div>
       </div>
 
       <!-- Chess board -->
       <div class="board">
-        <div v-for="(row, rowIndex) in board" :key="`row-${rowIndex}`" class="board-row">
+        <div v-for="(row, rowIndex) in boardView" :key="`row-${rowIndex}`" class="board-row">
           <div
             v-for="(square, colIndex) in row"
             :key="`square-${rowIndex}-${colIndex}`"
             class="square"
             :class="[
-              getSquareColor(rowIndex, colIndex),
+              getSquareColor(
+                playerColor === 'black' ? 7 - rowIndex : rowIndex,
+                playerColor === 'black' ? 7 - colIndex : colIndex,
+              ),
               {
-                selected: selectedPiece?.row === rowIndex && selectedPiece?.col === colIndex,
+                selected:
+                  selectedPiece?.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
+                  selectedPiece?.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
                 'valid-move': validMoves.some(
-                  (move) => move.row === rowIndex && move.col === colIndex,
+                  (move) =>
+                    move.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
+                    move.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
                 ),
               },
             ]"
@@ -231,12 +279,24 @@ onMounted(() => {
 
       <!-- Ranks labels (right) -->
       <div class="ranks-labels right">
-        <div v-for="rank in ranks" :key="`right-${rank}`" class="label">{{ rank }}</div>
+        <div
+          v-for="rank in playerColor === 'black' ? ranks : [...ranks].reverse()"
+          :key="`right-${rank}`"
+          class="label"
+        >
+          {{ rank }}
+        </div>
       </div>
 
       <!-- Files labels (bottom) -->
       <div class="files-labels bottom">
-        <div v-for="file in files" :key="`bottom-${file}`" class="label">{{ file }}</div>
+        <div
+          v-for="file in playerColor === 'black' ? [...files].reverse() : files"
+          :key="`bottom-${file}`"
+          class="label"
+        >
+          {{ file }}
+        </div>
       </div>
     </div>
   </div>
