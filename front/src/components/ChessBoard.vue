@@ -129,6 +129,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
     if (piece && piece.color === (gameState.value?.turn || 'white')) {
       selectedPiece.value = { row, col };
     }
+    validMoves.value = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'].map(fromAlgebraic);
     return;
   }
 
