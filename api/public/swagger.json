@@ -487,7 +487,7 @@
 				}
 			}
 		},
-		"/games/moves/{gameId}": {
+		"/games/{gameId}/moves": {
 			"get": {
 				"operationId": "GetMoves",
 				"responses": {
@@ -520,6 +520,46 @@
 						}
 					}
 				]
+			}
+		},
+		"/games/{gameId}/move": {
+			"post": {
+				"operationId": "MakeMove",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Games"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "gameId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MakeMoveDTO"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/games/{gameId}": {

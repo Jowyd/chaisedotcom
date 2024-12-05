@@ -16,7 +16,7 @@ import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
 import { GameHistoryDTO } from "../dto/game.dto";
 import { ChessMove } from "../interfaces/chess.interface";
-
+import { MakeMoveDTO } from "../dto/move.dto";
 
 interface CreateGameRequest {
   whitePlayerName: string;
@@ -46,12 +46,26 @@ export class GameController extends Controller {
     }
   }
 
-  @Get("/moves/{gameId}")
+  @Get("/{gameId}/moves")
   public async getMoves(@Path() gameId: number): Promise<ChessMove[]> {
     try {
       return await gameService.getMovesByGame(gameId);
     } catch (error) {
       this.setStatus(404);
+      throw error;
+    }
+  }
+
+  @Post("{gameId}/move")
+  public async makeMove(
+    @Path() gameId: number,
+    @Body() moveData: MakeMoveDTO
+  ): Promise<any> {
+    try {
+      console.log("gameId", gameId, "moveData", moveData);
+      //  return await gameService.makeMove(gameId, moveData);
+    } catch (error) {
+      this.setStatus(400);
       throw error;
     }
   }
@@ -112,7 +126,9 @@ export class GameController extends Controller {
   }
 
   @Get("/history")
-  public async getHistory(@Request() req: AuthRequest): Promise<GameHistoryDTO[]> {
+  public async getHistory(
+    @Request() req: AuthRequest
+  ): Promise<GameHistoryDTO[]> {
     const user = req.user;
     return await gameService.getHistory(user.id);
   }
@@ -120,7 +136,7 @@ export class GameController extends Controller {
   @Get("/stats/{username}")
   public async getStats(@Path() username: string): Promise<{ stats: number }> {
     const stats = await gameService.getStats(username);
-    return {stats};
+    return { stats };
   }
 }
 
