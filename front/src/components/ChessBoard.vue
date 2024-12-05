@@ -305,18 +305,18 @@ watch(capturedPieces, (newValue) => {
         <div
           v-for="rank in playerColor === 'black' ? ranks : [...ranks].reverse()"
           :key="`left-${rank}`"
-          class="label square"
+          class="label square text-base"
         >
           {{ rank }}
         </div>
       </div>
 
-      <div class="flex">
-        <div class="flex top">
+      <div class="flex col">
+        <div class="top flex">
           <div
             v-for="file in playerColor === 'black' ? [...files].reverse() : files"
             :key="`top-${file}`"
-            class="label square"
+            class="label square text-base"
           >
             {{ file }}
           </div>
@@ -420,7 +420,7 @@ watch(capturedPieces, (newValue) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 2.5rem;
+  font-size: 3.5rem;
 }
 
 .square.white {

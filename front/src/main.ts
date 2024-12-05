@@ -10,6 +10,7 @@ import TabPanel from 'primevue/tabpanel';
 import App from './App.vue';
 import router from './router';
 
+import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
 import './styles.css';
 import Tooltip from 'primevue/tooltip';
