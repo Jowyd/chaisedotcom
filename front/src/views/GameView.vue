@@ -54,6 +54,20 @@ const playerColor = ref<'white' | 'black'>('white');
 const togglePlayerColor = () => {
   playerColor.value = playerColor.value === 'white' ? 'black' : 'white';
 };
+
+interface CapturedPieces {
+  white: ChessPiece[];
+  black: ChessPiece[];
+}
+
+const capturedPieces = ref<CapturedPieces>({
+  white: [],
+  black: [],
+});
+
+const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
+  capturedPieces.value = pieces;
+};
 </script>
 
 <template>
@@ -96,8 +110,11 @@ const togglePlayerColor = () => {
             </div>
           </div>
 
-          <!-- Chess Board avec la prop playerColor -->
-          <ChessBoard :player-color="playerColor" />
+          <!-- Chess Board avec la prop playerColor et l'événement captured-pieces -->
+          <ChessBoard 
+            :player-color="playerColor" 
+            v-model:captured-pieces="capturedPieces"
+          />
 
           <!-- White Player Info -->
           <div 

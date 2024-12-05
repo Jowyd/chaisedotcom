@@ -14,6 +14,11 @@ interface Position {
   col: number;
 }
 
+interface CapturedPieces {
+  white: ChessPiece[];
+  black: ChessPiece[];
+}
+
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
@@ -23,6 +28,10 @@ const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const validMoves = ref<Position[]>([]);
 const gameState = ref<GameState | null>(null);
+const capturedPieces = ref<CapturedPieces>({
+  white: [],
+  black: [],
+});
 
 // Ajout d'une prop pour contrôler la couleur du joueur
 const props = defineProps<{
@@ -119,14 +128,19 @@ const isValidMove = (from: Position, to: Position): boolean => {
 
 // Mise à jour de handleSquareClick pour utiliser les coordonnées ajustées
 const handleSquareClick = async (displayRow: number, displayCol: number) => {
-  console.log('handleSquareClick', isPlayerTurn.value, displayRow, displayCol);
-  if (!isPlayerTurn.value) return;
-
+  console.log('handleSquareClick', isPlayerTurn.value, displayRow, displayCol, selectedPiece.value);
   const { row, col } = adjustCoordinates(displayRow, displayCol);
   const piece = board.value[row][col];
+  if (!selectedPiece.value && piece?.color != gameState.value?.turn) return;
+
+  if (selectedPiece.value && selectedPiece.value.row === row && selectedPiece.value.col === col) {
+    selectedPiece.value = null;
+    validMoves.value = [];
+    return;
+  }
 
   if (!selectedPiece.value) {
-    if (piece && piece.color === (gameState.value?.turn || 'white')) {
+    if (piece && piece.color === gameState.value?.turn) {
       selectedPiece.value = { row, col };
     }
     validMoves.value = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'].map(fromAlgebraic);
@@ -138,6 +152,13 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
 
   if (isValidMove(from, to)) {
     try {
+      // Si une pièce est présente sur la case cible, elle est capturée
+      const capturedPiece = board.value[row][col];
+      if (capturedPiece) {
+        const captureColor = capturedPiece.color === 'white' ? 'white' : 'black';
+        capturedPieces.value[captureColor].push(capturedPiece);
+      }
+
       const move: Move = {
         from: toAlgebraic(from.row, from.col),
         to: toAlgebraic(row, col),
@@ -221,10 +242,60 @@ onMounted(() => {
     initializeBoard();
   }
 });
+
+// Fonction pour calculer la valeur matérielle
+const calculateMaterialValue = (pieces: ChessPiece[]): number => {
+  const values: { [key: string]: number } = {
+    p: 1, // pion
+    n: 3, // cavalier
+    b: 3, // fou
+    r: 5, // tour
+    q: 9, // dame
+    k: 0, // roi (pas compté dans l'avantage matériel)
+  };
+
+  return pieces.reduce((sum, piece) => sum + (values[piece.type] || 0), 0);
+};
+
+// Compute l'avantage matériel
+const materialAdvantage = computed(() => {
+  const whiteValue = calculateMaterialValue(capturedPieces.value.black); // pièces noires capturées
+  const blackValue = calculateMaterialValue(capturedPieces.value.white); // pièces blanches capturées
+  return whiteValue - blackValue;
+});
+
+// Émet les pièces capturées pour le composant parent
+const emit = defineEmits<{
+  'update:capturedPieces': [pieces: CapturedPieces];
+}>();
+
+watch(capturedPieces, (newValue) => {
+  emit('update:capturedPieces', newValue);
+});
 </script>
 
 <template>
   <div class="chess-board-container">
+    <!-- Pièces capturées par les blancs -->
+    <div class="captured-pieces white mb-2">
+      <div class="captured-pieces-header">
+        <span class="font-medium">Captured pieces</span>
+        <span v-if="materialAdvantage > 0" class="material-advantage">
+          +{{ materialAdvantage }}
+        </span>
+      </div>
+      <div class="pieces-list">
+        <span
+          v-for="(piece, index) in capturedPieces.black"
+          :key="`white-captured-${index}`"
+          class="captured-piece"
+        >
+          {{ piece.symbol }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Échiquier existant -->
     <div class="chess-board">
       <!-- Files labels (top) -->
       <div class="files-labels top">
@@ -298,6 +369,25 @@ onMounted(() => {
         >
           {{ file }}
         </div>
+      </div>
+    </div>
+
+    <!-- Pièces capturées par les noirs -->
+    <div class="captured-pieces black mt-2">
+      <div class="captured-pieces-header">
+        <span class="font-medium">Captured pieces</span>
+        <span v-if="materialAdvantage < 0" class="material-advantage">
+          {{ materialAdvantage }}
+        </span>
+      </div>
+      <div class="pieces-list">
+        <span
+          v-for="(piece, index) in capturedPieces.white"
+          :key="`black-captured-${index}`"
+          class="captured-piece"
+        >
+          {{ piece.symbol }}
+        </span>
       </div>
     </div>
   </div>
@@ -419,5 +509,49 @@ onMounted(() => {
 
 .piece:hover {
   transform: scale(1.1);
+}
+
+.captured-pieces {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--surface-section);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.captured-pieces-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.material-advantage {
+  font-weight: bold;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius);
+  background: var(--surface-ground);
+}
+
+.pieces-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
+.captured-piece {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.captured-pieces.white .captured-piece {
+  color: #000;
+  text-shadow: 0 0 2px #fff;
+}
+
+.captured-pieces.black .captured-piece {
+  color: #fff;
+  text-shadow: 0 0 2px #000;
 }
 </style>
