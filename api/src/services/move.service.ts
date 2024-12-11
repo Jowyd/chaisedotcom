@@ -664,7 +664,9 @@ export class MoveService {
   async makeMove(game_id: number, move: MakeMoveDTO) {
     const game = await Game.findByPk(game_id);
     if (!game) {
-      throw new Error("Game not found");
+      const error = new Error("Game not found");
+      (error as any).status = "404";
+      throw error;
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
@@ -672,7 +674,9 @@ export class MoveService {
     const piece = currentBoard[move.from];
 
     if (!piece || piece.color !== currentPlayer) {
-      throw new Error("403: Not your turn or piece");
+      const error = new Error("Not your turn or piece");
+      (error as any).status = "403";
+      throw error;
     }
 
     const isCheckBefore = this.isKingInCheck(currentBoard, currentPlayer);
@@ -691,8 +695,10 @@ export class MoveService {
       const nextPlayer = currentPlayer === 'WHITE' ? 'BLACK' : 'WHITE';
       const isCheck = this.isKingInCheck(newBoard, nextPlayer);
       
-      if (isCheckBefore && !isCheck) {
-        throw new Error("403: Invalid move");
+      if (isCheckBefore && isCheck) {
+        const error = new Error("Invalid move");
+        (error as any).status = "403";
+        throw error;
       }
       
       const isCheckmate = this.isCheckmate(newBoard, nextPlayer);
@@ -751,14 +757,18 @@ export class MoveService {
 
       return moveReturn;
     } else {
-      throw new Error("403: Invalid move");
+      const error = new Error("Invalid move");
+      (error as any).status = "403";
+      throw error;
     }
   }
 
   async getState(game_id: number): Promise<MoveReturnDTO> {
     const game = await Game.findByPk(game_id);
     if (!game) {
-      throw new Error("Game not found");
+      const error = new Error("Game not found");
+      (error as any).status = "404";
+      throw error;
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
@@ -803,7 +813,9 @@ export class MoveService {
     const currentPlayer = await this.getNextPlayer(game_id);
     const piece = currentBoard[from];
     if (!piece || piece.color !== currentPlayer) {
-      throw new Error("403: Not your turn or piece");
+      const error = new Error("Not your turn or piece");
+      (error as any).status = "403";
+      throw error;
     }
 
     return this.switchCaseTypePieceSuggestion(
@@ -817,11 +829,15 @@ export class MoveService {
   async promotion(game_id: number, piece: ChessPiece) {
     const game = await Game.findByPk(game_id);
     if (!game) {
-      throw new Error("Game not found");
+      const error = new Error("Game not found");
+      (error as any).status = "404";
+      throw error
     }
     const currentBoard = await this.currentMoveOfGame(game_id);
     if(!this.isPromotion(currentBoard)) {
-      throw new Error("403: Not promotion");
+      const error = new Error("Not promotion");
+      (error as any).status = "403";
+      throw error;
     }
 
     const promotionBoard = this.makePromotion(currentBoard, piece.type);
