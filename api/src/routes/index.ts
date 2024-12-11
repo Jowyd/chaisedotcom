@@ -68,34 +68,10 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MoveReturnDTO": {
-        "dataType": "refObject",
-        "properties": {
-            "id": {"dataType":"string","required":true},
-            "fen": {"dataType":"string","required":true},
-            "moves": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"color":{"dataType":"string","required":true},"piece":{"dataType":"string","required":true},"to":{"dataType":"string","required":true},"from":{"dataType":"string","required":true}}},"required":true},
-            "isCheck": {"dataType":"boolean","required":true},
-            "isCheckmate": {"dataType":"boolean","required":true},
-            "status": {"dataType":"string","required":true},
-            "whitePlayer": {"dataType":"nestedObjectLiteral","nestedProperties":{"username":{"dataType":"string","required":true}},"required":true},
-            "blackPlayer": {"dataType":"nestedObjectLiteral","nestedProperties":{"username":{"dataType":"string","required":true}},"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MakeMoveDTO": {
-        "dataType": "refObject",
-        "properties": {
-            "from": {"dataType":"string","required":true},
-            "to": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "GameHistoryDTO": {
         "dataType": "refObject",
         "properties": {
-            "gameId": {"dataType":"double","required":true},
+            "game_id": {"dataType":"double","required":true},
             "whitePlayerName": {"dataType":"string","required":true},
             "blackPlayerName": {"dataType":"string","required":true},
             "isPublic": {"dataType":"boolean","required":true},
@@ -328,13 +304,13 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/games/:gameId/moves',
+        app.get('/games/:game_id/moves',
             ...(fetchMiddlewares<RequestHandler>(GameController)),
             ...(fetchMiddlewares<RequestHandler>(GameController.prototype.getMoves)),
 
             async function GameController_getMoves(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    gameId: {"in":"path","name":"gameId","required":true,"dataType":"double"},
+                    game_id: {"in":"path","name":"game_id","required":true,"dataType":"double"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -358,44 +334,13 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/games/:gameId/move',
-            ...(fetchMiddlewares<RequestHandler>(GameController)),
-            ...(fetchMiddlewares<RequestHandler>(GameController.prototype.makeMove)),
-
-            async function GameController_makeMove(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    gameId: {"in":"path","name":"gameId","required":true,"dataType":"double"},
-                    move: {"in":"body","name":"move","required":true,"ref":"MakeMoveDTO"},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const controller = new GameController();
-
-              await templateService.apiHandler({
-                methodName: 'makeMove',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.delete('/games/:gameId',
+        app.delete('/games/:game_id',
             ...(fetchMiddlewares<RequestHandler>(GameController)),
             ...(fetchMiddlewares<RequestHandler>(GameController.prototype.deleteGame)),
 
             async function GameController_deleteGame(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    gameId: {"in":"path","name":"gameId","required":true,"dataType":"double"},
+                    game_id: {"in":"path","name":"game_id","required":true,"dataType":"double"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
             };
 

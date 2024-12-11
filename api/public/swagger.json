@@ -56,51 +56,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CreateGameDTO": {
-				"properties": {
-					"userId": {
-						"type": "number",
-						"format": "double"
-					},
-					"whitePlayerName": {
-						"type": "string"
-					},
-					"blackPlayerName": {
-						"type": "string"
-					},
-					"isPublic": {
-						"type": "boolean"
-					}
-				},
-				"required": [
-					"userId",
-					"whitePlayerName",
-					"blackPlayerName",
-					"isPublic"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ChessMove": {
-				"properties": {
-					"from": {
-						"type": "string"
-					},
-					"to": {
-						"type": "string"
-					},
-					"piece": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"from",
-					"to",
-					"piece"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"MoveReturnDTO": {
 				"properties": {
 					"id": {
@@ -180,18 +135,47 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"MakeMoveDTO": {
+			"CreateGameDTO": {
+				"properties": {
+					"userId": {
+						"type": "number",
+						"format": "double"
+					},
+					"whitePlayerName": {
+						"type": "string"
+					},
+					"blackPlayerName": {
+						"type": "string"
+					},
+					"isPublic": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"userId",
+					"whitePlayerName",
+					"blackPlayerName",
+					"isPublic"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ChessMove": {
 				"properties": {
 					"from": {
 						"type": "string"
 					},
 					"to": {
 						"type": "string"
+					},
+					"piece": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"from",
-					"to"
+					"to",
+					"piece"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -437,12 +421,16 @@
 							"application/json": {
 								"schema": {
 									"properties": {
+										"initialBoard": {
+											"$ref": "#/components/schemas/MoveReturnDTO"
+										},
 										"game_id": {
 											"type": "number",
 											"format": "double"
 										}
 									},
 									"required": [
+										"initialBoard",
 										"game_id"
 									],
 									"type": "object"
@@ -501,48 +489,6 @@
 						}
 					}
 				]
-			}
-		},
-		"/games/{game_id}/move": {
-			"post": {
-				"operationId": "MakeMove",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/MoveReturnDTO"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Games"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "game_id",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/MakeMoveDTO"
-							}
-						}
-					}
-				}
 			}
 		},
 		"/games/{game_id}": {

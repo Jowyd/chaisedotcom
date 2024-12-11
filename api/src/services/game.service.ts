@@ -5,7 +5,6 @@ import Move from "../models/move.model";
 import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
 import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
 import { GameState } from "../interfaces/game.interface";
-import { MoveOptions } from "../interfaces/move.interface";
 import { MakeMoveDTO } from "../dto/move.dto";
 import { MoveReturnDTO } from "../dto/move.dto";
 import { ChessBoard } from "../interfaces/chess.interface";
