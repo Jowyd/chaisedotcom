@@ -101,6 +101,7 @@ class GameService {
     });
     return games.length;
   }
+
 }
 
 export const gameService = new GameService();

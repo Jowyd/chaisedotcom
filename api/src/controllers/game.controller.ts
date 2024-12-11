@@ -62,6 +62,11 @@ export class GameController extends Controller {
     return await moveService.makeMove(game_id, move);
   }
 
+  @Get("/{game_id}")
+  public async getState(@Path() game_id: number): Promise<MoveReturnDTO> {
+    return await moveService.getState(game_id);
+  }
+
 
   @Delete("/{game_id}")
   public async deleteGame(

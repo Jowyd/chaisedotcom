@@ -441,6 +441,49 @@ export class MoveService {
       throw new Error("403: Invalid move");
     }
   }
+
+
+  async getState(game_id: number): Promise<MoveReturnDTO> {
+    const game = await Game.findByPk(game_id);
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
+    const currentBoard = await this.currentMoveOfGame(game_id);
+    const currentPlayer = await this.getCurrentPlayer(game_id);
+    const isCheck = this.isKingInCheck(currentBoard, currentPlayer);
+    const isCheckmate = this.isCheckmate(currentBoard, currentPlayer);
+
+    const allMoves = await Move.findAll({
+      where: { game_id },
+      order: [['id', 'ASC']]
+    });
+
+    const fen = await this.getFenFromBoard(currentBoard, game_id);
+
+    // Préparer la réponse
+    const moveReturn: MoveReturnDTO = {
+      id: game_id.toString(),
+      fen: fen,
+      moves: allMoves.map(m => ({
+        from: m.from,
+        to: m.to,
+        piece: m.piece,
+        color: m.turn
+      })),
+      isCheck: isCheck,
+      isCheckmate: isCheckmate,
+      status: game.status,
+      whitePlayer: {
+        username: game.whitePlayerName,
+      },
+      blackPlayer: {
+        username: game.blackPlayerName,
+      },
+    };
+
+    return moveReturn;
+  }
 }
 
 export default new MoveService();
