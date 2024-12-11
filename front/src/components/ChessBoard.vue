@@ -219,7 +219,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
         };
       } else {
         console.log('MAke move');
-        gameState.value = newGameState;
+        updateBoardFromGameState(newGameState);
       }
       selectedPiece.value = null;
       return;

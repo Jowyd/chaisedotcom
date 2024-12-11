@@ -16,7 +16,7 @@ const pieces: { [key: string]: string } = {
   k: '♚',
   p: '♟',
 };
-// Simulation des données
+
 let mockGameState: GameState = {
   id: 'game-1',
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -49,13 +49,9 @@ export interface GameState {
   status: 'active' | 'finished';
 }
 
-// Fonction utilitaire pour simuler un délai réseau
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Fonction pour mettre à jour le FEN après un mouvement
 const updateFenAfterMove = (move: Move): string => {
-  // Pour l'instant, on garde le FEN initial
-  // Dans une vraie implémentation, il faudrait mettre à jour le FEN en fonction du mouvement
   return mockGameState.fen;
 };
 
@@ -82,20 +78,48 @@ function extractCapturedPiece(currentFen: string): CapturedPieces {
         }
       });
     });
-
     return pieces;
   };
 
   const initialPieces = extractPieces(initialFen);
   const currentPieces = extractPieces(currentFen);
 
-  // Déterminer les pièces capturées
-  const capturedPieces = initialPieces.filter((piece) => !currentPieces.includes(piece));
-  const capturedPiecesObj = capturedPieces.map((piece) => getPiecefromFen(piece));
+  console.log('currentFen', currentFen);
+  console.log('initialPieces', initialPieces);
+  console.log('currentPieces', currentPieces);
+
+  const capturedPieces = findMissingPieces(initialPieces, currentPieces);
+
   return {
-    white: capturedPiecesObj.filter((piece) => piece.color === 'white'),
-    black: capturedPiecesObj.filter((piece) => piece.color === 'black'),
+    white: capturedPieces.filter((piece) => piece.color === 'white'),
+    black: capturedPieces.filter((piece) => piece.color === 'black'),
   };
+}
+
+function findMissingPieces(initialPieces: string[], currentPieces: string[]): ChessPiece[] {
+  const initialPieceCount = new Map<string, number>();
+  const currentPieceCount = new Map<string, number>();
+
+  initialPieces.forEach((piece) => {
+    initialPieceCount.set(piece, (initialPieceCount.get(piece) || 0) + 1);
+  });
+
+  currentPieces.forEach((piece) => {
+    currentPieceCount.set(piece, (currentPieceCount.get(piece) || 0) + 1);
+  });
+
+  const missingPieces: ChessPiece[] = [];
+
+  initialPieceCount.forEach((count, piece) => {
+    const currentCount = currentPieceCount.get(piece) || 0;
+    const missingCount = count - currentCount;
+
+    for (let i = 0; i < missingCount; i++) {
+      missingPieces.push(getPiecefromFen(piece));
+    }
+  });
+
+  return missingPieces;
 }
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
@@ -113,6 +137,7 @@ export const GameService = {
 
   getCapturedPieces(fen: string): CapturedPieces {
     const capturedPieces = extractCapturedPiece(fen);
+    console.log('capturedPieces', capturedPieces);
     return capturedPieces;
   },
   async getSuggestions(gameId: string, from: string): Promise<string[]> {
@@ -133,13 +158,12 @@ export const GameService = {
       const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
       console.log('response', respose);
 
-      // Mise à jour du state du jeu
       mockGameState = {
         ...mockGameState,
         fen: updateFenAfterMove(move),
         moves: [...mockGameState.moves, move],
         turn: mockGameState.turn === 'white' ? 'black' : 'white',
-        isCheck: Math.random() < 0.2, // 20% de chance d'être en échec
+        isCheck: Math.random() < 0.2,
         isCheckmate: false,
       };
       console.log(mockGameState);
@@ -161,7 +185,7 @@ export const GameService = {
 
   async offerDraw(gameId: string): Promise<void> {
     await delay(200);
-    // Simule une acceptation aléatoire de la nulle
+
     if (Math.random() < 0.5) {
       mockGameState = {
         ...mockGameState,
@@ -170,7 +194,6 @@ export const GameService = {
     }
   },
 
-  // Méthode utilitaire pour réinitialiser le mock state (utile pour les tests)
   resetMockState(): void {
     mockGameState = {
       id: 'game-1',
