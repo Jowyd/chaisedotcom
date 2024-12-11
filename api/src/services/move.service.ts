@@ -307,7 +307,7 @@ export class MoveService {
             tempBoard[toSquare] = tempBoard[fromSquare];
             tempBoard[fromSquare] = null;
 
-            // Si ce mouvement sort de l'��chec
+            // Si ce mouvement sort de l'échec
             if (!this.isKingInCheck(tempBoard, playerColor)) {
               return false;
             }
@@ -319,34 +319,35 @@ export class MoveService {
     return true;
   }
 
-  async getFenFromBoard(board: ChessBoard, game_id: number):Promise<string> {
-      const rows: string[] = [];
-      for (let row = 8; row >= 1; row--) {
-        let rowString = "";
-        let emptyCount = 0;
-        for (const col of this.COLUMNS) {
-          const square = `${col}${row}`;
-          const piece = board[square];
-          if (piece) {
-            if (emptyCount > 0) {
-              rowString += emptyCount.toString();
-              emptyCount = 0;
-            }
-            rowString += piece.type.charAt(0).toUpperCase();
-          } else {
-            emptyCount++;
+  async getFenFromBoard(board: ChessBoard, game_id: number): Promise<string> {
+    const rows: string[] = [];
+    for (let row = 8; row >= 1; row--) {
+      let rowString = "";
+      let emptyCount = 0;
+      for (const col of this.COLUMNS) {
+        const square = `${col}${row}`;
+        const piece = board[square];
+        if (piece) {
+          if (emptyCount > 0) {
+            rowString += emptyCount.toString();
+            emptyCount = 0;
           }
+          const pieceChar = piece.type.charAt(0);
+          rowString += piece.color === 'WHITE' ? pieceChar.toUpperCase() : pieceChar.toLowerCase();
+        } else {
+          emptyCount++;
         }
-        if (emptyCount > 0) {
-          rowString += emptyCount.toString();
-        }
-        rows.push(rowString);
       }
-      const fen =
-        rows.join("/") +
-        " " +
-        (this.getNextPlayer(game_id)) +
-        " - - 0 1";
+      if (emptyCount > 0) {
+        rowString += emptyCount.toString();
+      }
+      rows.push(rowString);
+    }
+    const fen =
+      rows.join("/") +
+      " " +
+      //(this.getNextPlayerColor(board) === "WHITE" ? "w" : "b") +
+      " - - 0 1";
     return fen;
   }
 
