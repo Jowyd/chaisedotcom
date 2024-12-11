@@ -16,7 +16,7 @@ import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
 import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
 import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
-import { MakeMoveDTO, MoveReturnDTO } from "../dto/move.dto";
+import { MakeMoveDTO, MoveReturnDTO, SuggestionsDTORequest } from "../dto/move.dto";
 import moveService from "../services/move.service";
 
 @Route("games")
@@ -47,8 +47,12 @@ export class GameController extends Controller {
   }
 
   @Post("/{game_id}/suggestions")
-  public async getSuggestions(@Path() game_id: number, @Body() from: string): Promise<String[]> {
-    return await moveService.getSuggestions(game_id,from);
+  public async getSuggestions(
+    @Path() game_id: number,
+    @Body() body: SuggestionsDTORequest
+  ): Promise<String[]> {
+    console.log("game_id", game_id, "from", body.from);
+    return await moveService.getSuggestions(game_id, body.from);
   }
 
   @Post("/{game_id}/move")

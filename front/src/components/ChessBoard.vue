@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { GameService, type Move, type GameState } from '@/services/GameService';
+import {
+  GameService,
+  type Move,
+  type GameState,
+  type CapturedPieces,
+} from '@/services/GameService';
 
 interface ChessPiece {
   type: string;
@@ -12,11 +17,6 @@ interface ChessPiece {
 interface Position {
   row: number;
   col: number;
-}
-
-interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
 }
 
 interface PromotionData {
@@ -175,7 +175,11 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
     if (piece && piece.color === gameState.value?.turn) {
       selectedPiece.value = { row, col };
     }
-    validMoves.value = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'].map(fromAlgebraic); //TODO: Change
+    const from: string = toAlgebraic(row, col);
+    GameService.getSuggestions(gameId.value, from).then((suggestions: string[]) => {
+      validMoves.value = suggestions.map(fromAlgebraic);
+    });
+
     return;
   }
 
@@ -215,7 +219,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
         };
       } else {
         console.log('MAke move');
-        gameState.value = newGameState;
+        updateBoardFromGameState(newGameState);
       }
       selectedPiece.value = null;
       return;
@@ -248,6 +252,7 @@ const updateBoardFromGameState = (state: GameState) => {
   };
 
   const fenBoard = state.fen.split(' ')[0];
+  capturedPieces.value = GameService.getCapturedPieces(fenBoard);
   const rows = fenBoard.split('/');
 
   rows.forEach((row, rowIndex) => {

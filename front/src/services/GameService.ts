@@ -2,7 +2,21 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
 
-// Simulation des données
+interface ChessPiece {
+  type: string;
+  color: 'white' | 'black';
+  symbol: string;
+}
+
+const pieces: { [key: string]: string } = {
+  r: '♜',
+  n: '♞',
+  b: '♝',
+  q: '♛',
+  k: '♚',
+  p: '♟',
+};
+
 let mockGameState: GameState = {
   id: 'game-1',
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -20,6 +34,11 @@ export interface Move {
   to: string;
 }
 
+export interface CapturedPieces {
+  white: ChessPiece[];
+  black: ChessPiece[];
+}
+
 export interface GameState {
   id: string;
   fen: string;
@@ -30,23 +49,104 @@ export interface GameState {
   status: 'active' | 'finished';
 }
 
-// Fonction utilitaire pour simuler un délai réseau
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Fonction pour mettre à jour le FEN après un mouvement
 const updateFenAfterMove = (move: Move): string => {
-  // Pour l'instant, on garde le FEN initial
-  // Dans une vraie implémentation, il faudrait mettre à jour le FEN en fonction du mouvement
   return mockGameState.fen;
 };
 
+function fenToColor(fen: string): string {
+  return fen.split(' ')[1];
+}
+function getPiecefromFen(char: string): ChessPiece {
+  return {
+    type: char.toLowerCase(),
+    color: char === char.toLowerCase() ? 'black' : 'white',
+    symbol: pieces[char.toLowerCase()],
+  };
+}
+function extractCapturedPiece(currentFen: string): CapturedPieces {
+  const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const extractPieces = (fen: string) => {
+    const boardPart = fen.split(' ')[0];
+    const pieces: string[] = [];
+
+    boardPart.split('/').forEach((row) => {
+      row.split('').forEach((char) => {
+        if (isNaN(parseInt(char))) {
+          pieces.push(char);
+        }
+      });
+    });
+    return pieces;
+  };
+
+  const initialPieces = extractPieces(initialFen);
+  const currentPieces = extractPieces(currentFen);
+
+  console.log('currentFen', currentFen);
+  console.log('initialPieces', initialPieces);
+  console.log('currentPieces', currentPieces);
+
+  const capturedPieces = findMissingPieces(initialPieces, currentPieces);
+
+  return {
+    white: capturedPieces.filter((piece) => piece.color === 'white'),
+    black: capturedPieces.filter((piece) => piece.color === 'black'),
+  };
+}
+
+function findMissingPieces(initialPieces: string[], currentPieces: string[]): ChessPiece[] {
+  const initialPieceCount = new Map<string, number>();
+  const currentPieceCount = new Map<string, number>();
+
+  initialPieces.forEach((piece) => {
+    initialPieceCount.set(piece, (initialPieceCount.get(piece) || 0) + 1);
+  });
+
+  currentPieces.forEach((piece) => {
+    currentPieceCount.set(piece, (currentPieceCount.get(piece) || 0) + 1);
+  });
+
+  const missingPieces: ChessPiece[] = [];
+
+  initialPieceCount.forEach((count, piece) => {
+    const currentCount = currentPieceCount.get(piece) || 0;
+    const missingCount = count - currentCount;
+
+    for (let i = 0; i < missingCount; i++) {
+      missingPieces.push(getPiecefromFen(piece));
+    }
+  });
+
+  return missingPieces;
+}
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
     try {
       const response = await axios.get(`${API_URL}games/${gameId}`);
       console.log('response', response);
       const game = response.data;
-      return { ...mockGameState, ...game };
+      const color = fenToColor(game.fen) == 'w' ? 'white' : 'black';
+      return { ...mockGameState, ...game, turn: color };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  getCapturedPieces(fen: string): CapturedPieces {
+    const capturedPieces = extractCapturedPiece(fen);
+    console.log('capturedPieces', capturedPieces);
+    return capturedPieces;
+  },
+  async getSuggestions(gameId: string, from: string): Promise<string[]> {
+    try {
+      const response = await axios.post(`${API_URL}games/${gameId}/suggestions`, {
+        from,
+      });
+      console.log('response', response);
+      return response.data;
     } catch (error) {
       console.error(error);
       throw error;
@@ -58,13 +158,12 @@ export const GameService = {
       const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
       console.log('response', respose);
 
-      // Mise à jour du state du jeu
       mockGameState = {
         ...mockGameState,
         fen: updateFenAfterMove(move),
         moves: [...mockGameState.moves, move],
         turn: mockGameState.turn === 'white' ? 'black' : 'white',
-        isCheck: Math.random() < 0.2, // 20% de chance d'être en échec
+        isCheck: Math.random() < 0.2,
         isCheckmate: false,
       };
       console.log(mockGameState);
@@ -86,7 +185,7 @@ export const GameService = {
 
   async offerDraw(gameId: string): Promise<void> {
     await delay(200);
-    // Simule une acceptation aléatoire de la nulle
+
     if (Math.random() < 0.5) {
       mockGameState = {
         ...mockGameState,
@@ -95,7 +194,6 @@ export const GameService = {
     }
   },
 
-  // Méthode utilitaire pour réinitialiser le mock state (utile pour les tests)
   resetMockState(): void {
     mockGameState = {
       id: 'game-1',

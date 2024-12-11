@@ -3,7 +3,11 @@ import { Game } from "../models/game.model";
 import Move from "../models/move.model";
 import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
-import { MakeMoveDTO, MoveCreateDTO } from "../dto/move.dto";
+import {
+  MakeMoveDTO,
+  MoveCreateDTO,
+  SuggestionsDTORequest,
+} from "../dto/move.dto";
 import { MoveReturnDTO } from "../dto/move.dto";
 
 export class MoveService {
@@ -47,15 +51,13 @@ export class MoveService {
   private COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   private ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-
   async getInitialBoard(game: Game): Promise<MoveReturnDTO> {
     const fen = await this.getFenFromBoard(this.initialBoard, game.id);
 
     const moveReturn: MoveReturnDTO = {
       id: game.id.toString(),
       fen: fen,
-      moves: [
-      ],
+      moves: [],
       isCheck: false,
       isCheckmate: false,
       status: game.status,
@@ -85,10 +87,10 @@ export class MoveService {
   }
 
   async currentMoveOfGame(game_id: number): Promise<ChessBoard> {
-    let currentBoard = {...this.initialBoard};
+    let currentBoard = { ...this.initialBoard };
     const moves = await Move.findAll({
       where: { game_id },
-      order: [['id', 'ASC']]
+      order: [["id", "ASC"]],
     });
 
     for (const move of moves) {
@@ -104,25 +106,30 @@ export class MoveService {
   async validateMove(board: ChessBoard, move: MakeMoveDTO): Promise<Boolean> {
     const piece = board[move.from];
     if (!piece) return false;
-    
+
     return this.switchCaseTypePiece(piece.type, move, board, piece.color);
   }
 
-  switchCaseTypePiece(type: string, move: MakeMoveDTO, board: ChessBoard, color: string): boolean {
+  switchCaseTypePiece(
+    type: string,
+    move: MakeMoveDTO,
+    board: ChessBoard,
+    color: string
+  ): boolean {
     const isFirstMove = this.firstMovePawn(move.from, color);
-    
-    switch(type) {
-      case 'PAWN':
+
+    switch (type) {
+      case "PAWN":
         return this.validatePawnMove(board, move, isFirstMove, color);
-      case 'KNIGHT':
+      case "KNIGHT":
         return this.validateKnightMove(board, move, color);
-      case 'BISHOP':
+      case "BISHOP":
         return this.validateBishopMove(board, move, color);
-      case 'ROOK':
+      case "ROOK":
         return this.validateRookMove(board, move, color);
-      case 'QUEEN':
+      case "QUEEN":
         return this.validateQueenMove(board, move, color);
-      case 'KING':
+      case "KING":
         return this.validateKingMove(board, move, color);
       default:
         return false;
@@ -130,20 +137,25 @@ export class MoveService {
   }
 
   firstMovePawn(from: string, color: string): boolean {
-    if (color === 'WHITE') {
-      return from[1] === '2';
+    if (color === "WHITE") {
+      return from[1] === "2";
     } else {
-      return from[1] === '7';
+      return from[1] === "7";
     }
   }
 
-  validatePawnMove(board: ChessBoard, move: MakeMoveDTO, isFirstMove: boolean, color: string): boolean {
+  validatePawnMove(
+    board: ChessBoard,
+    move: MakeMoveDTO,
+    isFirstMove: boolean,
+    color: string
+  ): boolean {
     const fromCol = this.COLUMNS.indexOf(move.from[0]);
     const fromRow = parseInt(move.from[1]);
     const toCol = this.COLUMNS.indexOf(move.to[0]);
     const toRow = parseInt(move.to[1]);
-    
-    const direction = color === 'WHITE' ? 1 : -1;
+
+    const direction = color === "WHITE" ? 1 : -1;
     const targetPiece = board[move.to];
 
     if (fromCol === toCol && toRow === fromRow + direction && !targetPiece) {
@@ -162,12 +174,16 @@ export class MoveService {
     return false;
   }
 
-  validateKnightMove(board: ChessBoard, move: MakeMoveDTO, color: string): boolean {
+  validateKnightMove(
+    board: ChessBoard,
+    move: MakeMoveDTO,
+    color: string
+  ): boolean {
     const fromCol = this.COLUMNS.indexOf(move.from[0]);
     const fromRow = parseInt(move.from[1]);
     const toCol = this.COLUMNS.indexOf(move.to[0]);
     const toRow = parseInt(move.to[1]);
-    
+
     const targetPiece = board[move.to];
     if (targetPiece && targetPiece.color === color) return false;
 
@@ -177,12 +193,16 @@ export class MoveService {
     return (colDiff === 2 && rowDiff === 1) || (colDiff === 1 && rowDiff === 2);
   }
 
-  validateBishopMove(board: ChessBoard, move: MakeMoveDTO, color: string): boolean {
+  validateBishopMove(
+    board: ChessBoard,
+    move: MakeMoveDTO,
+    color: string
+  ): boolean {
     const fromCol = this.COLUMNS.indexOf(move.from[0]);
     const fromRow = parseInt(move.from[1]);
     const toCol = this.COLUMNS.indexOf(move.to[0]);
     const toRow = parseInt(move.to[1]);
-    
+
     const colDiff = Math.abs(toCol - fromCol);
     const rowDiff = Math.abs(toRow - fromRow);
 
@@ -192,7 +212,7 @@ export class MoveService {
     const rowStep = toRow > fromRow ? 1 : -1;
 
     for (let i = 1; i < colDiff; i++) {
-      const square = `${this.COLUMNS[fromCol + (i * colStep)]}${fromRow + (i * rowStep)}`;
+      const square = `${this.COLUMNS[fromCol + i * colStep]}${fromRow + i * rowStep}`;
       if (board[square]) return false;
     }
 
@@ -200,7 +220,11 @@ export class MoveService {
     return !targetPiece || targetPiece.color !== color;
   }
 
-  validateRookMove(board: ChessBoard, move: MakeMoveDTO, color: string): boolean {
+  validateRookMove(
+    board: ChessBoard,
+    move: MakeMoveDTO,
+    color: string
+  ): boolean {
     const fromCol = this.COLUMNS.indexOf(move.from[0]);
     const fromRow = parseInt(move.from[1]);
     const toCol = this.COLUMNS.indexOf(move.to[0]);
@@ -209,13 +233,17 @@ export class MoveService {
     if (fromCol !== toCol && fromRow !== toRow) return false;
 
     const isVertical = fromCol === toCol;
-    const start = isVertical ? Math.min(fromRow, toRow) : Math.min(fromCol, toCol);
-    const end = isVertical ? Math.max(fromRow, toRow) : Math.max(fromCol, toCol);
+    const start = isVertical
+      ? Math.min(fromRow, toRow)
+      : Math.min(fromCol, toCol);
+    const end = isVertical
+      ? Math.max(fromRow, toRow)
+      : Math.max(fromCol, toCol);
 
     for (let i = start + 1; i < end; i++) {
-      const square = isVertical ? 
-        `${move.from[0]}${i}` : 
-        `${this.COLUMNS[i]}${fromRow}`;
+      const square = isVertical
+        ? `${move.from[0]}${i}`
+        : `${this.COLUMNS[i]}${fromRow}`;
       if (board[square]) return false;
     }
 
@@ -223,11 +251,22 @@ export class MoveService {
     return !targetPiece || targetPiece.color !== color;
   }
 
-  validateQueenMove(board: ChessBoard, move: MakeMoveDTO, color: string): boolean {
-    return this.validateBishopMove(board, move, color) || this.validateRookMove(board, move, color);
+  validateQueenMove(
+    board: ChessBoard,
+    move: MakeMoveDTO,
+    color: string
+  ): boolean {
+    return (
+      this.validateBishopMove(board, move, color) ||
+      this.validateRookMove(board, move, color)
+    );
   }
 
-  validateKingMove(board: ChessBoard, move: MakeMoveDTO, color: string): boolean {
+  validateKingMove(
+    board: ChessBoard,
+    move: MakeMoveDTO,
+    color: string
+  ): boolean {
     const fromCol = this.COLUMNS.indexOf(move.from[0]);
     const fromRow = parseInt(move.from[1]);
     const toCol = this.COLUMNS.indexOf(move.to[0]);
@@ -243,19 +282,24 @@ export class MoveService {
   }
 
   // Partie pour les suggestions
-  switchCaseTypePieceSuggestion(type: string, from: string, board: ChessBoard, color: string): String[] {
-    switch(type) {
-      case 'PAWN':
+  switchCaseTypePieceSuggestion(
+    type: string,
+    from: string,
+    board: ChessBoard,
+    color: string
+  ): String[] {
+    switch (type) {
+      case "PAWN":
         return this.suggestPawnMove(board, from, color);
-      case 'KNIGHT':
+      case "KNIGHT":
         return this.suggestKnightMove(board, from, color);
-      case 'BISHOP':
+      case "BISHOP":
         return this.suggestBishopMove(board, from, color);
-      case 'ROOK':
+      case "ROOK":
         return this.suggestRookMove(board, from, color);
-      case 'QUEEN':
+      case "QUEEN":
         return this.suggestQueenMove(board, from, color);
-      case 'KING':
+      case "KING":
         return this.suggestKingMove(board, from, color);
       default:
         return [];
@@ -266,15 +310,17 @@ export class MoveService {
     const suggestions: String[] = [];
     const fromCol = this.COLUMNS.indexOf(from[0]);
     const fromRow = parseInt(from[1]);
-    const direction = color === 'WHITE' ? 1 : -1;
-    const isFirstMove = (color === 'WHITE' && fromRow === 2) || (color === 'BLACK' && fromRow === 7);
+    const direction = color === "WHITE" ? 1 : -1;
+    const isFirstMove =
+      (color === "WHITE" && fromRow === 2) ||
+      (color === "BLACK" && fromRow === 7);
 
     const oneStep = `${from[0]}${fromRow + direction}`;
     if (!board[oneStep]) {
       suggestions.push(oneStep);
 
       if (isFirstMove) {
-        const twoStep = `${from[0]}${fromRow + (2 * direction)}`;
+        const twoStep = `${from[0]}${fromRow + 2 * direction}`;
         if (!board[twoStep] && !board[oneStep]) {
           suggestions.push(twoStep);
         }
@@ -301,8 +347,14 @@ export class MoveService {
     const fromRow = parseInt(from[1]);
     
     const moves = [
-      [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-      [1, -2], [1, 2], [2, -1], [2, 1]
+      [-2, -1],
+      [-2, 1],
+      [-1, -2],
+      [-1, 2],
+      [1, -2],
+      [1, 2],
+      [2, -1],
+      [2, 1],
     ];
 
     for (const [colDiff, rowDiff] of moves) {
@@ -327,7 +379,10 @@ export class MoveService {
     const fromRow = parseInt(from[1]);
     
     const directions = [
-      [-1, -1], [-1, 1], [1, -1], [1, 1]
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1],
     ];
 
     for (const [colDir, rowDir] of directions) {
@@ -361,7 +416,10 @@ export class MoveService {
     const fromRow = parseInt(from[1]);
     
     const directions = [
-      [0, 1], [0, -1], [1, 0], [-1, 0]
+      [0, 1],
+      [0, -1],
+      [1, 0],
+      [-1, 0],
     ];
 
     for (const [colDir, rowDir] of directions) {
@@ -392,7 +450,7 @@ export class MoveService {
   suggestQueenMove(board: ChessBoard, from: string, color: string): String[] {
     return [
       ...this.suggestBishopMove(board, from, color),
-      ...this.suggestRookMove(board, from, color)
+      ...this.suggestRookMove(board, from, color),
     ];
   }
 
@@ -402,9 +460,14 @@ export class MoveService {
     const fromRow = parseInt(from[1]);
     
     const directions = [
-      [-1, -1], [-1, 0], [-1, 1],
-      [0, -1],           [0, 1],
-      [1, -1],  [1, 0],  [1, 1]
+      [-1, -1],
+      [-1, 0],
+      [-1, 1],
+      [0, -1],
+      [0, 1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
     ];
 
     for (const [colDir, rowDir] of directions) {
@@ -483,13 +546,13 @@ export class MoveService {
 
   async getNextPlayer(game_id: number): Promise<string> {
     const currentPlayer = await this.getCurrentPlayer(game_id);
-    return currentPlayer === 'WHITE' ? 'BLACK' : 'WHITE';
+    return currentPlayer === "WHITE" ? "BLACK" : "WHITE";
   }
 
   isKingInCheck(board: ChessBoard, playerColor: string): boolean {
     let kingPosition: string | null = null;
     for (const [square, piece] of Object.entries(board)) {
-      if (piece && piece.type === 'KING' && piece.color === playerColor) {
+      if (piece && piece.type === "KING" && piece.color === playerColor) {
         kingPosition = square;
         break;
       }
@@ -501,7 +564,7 @@ export class MoveService {
       if (piece && piece.color !== playerColor) {
         const move: MakeMoveDTO = {
           from: square,
-          to: kingPosition
+          to: kingPosition,
         };
         if (this.switchCaseTypePiece(piece.type, move, board, piece.color)) {
           return true;
@@ -539,7 +602,6 @@ export class MoveService {
     return true;
   }
 
-
   async getFenFromBoard(board: ChessBoard, game_id: number): Promise<string> {
     const rows: string[] = [];
     for (let row = 8; row >= 1; row--) {
@@ -555,15 +617,30 @@ export class MoveService {
           }
           let pieceChar: string;
           switch (piece.type) {
-            case 'KING': pieceChar = 'k'; break;
-            case 'QUEEN': pieceChar = 'q'; break;
-            case 'ROOK': pieceChar = 'r'; break;
-            case 'BISHOP': pieceChar = 'b'; break;
-            case 'KNIGHT': pieceChar = 'n'; break;
-            case 'PAWN': pieceChar = 'p'; break;
-            default: pieceChar = ''; break;
+            case "KING":
+              pieceChar = "k";
+              break;
+            case "QUEEN":
+              pieceChar = "q";
+              break;
+            case "ROOK":
+              pieceChar = "r";
+              break;
+            case "BISHOP":
+              pieceChar = "b";
+              break;
+            case "KNIGHT":
+              pieceChar = "n";
+              break;
+            case "PAWN":
+              pieceChar = "p";
+              break;
+            default:
+              pieceChar = "";
+              break;
           }
-          rowString += piece.color === 'WHITE' ? pieceChar.toUpperCase() : pieceChar;
+          rowString +=
+            piece.color === "WHITE" ? pieceChar.toUpperCase() : pieceChar;
         } else {
           emptyCount++;
         }
@@ -576,11 +653,10 @@ export class MoveService {
     const fen =
       rows.join("/") +
       " " +
-      (await this.getNextPlayer(game_id) === "WHITE" ? "w" : "b") +
+      ((await this.getNextPlayer(game_id)) === "WHITE" ? "w" : "b") +
       " - - 0 1";
     return fen;
   }
-
 
   async makeMove(game_id: number, move: MakeMoveDTO) {
     const game = await Game.findByPk(game_id);
@@ -604,7 +680,7 @@ export class MoveService {
 
       let type = 'normal';
       if (targetPiece) {
-        type = 'capture';
+        type = "capture";
       }
 
       const nextPlayer = currentPlayer === 'WHITE' ? 'BLACK' : 'WHITE';
@@ -632,12 +708,12 @@ export class MoveService {
         isCheckmate: isCheckmate,
         turn: currentPlayer,
       };
-      
+
       await this.createMove(moveCreate);
       
       const allMoves = await Move.findAll({
         where: { game_id },
-        order: [['id', 'ASC']]
+        order: [["id", "ASC"]],
       });
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
@@ -645,11 +721,11 @@ export class MoveService {
       const moveReturn: MoveReturnDTO = {
         id: game_id.toString(),
         fen: fen,
-        moves: allMoves.map(m => ({
+        moves: allMoves.map((m) => ({
           from: m.from,
           to: m.to,
           piece: m.piece,
-          color: m.turn
+          color: m.turn,
         })),
         isCheck: isCheck,
         isCheckmate: isCheckmate,
@@ -669,7 +745,6 @@ export class MoveService {
     }
   }
 
-
   async getState(game_id: number): Promise<MoveReturnDTO> {
     const game = await Game.findByPk(game_id);
     if (!game) {
@@ -684,7 +759,7 @@ export class MoveService {
 
     const allMoves = await Move.findAll({
       where: { game_id },
-      order: [['id', 'ASC']]
+      order: [["id", "ASC"]],
     });
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
@@ -692,11 +767,11 @@ export class MoveService {
     const moveReturn: MoveReturnDTO = {
       id: game_id.toString(),
       fen: fen,
-      moves: allMoves.map(m => ({
+      moves: allMoves.map((m) => ({
         from: m.from,
         to: m.to,
         piece: m.piece,
-        color: m.turn
+        color: m.turn,
       })),
       isCheck: isCheck,
       isCheckmate: isCheckmate,
@@ -713,7 +788,6 @@ export class MoveService {
     return moveReturn;
   }
 
-
   async getSuggestions(game_id: number, from: string): Promise<String[]> {
     const currentBoard = await this.currentMoveOfGame(game_id);
     const currentPlayer = await this.getNextPlayer(game_id);
@@ -722,7 +796,12 @@ export class MoveService {
       throw new Error("403: Not your turn or piece");
     }
 
-    return this.switchCaseTypePieceSuggestion(piece.type, from, currentBoard, currentPlayer);
+    return this.switchCaseTypePieceSuggestion(
+      piece.type,
+      from,
+      currentBoard,
+      currentPlayer
+    );
   }
 
   async promotion(game_id: number, piece: ChessPiece) {
