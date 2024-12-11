@@ -248,10 +248,10 @@ export class MoveService {
   async getCurrentPlayer(game_id: number): Promise<string> {
     const lastMove = await Move.findOne({
       where: { game_id },
-      order: [['id', 'DESC']]
+      order: [["id", "DESC"]],
     });
 
-    return lastMove ? (lastMove.turn === 'WHITE' ? 'WHITE' : 'BLACK') : 'WHITE';
+    return lastMove ? lastMove.turn : "WHITE";
   }
 
   async getNextPlayer(game_id: number): Promise<string> {
@@ -332,8 +332,17 @@ export class MoveService {
             rowString += emptyCount.toString();
             emptyCount = 0;
           }
-          const pieceChar = piece.type.charAt(0);
-          rowString += piece.color === 'WHITE' ? pieceChar.toUpperCase() : pieceChar.toLowerCase();
+          let pieceChar: string;
+          switch (piece.type) {
+            case 'KING': pieceChar = 'k'; break;
+            case 'QUEEN': pieceChar = 'q'; break;
+            case 'ROOK': pieceChar = 'r'; break;
+            case 'BISHOP': pieceChar = 'b'; break;
+            case 'KNIGHT': pieceChar = 'n'; break;
+            case 'PAWN': pieceChar = 'p'; break;
+            default: pieceChar = ''; break;
+          }
+          rowString += piece.color === 'WHITE' ? pieceChar.toUpperCase() : pieceChar;
         } else {
           emptyCount++;
         }
@@ -359,7 +368,7 @@ export class MoveService {
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
-    const currentPlayer = await this.getCurrentPlayer(game_id);
+    const currentPlayer = await this.getNextPlayer(game_id);
     const piece = currentBoard[move.from];
 
     // Vérifier si c'est la bonne pièce du bon joueur
@@ -415,7 +424,6 @@ export class MoveService {
       });
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
-
       // Préparer la réponse
       const moveReturn: MoveReturnDTO = {
         id: game_id.toString(),
