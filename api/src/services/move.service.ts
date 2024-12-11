@@ -98,6 +98,9 @@ export class MoveService {
       const to = move.to;
       currentBoard[to] = currentBoard[from];
       currentBoard[from] = null;
+      if (move.type === 'promotion') {
+        currentBoard[to] = { type: move.piece as "PAWN" | "ROOK" | "KNIGHT" | "BISHOP" | "QUEEN" | "KING", color: move.turn as "WHITE" | "BLACK" };
+      }
     }
 
     return currentBoard;
@@ -672,6 +675,8 @@ export class MoveService {
       throw new Error("403: Not your turn or piece");
     }
 
+    const isCheckBefore = this.isKingInCheck(currentBoard, currentPlayer);
+
     if (await this.validateMove(currentBoard, move)) {
       const newBoard = {...currentBoard};
       const targetPiece = newBoard[move.to];
@@ -685,6 +690,11 @@ export class MoveService {
 
       const nextPlayer = currentPlayer === 'WHITE' ? 'BLACK' : 'WHITE';
       const isCheck = this.isKingInCheck(newBoard, nextPlayer);
+      
+      if (isCheckBefore && !isCheck) {
+        throw new Error("403: Invalid move");
+      }
+      
       const isCheckmate = this.isCheckmate(newBoard, nextPlayer);
       const isPromotion = this.isPromotion(newBoard);
 
@@ -694,7 +704,7 @@ export class MoveService {
         game.winner = currentPlayer;
         await game.save();
       } else if (isCheck) {
-        game.status = "checkmate"; //TODO : check
+        game.status = "check";
         await game.save();
       }
 

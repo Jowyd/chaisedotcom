@@ -14,7 +14,8 @@ export class Game extends Model {
     | "checkmate"
     | "stalemate"
     | "draw"
-    | "surrender";
+    | "surrender"
+    | "check";
 }
 
 Game.init(
@@ -50,7 +51,8 @@ Game.init(
         "checkmate",
         "stalemate",
         "draw",
-        "surrender"
+        "surrender",
+        "check"
       ),
       defaultValue: "in_progress",
     },
