@@ -12,9 +12,7 @@ const PORT = config.PORT || 8000;
 const app: Application = express();
 
 app.use(express.json());
-app.use(cors({
-  origin: "http://localhost:5173",
-}));
+app.use(cors());
 app.use(morgan("tiny"));
 app.use(express.static("public"));
 app.use(

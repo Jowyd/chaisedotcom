@@ -48,19 +48,19 @@ export class GameController extends Controller {
     }
   }
 
-  // @Post("/{game_id}/move")
-  // public async makeMove(
-  //   @Path() game_id: number,
-  //   @Body() move: MakeMoveDTO
-  // ): Promise<MoveReturnDTO> {
-  //   console.log(move);
-  //   if (!game_id || !move.from || !move.to) {
-  //     this.setStatus(400);
-  //     throw new Error("Missing required fields");
-  //   }
-  //   console.log("game_id", game_id, "move", move);
-  //   return await moveService.makeMove(game_id, move);
-  // }
+  @Post("/{game_id}/move")
+  public async makeMove(
+    @Path() game_id: number,
+    @Body() move: MakeMoveDTO
+  ): Promise<MoveReturnDTO> {
+    console.log(move);
+    if (!game_id || !move.from || !move.to) {
+      this.setStatus(400);
+      throw new Error("Missing required fields");
+    }
+    console.log("game_id", game_id, "move", move);
+    return await moveService.makeMove(game_id, move);
+  }
 
 
   @Delete("/{game_id}")
