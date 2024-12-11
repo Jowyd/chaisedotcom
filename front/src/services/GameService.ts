@@ -14,9 +14,10 @@ let mockGameState: GameState = {
 };
 
 export interface Move {
+  color: string;
   from: string;
+  piece: string;
   to: string;
-  promotion?: string;
 }
 
 export interface GameState {
@@ -45,7 +46,6 @@ export const GameService = {
       const response = await axios.get(`${API_URL}games/${gameId}`);
       console.log('response', response);
       const game = response.data;
-      //  await delay(300); // Simule la latence réseau
       return { ...mockGameState, ...game };
     } catch (error) {
       console.error(error);
