@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
 import { GameService } from '@/services/GameService';
 import { useRoute } from 'vue-router';
@@ -47,6 +47,14 @@ const handleDrawOffer = async () => {
   }
 };
 
+onMounted(() => {
+  // Récupérer les informations de la partie
+  GameService.getGame(gameId.value).then((game) => {
+    console.log('Game:', game);
+    //     gameInfo.value = game;
+  });
+});
+
 // Ajout d'une ref pour la couleur du joueur
 const playerColor = ref<'white' | 'black'>('white');
 
@@ -91,7 +99,7 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
         </div>
       </div>
 
-      <div class="col-12 md:col-9 p-3 w-full">
+      <div class="col-12 md:col-9 p-3 w-full flex">
         <div class="game-container surface-section border-round shadow-1 p-3">
           <!-- Black Player Info -->
           <div class="flex justify-content-between align-items-center">
@@ -144,22 +152,25 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
             />
           </div>
         </div>
+        <div class="col-12 md:col-3 p-3 m-auto">
+          <TabView>
+            <TabPanel header="Moves" :value="0">
+              <div class="moves-list surface-section border-round p-3 h-30rem overflow-y-auto">
+                <div class="flex align-items-center mb-2" v-for="n in 10" :key="n">
+                  <span class="text-500 mr-2">{{ n }}.</span>
+                  <span class="mr-2">e4</span>
+                  <span>e5</span>
+                  <div :class="{ 'text-500 ml-2': true }">
+                    {{ n % 2 === 0 ? 'Noir' : 'Blanc' }}
+                  </div>
+                </div>
+              </div>
+            </TabPanel>
+          </TabView>
+        </div>
       </div>
 
       <!-- Game Chat & Moves -->
-      <!-- <div class="col-12 md:col-3 p-3">
-        <TabView>
-          <TabPanel header="Moves" :value="0">
-            <div class="moves-list surface-section border-round p-3 h-30rem overflow-y-auto">
-              <div class="flex align-items-center mb-2" v-for="n in 10" :key="n">
-                <span class="text-500 mr-2">{{ n }}.</span>
-                <span class="mr-2">e4</span>
-                <span>e5</span>
-              </div>
-            </div>
-          </TabPanel>
-        </TabView>
-      </div> -->
     </div>
   </div>
 </template>

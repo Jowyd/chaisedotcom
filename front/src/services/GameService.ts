@@ -16,6 +16,7 @@ let mockGameState: GameState = {
 export interface Move {
   from: string;
   to: string;
+  promotion?: string;
 }
 
 export interface GameState {
@@ -40,14 +41,16 @@ const updateFenAfterMove = (move: Move): string => {
 
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
+    //     const response = await axios.get(`${API_URL}games/${gameId}`);
+    //     console.log('response', response);
     await delay(300); // Simule la latence réseau
     return { ...mockGameState, id: gameId };
   },
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
     try {
-      const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
-      console.log('response', respose);
+      //  const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
+      //  console.log('response', respose);
 
       // Mise à jour du state du jeu
       mockGameState = {
@@ -58,6 +61,7 @@ export const GameService = {
         isCheck: Math.random() < 0.2, // 20% de chance d'être en échec
         isCheckmate: false,
       };
+      console.log(mockGameState);
 
       return mockGameState;
     } catch (error) {
