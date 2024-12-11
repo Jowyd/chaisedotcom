@@ -20,8 +20,7 @@ interface Position {
 }
 
 interface PromotionData {
-  from: Position;
-  to: Position;
+  color: 'white' | 'black';
   isOpen: boolean;
 }
 
@@ -40,8 +39,7 @@ const capturedPieces = ref<CapturedPieces>({
 });
 
 const promotionDialog = ref<PromotionData>({
-  from: { row: 0, col: 0 },
-  to: { row: 0, col: 0 },
+  color: 'white',
   isOpen: false,
 });
 
@@ -51,13 +49,13 @@ interface PromotionPiece {
 }
 
 const promotionPieces: { [key: string]: PromotionPiece[] } = {
-  white: [
+  WHITE: [
     { type: 'q', symbol: '♛' },
     { type: 'r', symbol: '♜' },
     { type: 'b', symbol: '♝' },
     { type: 'n', symbol: '♞' },
   ],
-  black: [
+  BLACK: [
     { type: 'q', symbol: '♛' },
     { type: 'r', symbol: '♜' },
     { type: 'b', symbol: '♝' },
@@ -152,18 +150,16 @@ const getSquareColor = (row: number, col: number): string => {
   return (row + col) % 2 === 0 ? 'white' : 'black';
 };
 
-const isValidMove = (from: Position, to: Position): boolean => {
-  // Ici, vous pouvez implémenter la logique de validation des mouvements
-  // Pour l'instant, permettons tous les mouvements
-  return true;
-};
-
 // Mise à jour de handleSquareClick pour utiliser les coordonnées ajustées
 const handleSquareClick = async (displayRow: number, displayCol: number) => {
-  console.log('handleSquareClick', isPlayerTurn.value, displayRow, displayCol, selectedPiece.value);
   const { row, col } = adjustCoordinates(displayRow, displayCol);
   const piece = board.value[row][col];
-  if (!selectedPiece.value && piece?.color != gameState.value?.turn) return;
+
+  if (
+    (!selectedPiece.value && piece?.color != gameState.value?.turn) ||
+    (!selectedPiece.value && !piece)
+  )
+    return;
 
   if (selectedPiece.value && selectedPiece.value.row === row && selectedPiece.value.col === col) {
     selectedPiece.value = null;
@@ -186,50 +182,24 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
   const from = selectedPiece.value;
   const to = { row, col };
 
-  if (isValidMove(from, to)) {
-    try {
-      const move: Move = {
-        from: toAlgebraic(from.row, from.col),
-        to: toAlgebraic(row, col),
-      };
-      const newGameState = await GameService.makeMove(gameId.value, move);
-      // Si une pièce est présente sur la case cible, elle est capturée
-      const capturedPiece = board.value[row][col];
-      if (capturedPiece) {
-        const captureColor = capturedPiece.color === 'white' ? 'white' : 'black';
-        capturedPieces.value[captureColor].push(capturedPiece);
-      }
-
-      console.log('Making move:', move);
-
-      // Déplacer la pièce sur l'échiquier
-
-      const currentPiece = board.value[row][col];
-      console.log('currentPiece', currentPiece);
-      const isPromotion =
-        currentPiece?.type === 'p' &&
-        ((currentPiece.color === 'white' && to.row === 0) ||
-          (currentPiece.color === 'black' && to.row === 7));
-
-      if (isPromotion) {
-        promotionDialog.value = {
-          from,
-          to,
-          isOpen: true,
-        };
-      } else {
-        console.log('MAke move');
-        updateBoardFromGameState(newGameState);
-      }
-      selectedPiece.value = null;
-      return;
-    } catch (error) {
-      console.error('Error making move:', error);
-    } finally {
-      const piece = board.value[from.row][from.col];
-      board.value[row][col] = piece;
-      board.value[from.row][from.col] = null;
+  try {
+    const move: Move = {
+      from: toAlgebraic(from.row, from.col),
+      to: toAlgebraic(row, col),
+    };
+    const newGameState = await GameService.makeMove(gameId.value, move);
+    // Si une pièce est présente sur la case cible, elle est capturée
+    const capturedPiece = board.value[row][col];
+    if (capturedPiece) {
+      const captureColor = capturedPiece.color === 'white' ? 'white' : 'black';
+      capturedPieces.value[captureColor].push(capturedPiece);
     }
+
+    selectedPiece.value = null;
+    updateBoardFromGameState(newGameState);
+    return;
+  } catch (error) {
+    console.error('Error making move:', error);
   }
 
   selectedPiece.value = null;
@@ -237,7 +207,6 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
 };
 
 const updateBoardFromGameState = (state: GameState) => {
-  gameState.value = state;
   const newBoard: (ChessPiece | null)[][] = Array(8)
     .fill(null)
     .map(() => Array(8).fill(null));
@@ -274,8 +243,18 @@ const updateBoardFromGameState = (state: GameState) => {
     }
   });
 
+  if (state.promotion != null) {
+    console.log(state.promotion);
+    promotionDialog.value = {
+      color: state.promotion,
+      isOpen: true,
+    };
+  }
+
   board.value = newBoard;
   gameState.value = state;
+  selectedPiece.value = null;
+  validMoves.value = [];
 };
 
 const loadGame = async () => {
@@ -327,25 +306,18 @@ watch(capturedPieces, (newValue) => {
 
 const handlePromotion = async (promotionPiece: PromotionPiece) => {
   try {
-    const { from, to } = promotionDialog.value;
-    const move: Move = {
-      from: toAlgebraic(from.row, from.col),
-      to: toAlgebraic(to.row, to.col),
-      promotion: promotionPiece.type,
-    };
-
-    const newGameState = await GameService.makeMove(gameId.value, move);
-    console.log('Promotion move:', move, newGameState);
-
-    // Mettre à jour l'état du jeu
+    const { color } = promotionDialog.value;
+    console.log('Promotion piece:', promotionPiece, promotionDialog.value, color);
     const newPiece: ChessPiece = {
       type: promotionPiece.type,
-      color: gameState?.value?.turn === 'white' ? 'white' : 'black',
+      color: color,
       symbol: promotionPiece.symbol,
     };
-    board.value[to.row][to.col] = newPiece;
-    gameState.value = newGameState;
-    //     updateBoardFromGameState(newGameState);
+
+    const newGameState = await GameService.makePromotion(gameId.value, newPiece);
+
+    // Mettre à jour l'état du jeu
+    updateBoardFromGameState(newGameState);
 
     // Fermer le dialog
     promotionDialog.value.isOpen = false;
@@ -353,6 +325,10 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
     console.error('Error making promotion move:', error);
   }
 };
+
+function typeToFullName(type: string) {
+  throw new Error('Function not implemented.');
+}
 </script>
 
 <template>
@@ -459,12 +435,12 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
         <h3 class="promotion-title">Choose promotion piece</h3>
         <div class="promotion-pieces">
           <button
-            v-for="piece in promotionPieces[gameState!.turn]"
+            v-for="piece in promotionPieces[promotionDialog.color]"
             :key="piece.type"
             class="promotion-piece"
             @click="handlePromotion(piece)"
           >
-            <span :class="gameState?.turn">{{ piece.symbol }}</span>
+            <span :class="promotionDialog.color">{{ piece.symbol }}</span>
           </button>
         </div>
       </div>

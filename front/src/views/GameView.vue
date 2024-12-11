@@ -58,7 +58,6 @@ const handleDrawOffer = async () => {
 onMounted(() => {
   // Récupérer les informations de la partie
   GameService.getGame(gameId.value).then((game: GameState) => {
-    console.log('Game:', game);
     moves.value = game.moves;
     //     gameInfo.value = game;
   });
