@@ -44,3 +44,6 @@ export interface MoveCreateDTO {
   turn: string;
 }
 
+export interface SuggestionsDTORequest {
+  from: string;
+}

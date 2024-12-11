@@ -2,6 +2,20 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
 
+interface ChessPiece {
+  type: string;
+  color: 'white' | 'black';
+  symbol: string;
+}
+
+const pieces: { [key: string]: string } = {
+  r: '♜',
+  n: '♞',
+  b: '♝',
+  q: '♛',
+  k: '♚',
+  p: '♟',
+};
 // Simulation des données
 let mockGameState: GameState = {
   id: 'game-1',
@@ -18,6 +32,11 @@ export interface Move {
   from: string;
   piece: string;
   to: string;
+}
+
+export interface CapturedPieces {
+  white: ChessPiece[];
+  black: ChessPiece[];
 }
 
 export interface GameState {
@@ -40,13 +59,69 @@ const updateFenAfterMove = (move: Move): string => {
   return mockGameState.fen;
 };
 
+function fenToColor(fen: string): string {
+  return fen.split(' ')[1];
+}
+function getPiecefromFen(char: string): ChessPiece {
+  return {
+    type: char.toLowerCase(),
+    color: char === char.toLowerCase() ? 'black' : 'white',
+    symbol: pieces[char.toLowerCase()],
+  };
+}
+function extractCapturedPiece(currentFen: string): CapturedPieces {
+  const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  const extractPieces = (fen: string) => {
+    const boardPart = fen.split(' ')[0];
+    const pieces: string[] = [];
+
+    boardPart.split('/').forEach((row) => {
+      row.split('').forEach((char) => {
+        if (isNaN(parseInt(char))) {
+          pieces.push(char);
+        }
+      });
+    });
+
+    return pieces;
+  };
+
+  const initialPieces = extractPieces(initialFen);
+  const currentPieces = extractPieces(currentFen);
+
+  // Déterminer les pièces capturées
+  const capturedPieces = initialPieces.filter((piece) => !currentPieces.includes(piece));
+  const capturedPiecesObj = capturedPieces.map((piece) => getPiecefromFen(piece));
+  return {
+    white: capturedPiecesObj.filter((piece) => piece.color === 'white'),
+    black: capturedPiecesObj.filter((piece) => piece.color === 'black'),
+  };
+}
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
     try {
       const response = await axios.get(`${API_URL}games/${gameId}`);
       console.log('response', response);
       const game = response.data;
-      return { ...mockGameState, ...game };
+      const color = fenToColor(game.fen) == 'w' ? 'white' : 'black';
+      return { ...mockGameState, ...game, turn: color };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  getCapturedPieces(fen: string): CapturedPieces {
+    const capturedPieces = extractCapturedPiece(fen);
+    return capturedPieces;
+  },
+  async getSuggestions(gameId: string, from: string): Promise<string[]> {
+    try {
+      const response = await axios.post(`${API_URL}games/${gameId}/suggestions`, {
+        from,
+      });
+      console.log('response', response);
+      return response.data;
     } catch (error) {
       console.error(error);
       throw error;
