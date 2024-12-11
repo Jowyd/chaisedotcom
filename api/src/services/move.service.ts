@@ -346,7 +346,7 @@ export class MoveService {
     const fen =
       rows.join("/") +
       " " +
-      //(this.getNextPlayerColor(board) === "WHITE" ? "w" : "b") +
+      (await this.getNextPlayer(game_id) === "WHITE" ? "w" : "b") +
       " - - 0 1";
     return fen;
   }

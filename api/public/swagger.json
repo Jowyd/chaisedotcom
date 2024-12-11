@@ -550,6 +550,36 @@
 			}
 		},
 		"/games/{game_id}": {
+			"get": {
+				"operationId": "GetState",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MoveReturnDTO"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Games"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "game_id",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
 			"delete": {
 				"operationId": "DeleteGame",
 				"responses": {
