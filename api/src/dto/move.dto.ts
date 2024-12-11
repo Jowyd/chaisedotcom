@@ -43,3 +43,4 @@ export interface MoveCreateDTO {
   isCheckmate?: boolean;
   turn: string;
 }
+

@@ -245,6 +245,201 @@ export class MoveService {
     return !targetPiece || targetPiece.color !== color;
   }
 
+  // Partie pour les suggestions
+  switchCaseTypePieceSuggestion(type: string, from: string, board: ChessBoard, color: string): String[] {
+    switch(type) {
+      case 'PAWN':
+        return this.suggestPawnMove(board, from, color);
+      case 'KNIGHT':
+        return this.suggestKnightMove(board, from, color);
+      case 'BISHOP':
+        return this.suggestBishopMove(board, from, color);
+      case 'ROOK':
+        return this.suggestRookMove(board, from, color);
+      case 'QUEEN':
+        return this.suggestQueenMove(board, from, color);
+      case 'KING':
+        return this.suggestKingMove(board, from, color);
+      default:
+        return [];
+    }
+  }
+
+  suggestPawnMove(board: ChessBoard, from: string, color: string): String[] {
+    const suggestions: String[] = [];
+    const fromCol = this.COLUMNS.indexOf(from[0]);
+    const fromRow = parseInt(from[1]);
+    const direction = color === 'WHITE' ? 1 : -1;
+    const isFirstMove = (color === 'WHITE' && fromRow === 2) || (color === 'BLACK' && fromRow === 7);
+
+    // Mouvement d'une case en avant
+    const oneStep = `${from[0]}${fromRow + direction}`;
+    if (!board[oneStep]) {
+      suggestions.push(oneStep);
+
+      // Mouvement de deux cases si premier mouvement
+      if (isFirstMove) {
+        const twoStep = `${from[0]}${fromRow + (2 * direction)}`;
+        if (!board[twoStep] && !board[oneStep]) {
+          suggestions.push(twoStep);
+        }
+      }
+    }
+
+    // Prises en diagonale
+    const diagonals = [fromCol - 1, fromCol + 1];
+    for (const col of diagonals) {
+      if (col >= 0 && col < 8) {
+        const capture = `${this.COLUMNS[col]}${fromRow + direction}`;
+        const targetPiece = board[capture];
+        if (targetPiece && targetPiece.color !== color) {
+          suggestions.push(capture);
+        }
+      }
+    }
+
+    return suggestions;
+  }
+
+  suggestKnightMove(board: ChessBoard, from: string, color: string): String[] {
+    const suggestions: String[] = [];
+    const fromCol = this.COLUMNS.indexOf(from[0]);
+    const fromRow = parseInt(from[1]);
+    
+    // Tous les mouvements possibles du cavalier
+    const moves = [
+      [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+      [1, -2], [1, 2], [2, -1], [2, 1]
+    ];
+
+    for (const [colDiff, rowDiff] of moves) {
+      const newCol = fromCol + colDiff;
+      const newRow = fromRow + rowDiff;
+
+      if (newCol >= 0 && newCol < 8 && newRow > 0 && newRow <= 8) {
+        const target = `${this.COLUMNS[newCol]}${newRow}`;
+        const targetPiece = board[target];
+        if (!targetPiece || targetPiece.color !== color) {
+          suggestions.push(target);
+        }
+      }
+    }
+
+    return suggestions;
+  }
+
+  suggestBishopMove(board: ChessBoard, from: string, color: string): String[] {
+    const suggestions: String[] = [];
+    const fromCol = this.COLUMNS.indexOf(from[0]);
+    const fromRow = parseInt(from[1]);
+    
+    // Directions diagonales
+    const directions = [
+      [-1, -1], [-1, 1], [1, -1], [1, 1]
+    ];
+
+    for (const [colDir, rowDir] of directions) {
+      let newCol = fromCol + colDir;
+      let newRow = fromRow + rowDir;
+
+      while (newCol >= 0 && newCol < 8 && newRow > 0 && newRow <= 8) {
+        const target = `${this.COLUMNS[newCol]}${newRow}`;
+        const targetPiece = board[target];
+
+        if (!targetPiece) {
+          suggestions.push(target);
+        } else {
+          if (targetPiece.color !== color) {
+            suggestions.push(target);
+          }
+          break;
+        }
+
+        newCol += colDir;
+        newRow += rowDir;
+      }
+    }
+
+    return suggestions;
+  }
+
+  suggestRookMove(board: ChessBoard, from: string, color: string): String[] {
+    const suggestions: String[] = [];
+    const fromCol = this.COLUMNS.indexOf(from[0]);
+    const fromRow = parseInt(from[1]);
+    
+    // Directions horizontales et verticales
+    const directions = [
+      [0, 1], [0, -1], [1, 0], [-1, 0]
+    ];
+
+    for (const [colDir, rowDir] of directions) {
+      let newCol = fromCol + colDir;
+      let newRow = fromRow + rowDir;
+
+      while (newCol >= 0 && newCol < 8 && newRow > 0 && newRow <= 8) {
+        const target = `${this.COLUMNS[newCol]}${newRow}`;
+        const targetPiece = board[target];
+
+        if (!targetPiece) {
+          suggestions.push(target);
+        } else {
+          if (targetPiece.color !== color) {
+            suggestions.push(target);
+          }
+          break;
+        }
+
+        newCol += colDir;
+        newRow += rowDir;
+      }
+    }
+
+    return suggestions;
+  }
+
+  suggestQueenMove(board: ChessBoard, from: string, color: string): String[] {
+    // La reine combine les mouvements du fou et de la tour
+    return [
+      ...this.suggestBishopMove(board, from, color),
+      ...this.suggestRookMove(board, from, color)
+    ];
+  }
+
+  suggestKingMove(board: ChessBoard, from: string, color: string): String[] {
+    const suggestions: String[] = [];
+    const fromCol = this.COLUMNS.indexOf(from[0]);
+    const fromRow = parseInt(from[1]);
+    
+    // Toutes les directions possibles pour le roi
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],           [0, 1],
+      [1, -1],  [1, 0],  [1, 1]
+    ];
+
+    for (const [colDir, rowDir] of directions) {
+      const newCol = fromCol + colDir;
+      const newRow = fromRow + rowDir;
+
+      if (newCol >= 0 && newCol < 8 && newRow > 0 && newRow <= 8) {
+        const target = `${this.COLUMNS[newCol]}${newRow}`;
+        const targetPiece = board[target];
+        if (!targetPiece || targetPiece.color !== color) {
+          // Vérifier que le roi ne se met pas en échec
+          const tempBoard = {...board};
+          tempBoard[target] = tempBoard[from];
+          tempBoard[from] = null;
+          if (!this.isKingInCheck(tempBoard, color)) {
+            suggestions.push(target);
+          }
+        }
+      }
+    }
+
+    return suggestions;
+  }
+
   async getCurrentPlayer(game_id: number): Promise<string> {
     const lastMove = await Move.findOne({
       where: { game_id },
@@ -318,6 +513,7 @@ export class MoveService {
 
     return true;
   }
+
 
   async getFenFromBoard(board: ChessBoard, game_id: number): Promise<string> {
     const rows: string[] = [];
@@ -492,6 +688,18 @@ export class MoveService {
     };
 
     return moveReturn;
+  }
+
+
+  async getSuggestions(game_id: number, from: string): Promise<String[]> {
+    const currentBoard = await this.currentMoveOfGame(game_id);
+    const currentPlayer = await this.getCurrentPlayer(game_id);
+    const piece = currentBoard[from];
+    if (!piece || piece.color !== currentPlayer) {
+      throw new Error("403: Not your turn or piece");
+    }
+
+    return this.switchCaseTypePieceSuggestion(piece.type, from, currentBoard, currentPlayer);
   }
 }
 

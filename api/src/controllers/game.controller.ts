@@ -48,6 +48,11 @@ export class GameController extends Controller {
     }
   }
 
+  @Get("/{game_id}/suggestions")
+  public async getSuggestions(@Path() game_id: number, @Body() from: string): Promise<String[]> {
+    return await moveService.getSuggestions(game_id,from);
+  }
+
   @Post("/{game_id}/move")
   public async makeMove(
     @Path() game_id: number,
