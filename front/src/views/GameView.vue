@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
-import { GameService } from '@/services/GameService';
+import { GameService, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
 
 interface GameInfo {
@@ -11,6 +11,14 @@ interface GameInfo {
   timeWhite: number;
   timeBlack: number;
 }
+
+interface PieceMove {
+  color: string;
+  from: string;
+  piece: string;
+  to: string;
+}
+const moves = ref<PieceMove[]>([]);
 
 const gameInfo = ref<GameInfo>({
   opponent: 'Magnus Carlsen',
@@ -49,8 +57,9 @@ const handleDrawOffer = async () => {
 
 onMounted(() => {
   // Récupérer les informations de la partie
-  GameService.getGame(gameId.value).then((game) => {
+  GameService.getGame(gameId.value).then((game: GameState) => {
     console.log('Game:', game);
+    moves.value = game.moves;
     //     gameInfo.value = game;
   });
 });
@@ -156,13 +165,15 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
           <TabView>
             <TabPanel header="Moves" :value="0">
               <div class="moves-list surface-section border-round p-3 h-30rem overflow-y-auto">
-                <div class="flex align-items-center mb-2" v-for="n in 10" :key="n">
-                  <span class="text-500 mr-2">{{ n }}.</span>
-                  <span class="mr-2">e4</span>
-                  <span>e5</span>
-                  <div :class="{ 'text-500 ml-2': true }">
-                    {{ n % 2 === 0 ? 'Noir' : 'Blanc' }}
-                  </div>
+                <div
+                  class="flex align-items-center mb-2"
+                  v-for="(move, index) in moves"
+                  :key="index"
+                >
+                  <span class="text-500 mr-2">{{ index + 1 }}.</span>
+                  <span class="mr-2">{{ move.from }}</span>
+                  <span>{{ move.to }}</span>
+                  <div :class="{ 'text-500 ml-2': true }">{{ move.color }} - {{ move.piece }}</div>
                 </div>
               </div>
             </TabPanel>
