@@ -41,16 +41,22 @@ const updateFenAfterMove = (move: Move): string => {
 
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
-    //     const response = await axios.get(`${API_URL}games/${gameId}`);
-    //     console.log('response', response);
-    await delay(300); // Simule la latence réseau
-    return { ...mockGameState, id: gameId };
+    try {
+      const response = await axios.get(`${API_URL}games/${gameId}`);
+      console.log('response', response);
+      const game = response.data;
+      //  await delay(300); // Simule la latence réseau
+      return { ...mockGameState, ...game };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   },
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
     try {
-      //  const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
-      //  console.log('response', respose);
+      const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
+      console.log('response', respose);
 
       // Mise à jour du state du jeu
       mockGameState = {
@@ -65,7 +71,7 @@ export const GameService = {
 
       return mockGameState;
     } catch (error) {
-      console.error(error);
+      console.error('Make move', error);
       throw error;
     }
   },
