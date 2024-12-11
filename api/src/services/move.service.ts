@@ -251,7 +251,7 @@ export class MoveService {
       order: [['id', 'DESC']]
     });
 
-    return lastMove ? (lastMove.turn === 'WHITE' ? 'BLACK' : 'WHITE') : 'WHITE';
+    return lastMove ? (lastMove.turn === 'WHITE' ? 'WHITE' : 'BLACK') : 'WHITE';
   }
 
   async getNextPlayer(game_id: number): Promise<string> {
