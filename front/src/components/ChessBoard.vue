@@ -184,6 +184,11 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
 
   if (isValidMove(from, to)) {
     try {
+      const move: Move = {
+        from: toAlgebraic(from.row, from.col),
+        to: toAlgebraic(row, col),
+      };
+      const newGameState = await GameService.makeMove(gameId.value, move);
       // Si une pièce est présente sur la case cible, elle est capturée
       const capturedPiece = board.value[row][col];
       if (capturedPiece) {
@@ -191,16 +196,9 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
         capturedPieces.value[captureColor].push(capturedPiece);
       }
 
-      const move: Move = {
-        from: toAlgebraic(from.row, from.col),
-        to: toAlgebraic(row, col),
-      };
       console.log('Making move:', move);
 
       // Déplacer la pièce sur l'échiquier
-      const piece = board.value[from.row][from.col];
-      board.value[row][col] = piece;
-      board.value[from.row][from.col] = null;
 
       const currentPiece = board.value[row][col];
       console.log('currentPiece', currentPiece);
@@ -217,13 +215,16 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
         };
       } else {
         console.log('MAke move');
-        const newGameState = await GameService.makeMove(gameId.value, move);
         gameState.value = newGameState;
       }
       selectedPiece.value = null;
       return;
     } catch (error) {
       console.error('Error making move:', error);
+    } finally {
+      const piece = board.value[from.row][from.col];
+      board.value[row][col] = piece;
+      board.value[from.row][from.col] = null;
     }
   }
 
