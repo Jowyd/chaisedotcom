@@ -49,8 +49,8 @@ export const GameService = {
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
     try {
-      //  const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
-      //  console.log('response', respose);
+       const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
+       console.log('response', respose);
 
       // Mise à jour du state du jeu
       mockGameState = {
