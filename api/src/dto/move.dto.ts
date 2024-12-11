@@ -25,6 +25,7 @@ export interface MoveReturnDTO {
   isCheck: boolean;
   isCheckmate: boolean;
   status: string;
+  promotion: string | null;
   whitePlayer: {
     username: string;
   };

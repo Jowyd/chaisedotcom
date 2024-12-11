@@ -15,7 +15,7 @@ import { gameService } from "../services/game.service";
 import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
 import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
-import { ChessMove } from "../interfaces/chess.interface";
+import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
 import { MakeMoveDTO, MoveReturnDTO } from "../dto/move.dto";
 import moveService from "../services/move.service";
 
@@ -26,12 +26,10 @@ export class GameController extends Controller {
   @Post("/")
   public async createGame(
     @Body() dto: CreateGameDTO
-  ): Promise<{ game_id: number, initialBoard: MoveReturnDTO }> {
+  ): Promise<{ game_id: number }> {
     try {
       const game = await gameService.createGame(dto);
-      const initialBoard = await moveService.getInitialBoard(game);
-
-      return { game_id: game.id, initialBoard: initialBoard };
+      return { game_id: game.id };
     } catch (error) {
       this.setStatus(400);
       throw error;
@@ -48,7 +46,7 @@ export class GameController extends Controller {
     }
   }
 
-  @Get("/{game_id}/suggestions")
+  @Post("/{game_id}/suggestions")
   public async getSuggestions(@Path() game_id: number, @Body() from: string): Promise<String[]> {
     return await moveService.getSuggestions(game_id,from);
   }
@@ -72,6 +70,12 @@ export class GameController extends Controller {
     return await moveService.getState(game_id);
   }
 
+  @Post("/{game_id}/promotion")
+  public async promotion(@Path() game_id: number, @Body() piece: ChessPiece): Promise<MoveReturnDTO> {
+    return await moveService.promotion(game_id, piece);
+  }
+
+  
 
   @Delete("/{game_id}")
   public async deleteGame(

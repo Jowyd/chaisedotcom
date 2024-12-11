@@ -59,6 +59,7 @@ export class MoveService {
       isCheck: false,
       isCheckmate: false,
       status: game.status,
+      promotion: null,
       whitePlayer: {
         username: game.whitePlayerName,
       },
@@ -145,18 +146,15 @@ export class MoveService {
     const direction = color === 'WHITE' ? 1 : -1;
     const targetPiece = board[move.to];
 
-    // Mouvement standard d'une case
     if (fromCol === toCol && toRow === fromRow + direction && !targetPiece) {
       return true;
     }
 
-    // Premier mouvement de deux cases
     if (isFirstMove && fromCol === toCol && toRow === fromRow + (2 * direction) && !targetPiece) {
       const intermediateSquare = `${move.from[0]}${fromRow + direction}`;
       return !board[intermediateSquare];
     }
 
-    // Prise en diagonale
     if (Math.abs(toCol - fromCol) === 1 && toRow === fromRow + direction) {
       return targetPiece !== null && targetPiece.color !== color;
     }
@@ -193,7 +191,6 @@ export class MoveService {
     const colStep = toCol > fromCol ? 1 : -1;
     const rowStep = toRow > fromRow ? 1 : -1;
 
-    // Vérifier le chemin
     for (let i = 1; i < colDiff; i++) {
       const square = `${this.COLUMNS[fromCol + (i * colStep)]}${fromRow + (i * rowStep)}`;
       if (board[square]) return false;
@@ -272,12 +269,10 @@ export class MoveService {
     const direction = color === 'WHITE' ? 1 : -1;
     const isFirstMove = (color === 'WHITE' && fromRow === 2) || (color === 'BLACK' && fromRow === 7);
 
-    // Mouvement d'une case en avant
     const oneStep = `${from[0]}${fromRow + direction}`;
     if (!board[oneStep]) {
       suggestions.push(oneStep);
 
-      // Mouvement de deux cases si premier mouvement
       if (isFirstMove) {
         const twoStep = `${from[0]}${fromRow + (2 * direction)}`;
         if (!board[twoStep] && !board[oneStep]) {
@@ -286,7 +281,6 @@ export class MoveService {
       }
     }
 
-    // Prises en diagonale
     const diagonals = [fromCol - 1, fromCol + 1];
     for (const col of diagonals) {
       if (col >= 0 && col < 8) {
@@ -306,7 +300,6 @@ export class MoveService {
     const fromCol = this.COLUMNS.indexOf(from[0]);
     const fromRow = parseInt(from[1]);
     
-    // Tous les mouvements possibles du cavalier
     const moves = [
       [-2, -1], [-2, 1], [-1, -2], [-1, 2],
       [1, -2], [1, 2], [2, -1], [2, 1]
@@ -333,7 +326,6 @@ export class MoveService {
     const fromCol = this.COLUMNS.indexOf(from[0]);
     const fromRow = parseInt(from[1]);
     
-    // Directions diagonales
     const directions = [
       [-1, -1], [-1, 1], [1, -1], [1, 1]
     ];
@@ -368,7 +360,6 @@ export class MoveService {
     const fromCol = this.COLUMNS.indexOf(from[0]);
     const fromRow = parseInt(from[1]);
     
-    // Directions horizontales et verticales
     const directions = [
       [0, 1], [0, -1], [1, 0], [-1, 0]
     ];
@@ -399,7 +390,6 @@ export class MoveService {
   }
 
   suggestQueenMove(board: ChessBoard, from: string, color: string): String[] {
-    // La reine combine les mouvements du fou et de la tour
     return [
       ...this.suggestBishopMove(board, from, color),
       ...this.suggestRookMove(board, from, color)
@@ -411,7 +401,6 @@ export class MoveService {
     const fromCol = this.COLUMNS.indexOf(from[0]);
     const fromRow = parseInt(from[1]);
     
-    // Toutes les directions possibles pour le roi
     const directions = [
       [-1, -1], [-1, 0], [-1, 1],
       [0, -1],           [0, 1],
@@ -426,7 +415,6 @@ export class MoveService {
         const target = `${this.COLUMNS[newCol]}${newRow}`;
         const targetPiece = board[target];
         if (!targetPiece || targetPiece.color !== color) {
-          // Vérifier que le roi ne se met pas en échec
           const tempBoard = {...board};
           tempBoard[target] = tempBoard[from];
           tempBoard[from] = null;
@@ -438,6 +426,50 @@ export class MoveService {
     }
 
     return suggestions;
+  }
+
+  isPromotion(board: ChessBoard): boolean {
+    for (const col of this.COLUMNS) {
+      const whitePos = `${col}8`;
+      if (board[whitePos]?.type === 'PAWN' && board[whitePos]?.color === 'WHITE') {
+        return true;
+      }
+      const blackPos = `${col}1`;
+      if (board[blackPos]?.type === 'PAWN' && board[blackPos]?.color === 'BLACK') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  makePromotion(board: ChessBoard, newPieceType: string): ChessBoard {
+    const newBoard = {...board};
+    let promotionSquare: string | null = null;
+    let pieceColor: string | null = null;
+
+    for (const col of this.COLUMNS) {
+      const whitePos = `${col}8`;
+      if (board[whitePos]?.type === 'PAWN' && board[whitePos]?.color === 'WHITE') {
+        promotionSquare = whitePos;
+        pieceColor = 'WHITE';
+        break;
+      }
+      const blackPos = `${col}1`;
+      if (board[blackPos]?.type === 'PAWN' && board[blackPos]?.color === 'BLACK') {
+        promotionSquare = blackPos;
+        pieceColor = 'BLACK';
+        break;
+      }
+    }
+
+    if (promotionSquare && pieceColor) {
+      newBoard[promotionSquare] = {
+        type: newPieceType as "PAWN" | "ROOK" | "KNIGHT" | "BISHOP" | "QUEEN" | "KING",
+        color: pieceColor as "WHITE" | "BLACK"
+      };
+    }
+
+    return newBoard;
   }
 
   async getCurrentPlayer(game_id: number): Promise<string> {
@@ -455,7 +487,6 @@ export class MoveService {
   }
 
   isKingInCheck(board: ChessBoard, playerColor: string): boolean {
-    // Trouver la position du roi
     let kingPosition: string | null = null;
     for (const [square, piece] of Object.entries(board)) {
       if (piece && piece.type === 'KING' && piece.color === playerColor) {
@@ -466,7 +497,6 @@ export class MoveService {
 
     if (!kingPosition) return false;
 
-    // Vérifier si une pièce adverse peut atteindre le roi
     for (const [square, piece] of Object.entries(board)) {
       if (piece && piece.color !== playerColor) {
         const move: MakeMoveDTO = {
@@ -485,24 +515,19 @@ export class MoveService {
   isCheckmate(board: ChessBoard, playerColor: string): boolean {
     if (!this.isKingInCheck(board, playerColor)) return false;
 
-    // Pour chaque pièce du joueur
     for (const [fromSquare, piece] of Object.entries(board)) {
       if (!piece || piece.color !== playerColor) continue;
 
-      // Pour chaque case possible
       for (const toCol of this.COLUMNS) {
         for (const toRow of this.ROWS) {
           const toSquare = `${toCol}${toRow}`;
           const move: MakeMoveDTO = { from: fromSquare, to: toSquare };
 
-          // Si le mouvement est valide
           if (this.switchCaseTypePiece(piece.type, move, board, piece.color)) {
-            // Simuler le mouvement
             const tempBoard = {...board};
             tempBoard[toSquare] = tempBoard[fromSquare];
             tempBoard[fromSquare] = null;
 
-            // Si ce mouvement sort de l'échec
             if (!this.isKingInCheck(tempBoard, playerColor)) {
               return false;
             }
@@ -567,28 +592,26 @@ export class MoveService {
     const currentPlayer = await this.getNextPlayer(game_id);
     const piece = currentBoard[move.from];
 
-    // Vérifier si c'est la bonne pièce du bon joueur
     if (!piece || piece.color !== currentPlayer) {
       throw new Error("403: Not your turn or piece");
     }
 
     if (await this.validateMove(currentBoard, move)) {
-      // Appliquer le mouvement
       const newBoard = {...currentBoard};
       const targetPiece = newBoard[move.to];
       newBoard[move.to] = newBoard[move.from];
       newBoard[move.from] = null;
 
-      // Déterminer le type de mouvement
       let type = 'normal';
       if (targetPiece) {
         type = 'capture';
       }
 
-      // Vérifier l'état du jeu après le mouvement
       const nextPlayer = currentPlayer === 'WHITE' ? 'BLACK' : 'WHITE';
       const isCheck = this.isKingInCheck(newBoard, nextPlayer);
       const isCheckmate = this.isCheckmate(newBoard, nextPlayer);
+      const isPromotion = this.isPromotion(newBoard);
+
 
       if (isCheckmate) {
         game.status = "checkmate";
@@ -599,7 +622,6 @@ export class MoveService {
         await game.save();
       }
 
-      // Créer le mouvement dans la base de données
       const moveCreate: MoveCreateDTO = {
         game_id: game_id,
         from: move.from,
@@ -613,14 +635,13 @@ export class MoveService {
       
       await this.createMove(moveCreate);
       
-      // Récupérer tous les mouvements de la partie
       const allMoves = await Move.findAll({
         where: { game_id },
         order: [['id', 'ASC']]
       });
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
-      // Préparer la réponse
+
       const moveReturn: MoveReturnDTO = {
         id: game_id.toString(),
         fen: fen,
@@ -633,6 +654,7 @@ export class MoveService {
         isCheck: isCheck,
         isCheckmate: isCheckmate,
         status: game.status,
+        promotion: ( isPromotion ? piece.type : null),
         whitePlayer: {
           username: game.whitePlayerName,
         },
@@ -655,9 +677,10 @@ export class MoveService {
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
-    const currentPlayer = await this.getCurrentPlayer(game_id);
+    const currentPlayer = await this.getNextPlayer(game_id);
     const isCheck = this.isKingInCheck(currentBoard, currentPlayer);
     const isCheckmate = this.isCheckmate(currentBoard, currentPlayer);
+    const isPromotion = this.isPromotion(currentBoard);
 
     const allMoves = await Move.findAll({
       where: { game_id },
@@ -666,7 +689,6 @@ export class MoveService {
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
 
-    // Préparer la réponse
     const moveReturn: MoveReturnDTO = {
       id: game_id.toString(),
       fen: fen,
@@ -679,6 +701,7 @@ export class MoveService {
       isCheck: isCheck,
       isCheckmate: isCheckmate,
       status: game.status,
+      promotion: ( isPromotion ? currentPlayer : null),
       whitePlayer: {
         username: game.whitePlayerName,
       },
@@ -693,7 +716,7 @@ export class MoveService {
 
   async getSuggestions(game_id: number, from: string): Promise<String[]> {
     const currentBoard = await this.currentMoveOfGame(game_id);
-    const currentPlayer = await this.getCurrentPlayer(game_id);
+    const currentPlayer = await this.getNextPlayer(game_id);
     const piece = currentBoard[from];
     if (!piece || piece.color !== currentPlayer) {
       throw new Error("403: Not your turn or piece");
@@ -701,6 +724,55 @@ export class MoveService {
 
     return this.switchCaseTypePieceSuggestion(piece.type, from, currentBoard, currentPlayer);
   }
+
+  async promotion(game_id: number, piece: ChessPiece) {
+    const game = await Game.findByPk(game_id);
+    if (!game) {
+      throw new Error("Game not found");
+    }
+    const currentBoard = await this.currentMoveOfGame(game_id);
+    if(!this.isPromotion(currentBoard)) {
+      throw new Error("403: Not promotion");
+    }
+
+    const promotionBoard = this.makePromotion(currentBoard, piece.type);
+
+    const currentPlayer = await this.getNextPlayer(game_id);
+    const isCheck = this.isKingInCheck(currentBoard, currentPlayer);
+    const isCheckmate = this.isCheckmate(currentBoard, currentPlayer);
+
+    const allMoves = await Move.findAll({
+      where: { game_id },
+      order: [['id', 'ASC']]
+    });
+
+    const fen = await this.getFenFromBoard(currentBoard, game_id);
+
+    const moveReturn: MoveReturnDTO = {
+      id: game_id.toString(),
+      fen: fen,
+      moves: allMoves.map(m => ({
+        from: m.from,
+        to: m.to,
+        piece: m.piece,
+        color: m.turn
+      })),
+      isCheck: isCheck,
+      isCheckmate: isCheckmate,
+      status: game.status,
+      promotion: null,
+      whitePlayer: {
+        username: game.whitePlayerName,
+      },
+      blackPlayer: {
+        username: game.blackPlayerName,
+      },
+    };
+
+    return moveReturn;
+
+  }
+
 }
 
 export default new MoveService();

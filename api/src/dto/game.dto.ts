@@ -13,3 +13,4 @@ export interface CreateGameDTO {
   blackPlayerName: string;
   isPublic: boolean;
 }
+
