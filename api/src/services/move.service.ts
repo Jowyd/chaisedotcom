@@ -825,7 +825,12 @@ export class MoveService {
       order: [['id', 'ASC']]
     });
 
-    const fen = await this.getFenFromBoard(currentBoard, game_id);
+    const fen = await this.getFenFromBoard(promotionBoard, game_id);
+
+    const lastMove = allMoves[allMoves.length - 1];
+    lastMove.piece = piece.type;
+    lastMove.type = 'promotion';
+    await lastMove.save();
 
     const moveReturn: MoveReturnDTO = {
       id: game_id.toString(),
