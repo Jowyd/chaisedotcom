@@ -19,6 +19,12 @@ interface CapturedPieces {
   black: ChessPiece[];
 }
 
+interface PromotionData {
+  from: Position;
+  to: Position;
+  isOpen: boolean;
+}
+
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
@@ -32,6 +38,32 @@ const capturedPieces = ref<CapturedPieces>({
   white: [],
   black: [],
 });
+
+const promotionDialog = ref<PromotionData>({
+  from: { row: 0, col: 0 },
+  to: { row: 0, col: 0 },
+  isOpen: false,
+});
+
+interface PromotionPiece {
+  type: string;
+  symbol: string;
+}
+
+const promotionPieces: { [key: string]: PromotionPiece[] } = {
+  white: [
+    { type: 'q', symbol: '♛' },
+    { type: 'r', symbol: '♜' },
+    { type: 'b', symbol: '♝' },
+    { type: 'n', symbol: '♞' },
+  ],
+  black: [
+    { type: 'q', symbol: '♛' },
+    { type: 'r', symbol: '♜' },
+    { type: 'b', symbol: '♝' },
+    { type: 'n', symbol: '♞' },
+  ],
+};
 
 // Ajout d'une prop pour contrôler la couleur du joueur
 const props = defineProps<{
@@ -143,7 +175,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
     if (piece && piece.color === gameState.value?.turn) {
       selectedPiece.value = { row, col };
     }
-    validMoves.value = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'].map(fromAlgebraic);
+    validMoves.value = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7'].map(fromAlgebraic); //TODO: Change
     return;
   }
 
@@ -165,15 +197,31 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
       };
       console.log('Making move:', move);
 
-      const newGameState = await GameService.makeMove(gameId.value, move);
-
       // Déplacer la pièce sur l'échiquier
       const piece = board.value[from.row][from.col];
       board.value[row][col] = piece;
       board.value[from.row][from.col] = null;
 
-      gameState.value = newGameState;
-      console.log(newGameState);
+      const currentPiece = board.value[row][col];
+      console.log('currentPiece', currentPiece);
+      const isPromotion =
+        currentPiece?.type === 'p' &&
+        ((currentPiece.color === 'white' && to.row === 0) ||
+          (currentPiece.color === 'black' && to.row === 7));
+
+      if (isPromotion) {
+        promotionDialog.value = {
+          from,
+          to,
+          isOpen: true,
+        };
+      } else {
+        console.log('MAke move');
+        const newGameState = await GameService.makeMove(gameId.value, move);
+        gameState.value = newGameState;
+      }
+      selectedPiece.value = null;
+      return;
     } catch (error) {
       console.error('Error making move:', error);
     }
@@ -270,6 +318,35 @@ const emit = defineEmits<{
 watch(capturedPieces, (newValue) => {
   emit('update:capturedPieces', newValue);
 });
+
+const handlePromotion = async (promotionPiece: PromotionPiece) => {
+  try {
+    const { from, to } = promotionDialog.value;
+    const move: Move = {
+      from: toAlgebraic(from.row, from.col),
+      to: toAlgebraic(to.row, to.col),
+      promotion: promotionPiece.type,
+    };
+
+    const newGameState = await GameService.makeMove(gameId.value, move);
+    console.log('Promotion move:', move, newGameState);
+
+    // Mettre à jour l'état du jeu
+    const newPiece: ChessPiece = {
+      type: promotionPiece.type,
+      color: gameState?.value?.turn === 'white' ? 'white' : 'black',
+      symbol: promotionPiece.symbol,
+    };
+    board.value[to.row][to.col] = newPiece;
+    gameState.value = newGameState;
+    //     updateBoardFromGameState(newGameState);
+
+    // Fermer le dialog
+    promotionDialog.value.isOpen = false;
+  } catch (error) {
+    console.error('Error making promotion move:', error);
+  }
+};
 </script>
 
 <template>
@@ -367,6 +444,23 @@ watch(capturedPieces, (newValue) => {
         >
           {{ piece.symbol }}
         </span>
+      </div>
+    </div>
+
+    <!-- Dialog de promotion -->
+    <div v-if="promotionDialog.isOpen" class="promotion-dialog">
+      <div class="promotion-dialog-content">
+        <h3 class="promotion-title">Choose promotion piece</h3>
+        <div class="promotion-pieces">
+          <button
+            v-for="piece in promotionPieces[gameState!.turn]"
+            :key="piece.type"
+            class="promotion-piece"
+            @click="handlePromotion(piece)"
+          >
+            <span :class="gameState?.turn">{{ piece.symbol }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -532,5 +626,69 @@ watch(capturedPieces, (newValue) => {
 .captured-pieces.black .captured-piece {
   color: #fff;
   text-shadow: 0 0 2px #000;
+}
+
+.promotion-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.promotion-dialog-content {
+  background: var(--surface-card);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.promotion-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.promotion-pieces {
+  display: flex;
+  gap: 1rem;
+}
+
+.promotion-piece {
+  width: 60px;
+  height: 60px;
+  font-size: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.promotion-piece:hover {
+  transform: scale(1.1);
+  background: var(--surface-hover);
+}
+
+.promotion-piece span {
+  user-select: none;
+}
+
+.promotion-piece span.white {
+  color: #fff;
+  text-shadow: 0 0 2px #000;
+}
+
+.promotion-piece span.black {
+  color: #000;
+  text-shadow: 0 0 2px #fff;
 }
 </style>
