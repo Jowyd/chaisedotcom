@@ -56,7 +56,7 @@ export interface GameState {
   isCheck: boolean;
   isCheckmate: boolean;
   turn: 'white' | 'black';
-  status: 'active' | 'finished';
+  status: 'active' | 'finished' | 'checkmate' | 'check';
   promotion?: 'white' | 'black' | null;
 }
 
@@ -163,7 +163,7 @@ export const GameService = {
       return {
         ...mockGameState,
         ...newGameState,
-        turn: color, //TODO fix this
+        turn: color,
       };
     } catch (error) {
       console.error(error);

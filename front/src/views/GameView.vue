@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
 import { GameService, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
 import Badge from 'primevue/badge';
 import Tag from 'primevue/tag';
+import GameOverDialog from '@/components/GameOverDialog.vue';
 
 interface GameInfo {
   opponent: string;
@@ -126,19 +127,33 @@ const updateGameState = (newState: GameState) => {
   if (currentMoveIndex.value === -1) {
     currentMoveIndex.value = moves.value.length - 1;
   }
+  if (newState.status === 'checkmate') {
+    showGameOverDialog.value = true;
+  }
 };
 
 const getPieceSymbol = (piece: string): string => {
   const symbols: { [key: string]: string } = {
-    'PAWN': '♟',
-    'KNIGHT': '♞',
-    'BISHOP': '♝',
-    'ROOK': '♜',
-    'QUEEN': '♛',
-    'KING': '♚',
+    PAWN: '♟',
+    KNIGHT: '♞',
+    BISHOP: '♝',
+    ROOK: '♜',
+    QUEEN: '♛',
+    KING: '♚',
   };
   return symbols[piece] || piece;
 };
+
+const showGameOverDialog = ref(false);
+
+watch(
+  () => gameState.value?.status,
+  (newStatus) => {
+    console.log('Status changed:', newStatus);
+    showGameOverDialog.value = newStatus === 'checkmate';
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -271,12 +286,11 @@ const getPieceSymbol = (piece: string): string => {
                     :key="index"
                     class="move-pair flex align-items-center p-2 border-bottom-1 surface-ground"
                     :class="{
-                      'current-pair': currentMoveIndex === index * 2 || currentMoveIndex === index * 2 + 1,
+                      'current-pair':
+                        currentMoveIndex === index * 2 || currentMoveIndex === index * 2 + 1,
                     }"
                   >
-                    <span class="move-number text-600 font-medium mr-2">
-                      {{ index + 1 }}.
-                    </span>
+                    <span class="move-number text-600 font-medium mr-2"> {{ index + 1 }}. </span>
                     <!-- Coup blanc -->
                     <div
                       class="move-item flex-1 cursor-pointer px-3 py-2 border-round-sm"
@@ -308,9 +322,13 @@ const getPieceSymbol = (piece: string): string => {
                       <div class="flex align-items-center justify-content-between">
                         <div class="flex align-items-center gap-2">
                           <i class="pi pi-circle-fill text-900" style="font-size: 0.5rem" />
-                          <span class="font-medium">{{ moves[index * 2 + 1].from }}-{{ moves[index * 2 + 1].to }}</span>
+                          <span class="font-medium"
+                            >{{ moves[index * 2 + 1].from }}-{{ moves[index * 2 + 1].to }}</span
+                          >
                         </div>
-                        <span class="piece-symbol text-600">{{ getPieceSymbol(moves[index * 2 + 1].piece) }}</span>
+                        <span class="piece-symbol text-600">{{
+                          getPieceSymbol(moves[index * 2 + 1].piece)
+                        }}</span>
                       </div>
                     </div>
                   </div>
@@ -324,6 +342,13 @@ const getPieceSymbol = (piece: string): string => {
       <!-- Game Chat & Moves -->
     </div>
   </div>
+  <GameOverDialog
+    v-model:visible="showGameOverDialog"
+    :game-state="gameState"
+    :game-info="gameInfo"
+    :captured-pieces="capturedPieces"
+    :moves="moves"
+  />
 </template>
 
 <style scoped>
