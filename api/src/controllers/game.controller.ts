@@ -101,6 +101,18 @@ export class GameController extends Controller {
     }
   }
 
+  @Post("/{game_id}/goto")
+  public async goto(
+    @Path() game_id: number,
+    @Body() body: { index: number }
+  ): Promise<MoveReturnDTO> {
+    if (!game_id || body.index === undefined) {
+      this.setStatus(400);
+      throw new Error("Missing required fields");
+    }
+    return await moveService.goto(game_id, body.index);
+  }
+
   @Get("/history")
   public async getHistory(
     @Request() req: AuthRequest

@@ -916,6 +916,73 @@ export class MoveService {
 
     return moveReturn;
   }
+
+  async goto(game_id: number, index: number): Promise<MoveReturnDTO> {
+    const game = await Game.findByPk(game_id);
+    if (!game) {
+      const error = new Error("Game not found");
+      (error as any).status = "404";
+      throw error;
+    }
+  
+    const allMoves = await Move.findAll({
+      where: { game_id },
+      order: [["id", "ASC"]],
+    });
+  
+    if (index < 0 || index > allMoves.length) {
+      const error = new Error("Invalid move index");
+      (error as any).status = "400";
+      throw error;
+    }
+  
+    const movesUntilIndex = allMoves.slice(0, index);
+  
+    let currentBoard = { ...this.initialBoard };
+    for (const move of movesUntilIndex) {
+      currentBoard[move.to] = currentBoard[move.from];
+      currentBoard[move.from] = null;
+      
+      if (move.type === "promotion") {
+        currentBoard[move.to] = {
+          type: move.piece as "PAWN" | "ROOK" | "KNIGHT" | "BISHOP" | "QUEEN" | "KING",
+          color: move.turn as "WHITE" | "BLACK",
+        };
+      }
+    }
+  
+    const currentPlayer = index === 0 ? "WHITE" : movesUntilIndex[index - 1].turn;
+    const nextPlayer = currentPlayer === "WHITE" ? "BLACK" : "WHITE";
+  
+    const isCheck = this.isKingInCheck(currentBoard, nextPlayer);
+    const isCheckmate = this.isCheckmate(currentBoard, nextPlayer);
+    const isPromotion = this.isPromotion(currentBoard);
+  
+    const fen = await this.getFenFromBoard(currentBoard, game_id);
+  
+    const moveReturn: MoveReturnDTO = {
+      id: game_id.toString(),
+      fen: fen,
+      moves: allMoves.map((m) => ({
+        from: m.from,
+        to: m.to,
+        piece: m.piece,
+        color: m.turn,
+      })),
+      isCheck: isCheck,
+      isCheckmate: isCheckmate,
+      status: game.status,
+      promotion: isPromotion ? currentPlayer : null,
+      whitePlayer: {
+        username: game.whitePlayerName,
+      },
+      blackPlayer: {
+        username: game.blackPlayerName,
+      },
+    };
+  
+    return moveReturn;
+  }
 }
 
 export default new MoveService();
