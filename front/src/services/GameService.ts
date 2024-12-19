@@ -222,4 +222,21 @@ export const GameService = {
       status: 'active',
     };
   },
+
+  async goToMove(gameId: string, index: number): Promise<GameState> {
+    try {
+      const response = await httpHelper.post(`${API_URL}games/${gameId}/goto`, { index });
+      const newGameState = response.data;
+      const color = fenToColor(newGameState.fen) == 'w' ? 'white' : 'black';
+
+      return {
+        ...mockGameState,
+        ...newGameState,
+        turn: color,
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
 };

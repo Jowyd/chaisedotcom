@@ -32,7 +32,6 @@ const selectedPiece = ref<Position | null>(null);
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const validMoves = ref<Position[]>([]);
-const gameState = ref<GameState | null>(null);
 const capturedPieces = ref<CapturedPieces>({
   white: [],
   black: [],
@@ -63,28 +62,27 @@ const promotionPieces: { [key: string]: PromotionPiece[] } = {
   ],
 };
 
-// Ajout d'une prop pour contrôler la couleur du joueur
 const props = defineProps<{
   playerColor?: 'white' | 'black';
 }>();
 
-// Détermine si c'est le tour du joueur
-const isPlayerTurn = computed(() => {
-  return true;
-  //   return gameState.value?.turn === (props.playerColor || 'white' );
+const gameState = defineModel<GameState>('gameState', { required: true });
+
+watch(gameState, (newValue) => {
+  if (newValue) {
+    updateBoardFromGameState(newValue);
+  }
 });
 
-// Fonction pour retourner l'échiquier selon la couleur du joueur
 const boardView = computed(() => {
   const currentBoard = board.value;
   if (!currentBoard || props.playerColor !== 'black') {
     return currentBoard;
   }
-  // Retourne l'échiquier pour les noirs
+
   return [...currentBoard].reverse().map((row) => [...row].reverse());
 });
 
-// Ajuste les coordonnées en fonction de la couleur du joueur
 const adjustCoordinates = (row: number, col: number): { row: number; col: number } => {
   if (props.playerColor === 'black') {
     return {
@@ -95,14 +93,12 @@ const adjustCoordinates = (row: number, col: number): { row: number; col: number
   return { row, col };
 };
 
-// Convertit les coordonnées de l'échiquier en notation algébrique
 const toAlgebraic = (row: number, col: number): string => {
   const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
   return `${files[col]}${ranks[row]}`;
 };
 
-// Convertit la notation algébrique en coordonnées
 const fromAlgebraic = (square: string): Position => {
   const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
@@ -125,7 +121,6 @@ const initializeBoard = () => {
     p: '♟',
   };
 
-  // Set up black pieces
   const backRankBlack = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
   backRankBlack.forEach((piece, i) => {
     newBoard[0][i] = { type: piece, color: 'black', symbol: pieces[piece] };
@@ -134,7 +129,6 @@ const initializeBoard = () => {
     newBoard[1][i] = { type: 'p', color: 'black', symbol: pieces['p'] };
   }
 
-  // Set up white pieces
   const backRankWhite = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
   backRankWhite.forEach((piece, i) => {
     newBoard[7][i] = { type: piece, color: 'white', symbol: pieces[piece] };
@@ -150,7 +144,6 @@ const getSquareColor = (row: number, col: number): string => {
   return (row + col) % 2 === 0 ? 'white' : 'black';
 };
 
-// Mise à jour de handleSquareClick pour utiliser les coordonnées ajustées
 const handleSquareClick = async (displayRow: number, displayCol: number) => {
   const { row, col } = adjustCoordinates(displayRow, displayCol);
   const piece = board.value[row][col];
@@ -188,7 +181,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
       to: toAlgebraic(row, col),
     };
     const newGameState = await GameService.makeMove(gameId.value, move);
-    // Si une pièce est présente sur la case cible, elle est capturée
+
     const capturedPiece = board.value[row][col];
     if (capturedPiece) {
       const captureColor = capturedPiece.color === 'white' ? 'white' : 'black';
@@ -244,7 +237,6 @@ const updateBoardFromGameState = (state: GameState) => {
   });
 
   if (state.promotion != null) {
-    console.log(state.promotion);
     promotionDialog.value = {
       color: state.promotion,
       isOpen: true,
@@ -274,28 +266,25 @@ onMounted(() => {
   }
 });
 
-// Fonction pour calculer la valeur matérielle
 const calculateMaterialValue = (pieces: ChessPiece[]): number => {
   const values: { [key: string]: number } = {
-    p: 1, // pion
-    n: 3, // cavalier
-    b: 3, // fou
-    r: 5, // tour
-    q: 9, // dame
-    k: 0, // roi (pas compté dans l'avantage matériel)
+    p: 1,
+    n: 3,
+    b: 3,
+    r: 5,
+    q: 9,
+    k: 0,
   };
 
   return pieces.reduce((sum, piece) => sum + (values[piece.type] || 0), 0);
 };
 
-// Compute l'avantage matériel
 const materialAdvantage = computed(() => {
-  const whiteValue = calculateMaterialValue(capturedPieces.value.black); // pièces noires capturées
-  const blackValue = calculateMaterialValue(capturedPieces.value.white); // pièces blanches capturées
+  const whiteValue = calculateMaterialValue(capturedPieces.value.black);
+  const blackValue = calculateMaterialValue(capturedPieces.value.white);
   return whiteValue - blackValue;
 });
 
-// Émet les pièces capturées pour le composant parent
 const emit = defineEmits<{
   'update:capturedPieces': [pieces: CapturedPieces];
 }>();
@@ -316,10 +305,8 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
 
     const newGameState = await GameService.makePromotion(gameId.value, newPiece);
 
-    // Mettre à jour l'état du jeu
     updateBoardFromGameState(newGameState);
 
-    // Fermer le dialog
     promotionDialog.value.isOpen = false;
   } catch (error) {
     console.error('Error making promotion move:', error);

@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
 import { GameService, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
+import Badge from 'primevue/badge';
+import Tag from 'primevue/tag';
 
 interface GameInfo {
   opponent: string;
@@ -58,7 +60,7 @@ const handleDrawOffer = async () => {
 onMounted(() => {
   // Récupérer les informations de la partie
   GameService.getGame(gameId.value).then((game: GameState) => {
-    moves.value = game.moves;
+    updateGameState(game);
     //     gameInfo.value = game;
   });
 });
@@ -83,6 +85,43 @@ const capturedPieces = ref<CapturedPieces>({
 
 const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
   capturedPieces.value = pieces;
+};
+const gameState = ref<GameState | null>(null);
+
+const currentMoveIndex = ref(-1);
+
+const goToMove = async (index: number) => {
+  try {
+    const newGameState = await GameService.goToMove(gameId.value, index);
+    updateGameState(newGameState);
+    currentMoveIndex.value = index;
+  } catch (error) {
+    console.error('Error going to move:', error);
+  }
+};
+
+const goToPreviousMove = () => {
+  if (currentMoveIndex.value > 0) {
+    goToMove(currentMoveIndex.value - 1);
+  }
+};
+
+const goToNextMove = () => {
+  if (currentMoveIndex.value < moves.value.length - 1) {
+    goToMove(currentMoveIndex.value + 1);
+  }
+};
+
+const goToCurrentPosition = () => {
+  goToMove(moves.value.length - 1);
+};
+
+const updateGameState = (newState: GameState) => {
+  gameState.value = newState;
+  moves.value = newState.moves;
+  if (currentMoveIndex.value === -1) {
+    currentMoveIndex.value = moves.value.length - 1;
+  }
 };
 </script>
 
@@ -144,7 +183,12 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
           </div>
 
           <!-- Chess Board avec la prop playerColor et l'événement captured-pieces -->
-          <ChessBoard :player-color="playerColor" v-model:captured-pieces="capturedPieces" />
+          <ChessBoard
+            v-if="gameState"
+            :player-color="playerColor"
+            v-model:captured-pieces="capturedPieces"
+            v-model:gameState="gameState"
+          />
 
           <!-- White Player Info -->
 
@@ -163,16 +207,91 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
         <div class="col-12 md:col-3 p-3 m-auto">
           <TabView>
             <TabPanel header="Moves" :value="0">
-              <div class="moves-list surface-section border-round p-3 h-30rem overflow-y-auto">
+              <div class="moves-container">
+                <!-- Contrôles de navigation -->
                 <div
-                  class="flex align-items-center mb-2"
-                  v-for="(move, index) in moves"
-                  :key="index"
+                  class="move-controls flex justify-content-center gap-2 p-2 surface-section border-bottom-1"
                 >
-                  <span class="text-500 mr-2">{{ index + 1 }}.</span>
-                  <span class="mr-2">{{ move.from }}</span>
-                  <span>{{ move.to }}</span>
-                  <div :class="{ 'text-500 ml-2': true }">{{ move.color }} - {{ move.piece }}</div>
+                  <Button
+                    icon="pi pi-step-backward"
+                    text
+                    rounded
+                    size="small"
+                    @click="goToMove(0)"
+                    :disabled="currentMoveIndex === 0"
+                    v-tooltip.bottom="'Go to start'"
+                  />
+                  <Button
+                    icon="pi pi-chevron-left"
+                    text
+                    rounded
+                    size="small"
+                    @click="goToPreviousMove"
+                    :disabled="currentMoveIndex === 0"
+                    v-tooltip.bottom="'Previous move'"
+                  />
+                  <Button
+                    icon="pi pi-chevron-right"
+                    text
+                    rounded
+                    size="small"
+                    @click="goToNextMove"
+                    :disabled="currentMoveIndex === moves.length - 1"
+                    v-tooltip.bottom="'Next move'"
+                  />
+                  <Button
+                    icon="pi pi-step-forward"
+                    text
+                    rounded
+                    size="small"
+                    @click="goToCurrentPosition"
+                    :disabled="currentMoveIndex === moves.length - 1"
+                    v-tooltip.bottom="'Go to current position'"
+                  />
+                </div>
+
+                <!-- Liste des coups -->
+                <div class="moves-list">
+                  <div
+                    v-for="(move, index) in moves"
+                    :key="index"
+                    class="move-pair flex align-items-center p-2 border-bottom-1"
+                    :class="{
+                      'current-pair': currentMoveIndex === index || currentMoveIndex === index + 1,
+                    }"
+                  >
+                    <span class="move-number text-500 font-medium mr-2">{{ index / 2 }}.</span>
+                    <!-- Coup blanc -->
+                    <div
+                      class="move-item flex-1 cursor-pointer px-2 py-1 border-round"
+                      :class="{ 'current-move': index === currentMoveIndex }"
+                      @click="goToMove(index)"
+                    >
+                      <div class="flex align-items-center justify-content-between">
+                        <div class="flex align-items-center gap-1">
+                          <span class="font-medium">{{ move.from }}-{{ move.to }}</span>
+                        </div>
+                        <span class="piece-type text-500">{{ move.piece }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Coup noir -->
+                    <div
+                      v-if="moves[index + 1]"
+                      class="move-item flex-1 cursor-pointer px-2 py-1 border-round ml-2"
+                      :class="{ 'current-move': index + 1 === currentMoveIndex }"
+                      @click="goToMove(index + 1)"
+                    >
+                      <div class="flex align-items-center justify-content-between">
+                        <div class="flex align-items-center gap-1">
+                          <span class="font-medium"
+                            >{{ moves[index + 1].from }}-{{ moves[index + 1].to }}</span
+                          >
+                        </div>
+                        <span class="piece-type text-500">{{ moves[index + 1].piece }}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </TabPanel>
@@ -215,5 +334,73 @@ const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
 
 .active-player {
   border: 2px solid white;
+}
+
+.moves-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-section);
+  border-radius: var(--border-radius);
+}
+
+.move-controls {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-section);
+}
+
+.moves-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.move-pair {
+  border-color: var(--surface-border);
+}
+
+.move-pair:hover {
+  background: var(--surface-ground);
+}
+
+.current-pair {
+  background: var(--surface-hover);
+}
+
+.move-item {
+  transition: all 0.2s;
+}
+
+.move-item:hover {
+  background: var(--surface-hover);
+}
+
+.current-move {
+  background: var(--primary-color);
+  color: var(--primary-color-text);
+}
+
+.current-move .piece-type {
+  color: var(--primary-color-text) !important;
+}
+
+.piece-type {
+  font-size: 0.875rem;
+}
+
+/* Ajustez ces styles pour le TabView */
+:deep(.p-tabview-panels) {
+  padding: 0 !important;
+  height: calc(100vh - 25rem);
+}
+
+:deep(.p-tabview-panel) {
+  height: 100%;
+}
+
+:deep(.p-tabview) {
+  height: 100%;
 }
 </style>
