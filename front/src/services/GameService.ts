@@ -1,5 +1,4 @@
-import axios from 'axios';
-
+import httpHelper from '@/utils/httpHelper';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
 
 interface ChessPiece {
@@ -128,7 +127,7 @@ function findMissingPieces(initialPieces: string[], currentPieces: string[]): Ch
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
     try {
-      const response = await axios.get(`${API_URL}games/${gameId}`);
+      const response = await httpHelper.get(`${API_URL}games/${gameId}`);
       const game = response.data;
       const color = fenToColor(game.fen) == 'w' ? 'white' : 'black';
       console.log(game);
@@ -145,7 +144,7 @@ export const GameService = {
   },
   async getSuggestions(gameId: string, from: string): Promise<string[]> {
     try {
-      const response = await axios.post(`${API_URL}games/${gameId}/suggestions`, {
+      const response = await httpHelper.post(`${API_URL}games/${gameId}/suggestions`, {
         from,
       });
       return response.data;
@@ -157,7 +156,7 @@ export const GameService = {
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
     try {
-      const respose = await axios.post(`${API_URL}games/${gameId}/move`, move);
+      const respose = await httpHelper.post(`${API_URL}games/${gameId}/move`, move);
       const newGameState = respose.data;
       const color = fenToColor(newGameState.fen) == 'w' ? 'white' : 'black';
 
@@ -177,7 +176,7 @@ export const GameService = {
         type: typeToFullName(piece.type)!.toUpperCase(),
         color: piece.color.toUpperCase(),
       };
-      const response = await axios.post(`${API_URL}games/${gameId}/promotion`, newPiece);
+      const response = await httpHelper.post(`${API_URL}games/${gameId}/promotion`, newPiece);
       const newGameState = response.data;
       const color = fenToColor(newGameState.fen) == 'w' ? 'white' : 'black';
 
