@@ -22,6 +22,10 @@ interface PieceMove {
 }
 const moves = ref<PieceMove[]>([]);
 
+const filteredMoves = computed(() => {
+  return moves.value.filter((_, index) => index % 2 === 0);
+});
+
 const gameInfo = ref<GameInfo>({
   opponent: 'Magnus Carlsen',
   opponentRating: 2847,
@@ -122,6 +126,18 @@ const updateGameState = (newState: GameState) => {
   if (currentMoveIndex.value === -1) {
     currentMoveIndex.value = moves.value.length - 1;
   }
+};
+
+const getPieceSymbol = (piece: string): string => {
+  const symbols: { [key: string]: string } = {
+    'PAWN': '♟',
+    'KNIGHT': '♞',
+    'BISHOP': '♝',
+    'ROOK': '♜',
+    'QUEEN': '♛',
+    'KING': '♚',
+  };
+  return symbols[piece] || piece;
 };
 </script>
 
@@ -249,46 +265,52 @@ const updateGameState = (newState: GameState) => {
                     v-tooltip.bottom="'Go to current position'"
                   />
                 </div>
-
-                <!-- Liste des coups -->
                 <div class="moves-list">
                   <div
-                    v-for="(move, index) in moves"
+                    v-for="(move, index) in filteredMoves"
                     :key="index"
-                    class="move-pair flex align-items-center p-2 border-bottom-1"
+                    class="move-pair flex align-items-center p-2 border-bottom-1 surface-ground"
                     :class="{
-                      'current-pair': currentMoveIndex === index || currentMoveIndex === index + 1,
+                      'current-pair': currentMoveIndex === index * 2 || currentMoveIndex === index * 2 + 1,
                     }"
                   >
-                    <span class="move-number text-500 font-medium mr-2">{{ index / 2 }}.</span>
+                    <span class="move-number text-600 font-medium mr-2">
+                      {{ index + 1 }}.
+                    </span>
                     <!-- Coup blanc -->
                     <div
-                      class="move-item flex-1 cursor-pointer px-2 py-1 border-round"
-                      :class="{ 'current-move': index === currentMoveIndex }"
-                      @click="goToMove(index)"
+                      class="move-item flex-1 cursor-pointer px-3 py-2 border-round-sm"
+                      :class="{
+                        'current-move': index * 2 === currentMoveIndex,
+                        'hover:surface-hover': index * 2 !== currentMoveIndex,
+                      }"
+                      @click="goToMove(index * 2)"
                     >
                       <div class="flex align-items-center justify-content-between">
-                        <div class="flex align-items-center gap-1">
+                        <div class="flex align-items-center gap-2">
+                          <i class="pi pi-circle-fill text-white" style="font-size: 0.5rem" />
                           <span class="font-medium">{{ move.from }}-{{ move.to }}</span>
                         </div>
-                        <span class="piece-type text-500">{{ move.piece }}</span>
+                        <span class="piece-symbol text-600">{{ getPieceSymbol(move.piece) }}</span>
                       </div>
                     </div>
 
-                    <!-- Coup noir -->
+                    <!-- Coup noir (s'il existe) -->
                     <div
-                      v-if="moves[index + 1]"
-                      class="move-item flex-1 cursor-pointer px-2 py-1 border-round ml-2"
-                      :class="{ 'current-move': index + 1 === currentMoveIndex }"
-                      @click="goToMove(index + 1)"
+                      v-if="moves[index * 2 + 1]"
+                      class="move-item flex-1 cursor-pointer px-3 py-2 border-round-sm ml-2"
+                      :class="{
+                        'current-move': index * 2 + 1 === currentMoveIndex,
+                        'hover:surface-hover': index * 2 + 1 !== currentMoveIndex,
+                      }"
+                      @click="goToMove(index * 2 + 1)"
                     >
                       <div class="flex align-items-center justify-content-between">
-                        <div class="flex align-items-center gap-1">
-                          <span class="font-medium"
-                            >{{ moves[index + 1].from }}-{{ moves[index + 1].to }}</span
-                          >
+                        <div class="flex align-items-center gap-2">
+                          <i class="pi pi-circle-fill text-900" style="font-size: 0.5rem" />
+                          <span class="font-medium">{{ moves[index * 2 + 1].from }}-{{ moves[index * 2 + 1].to }}</span>
                         </div>
-                        <span class="piece-type text-500">{{ moves[index + 1].piece }}</span>
+                        <span class="piece-symbol text-600">{{ getPieceSymbol(moves[index * 2 + 1].piece) }}</span>
                       </div>
                     </div>
                   </div>
@@ -340,54 +362,70 @@ const updateGameState = (newState: GameState) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--surface-section);
+  background: var(--surface-card);
   border-radius: var(--border-radius);
+  border: 1px solid var(--surface-border);
 }
 
 .move-controls {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--surface-section);
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .moves-list {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  padding: 0.5rem;
 }
 
 .move-pair {
   border-color: var(--surface-border);
-}
-
-.move-pair:hover {
-  background: var(--surface-ground);
+  transition: background-color 0.2s;
 }
 
 .current-pair {
-  background: var(--surface-hover);
+  background: var(--surface-card) !important;
+  border: 1px solid var(--primary-200);
+  margin: 0.25rem 0;
+  border-radius: var(--border-radius);
 }
 
 .move-item {
   transition: all 0.2s;
+  background: var(--surface-section);
+  border: 1px solid transparent;
 }
 
-.move-item:hover {
-  background: var(--surface-hover);
+.move-item:hover:not(.current-move) {
+  border-color: var(--primary-200);
+  transform: translateX(2px);
 }
 
 .current-move {
   background: var(--primary-color);
   color: var(--primary-color-text);
+  border: 1px solid var(--primary-color);
+  box-shadow: var(--card-shadow);
+  transform: translateX(2px);
 }
 
-.current-move .piece-type {
+.current-move .piece-type,
+.current-move .pi {
   color: var(--primary-color-text) !important;
 }
 
 .piece-type {
   font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.move-number {
+  min-width: 2rem;
+  text-align: center;
 }
 
 /* Ajustez ces styles pour le TabView */
@@ -402,5 +440,34 @@ const updateGameState = (newState: GameState) => {
 
 :deep(.p-tabview) {
   height: 100%;
+}
+
+/* Style de la scrollbar */
+.moves-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.moves-list::-webkit-scrollbar-track {
+  background: var(--surface-ground);
+  border-radius: 4px;
+}
+
+.moves-list::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 4px;
+}
+
+.moves-list::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-500);
+}
+
+/* Ajoutez ces styles */
+.piece-symbol {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.current-move .piece-symbol {
+  color: var(--primary-color-text) !important;
 }
 </style>
