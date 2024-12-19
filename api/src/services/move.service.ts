@@ -743,6 +743,9 @@ export class MoveService {
       } else if (isCheck) {
         game.status = "check";
         await game.save();
+      }else{
+        game.status = "in_progress";
+        await game.save();
       }
 
       const moveCreate: MoveCreateDTO = {

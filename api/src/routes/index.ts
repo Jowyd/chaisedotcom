@@ -47,21 +47,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MoveReturnDTO": {
-        "dataType": "refObject",
-        "properties": {
-            "id": {"dataType":"string","required":true},
-            "fen": {"dataType":"string","required":true},
-            "moves": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"color":{"dataType":"string","required":true},"piece":{"dataType":"string","required":true},"to":{"dataType":"string","required":true},"from":{"dataType":"string","required":true}}},"required":true},
-            "isCheck": {"dataType":"boolean","required":true},
-            "isCheckmate": {"dataType":"boolean","required":true},
-            "status": {"dataType":"string","required":true},
-            "whitePlayer": {"dataType":"nestedObjectLiteral","nestedProperties":{"username":{"dataType":"string","required":true}},"required":true},
-            "blackPlayer": {"dataType":"nestedObjectLiteral","nestedProperties":{"username":{"dataType":"string","required":true}},"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateGameDTO": {
         "dataType": "refObject",
         "properties": {
@@ -83,11 +68,44 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SuggestionsDTORequest": {
+        "dataType": "refObject",
+        "properties": {
+            "from": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MoveReturnDTO": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "fen": {"dataType":"string","required":true},
+            "moves": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"color":{"dataType":"string","required":true},"piece":{"dataType":"string","required":true},"to":{"dataType":"string","required":true},"from":{"dataType":"string","required":true}}},"required":true},
+            "isCheck": {"dataType":"boolean","required":true},
+            "isCheckmate": {"dataType":"boolean","required":true},
+            "status": {"dataType":"string","required":true},
+            "promotion": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},
+            "whitePlayer": {"dataType":"nestedObjectLiteral","nestedProperties":{"username":{"dataType":"string","required":true}},"required":true},
+            "blackPlayer": {"dataType":"nestedObjectLiteral","nestedProperties":{"username":{"dataType":"string","required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "MakeMoveDTO": {
         "dataType": "refObject",
         "properties": {
             "from": {"dataType":"string","required":true},
             "to": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ChessPiece": {
+        "dataType": "refObject",
+        "properties": {
+            "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["PAWN"]},{"dataType":"enum","enums":["ROOK"]},{"dataType":"enum","enums":["KNIGHT"]},{"dataType":"enum","enums":["BISHOP"]},{"dataType":"enum","enums":["QUEEN"]},{"dataType":"enum","enums":["KING"]}],"required":true},
+            "color": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["WHITE"]},{"dataType":"enum","enums":["BLACK"]}],"required":true},
         },
         "additionalProperties": false,
     },
@@ -358,6 +376,37 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/games/:game_id/suggestions',
+            ...(fetchMiddlewares<RequestHandler>(GameController)),
+            ...(fetchMiddlewares<RequestHandler>(GameController.prototype.getSuggestions)),
+
+            async function GameController_getSuggestions(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    game_id: {"in":"path","name":"game_id","required":true,"dataType":"double"},
+                    body: {"in":"body","name":"body","required":true,"ref":"SuggestionsDTORequest"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new GameController();
+
+              await templateService.apiHandler({
+                methodName: 'getSuggestions',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/games/:game_id/move',
             ...(fetchMiddlewares<RequestHandler>(GameController)),
             ...(fetchMiddlewares<RequestHandler>(GameController.prototype.makeMove)),
@@ -408,6 +457,37 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getState',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/games/:game_id/promotion',
+            ...(fetchMiddlewares<RequestHandler>(GameController)),
+            ...(fetchMiddlewares<RequestHandler>(GameController.prototype.promotion)),
+
+            async function GameController_promotion(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    game_id: {"in":"path","name":"game_id","required":true,"dataType":"double"},
+                    piece: {"in":"body","name":"piece","required":true,"ref":"ChessPiece"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new GameController();
+
+              await templateService.apiHandler({
+                methodName: 'promotion',
                 controller,
                 response,
                 next,
