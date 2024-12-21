@@ -22,6 +22,11 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton';
 import Password from 'primevue/password';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Calendar from 'primevue/calendar';
+import InputSwitch from 'primevue/inputswitch';
+import Divider from 'primevue/divider';
 
 const app = createApp(App);
 
@@ -44,6 +49,11 @@ app.component('Dropdown', Dropdown);
 app.component('RadioButton', RadioButton);
 app.component('Toast', Toast);
 app.component('Password', Password);
+app.component('DataTable', DataTable);
+app.component('Column', Column);
+app.component('Calendar', Calendar);
+app.component('InputSwitch', InputSwitch);
+app.component('Divider', Divider);
 
 app.directive('tooltip', Tooltip);
 

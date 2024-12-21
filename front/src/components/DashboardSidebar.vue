@@ -14,12 +14,12 @@ const menuItems = ref([
   {
     label: 'History',
     icon: 'pi pi-clock',
-    command: () => console.log('Analysis clicked'),
+    command: () => router.push("/history"),
   },
   {
     label: 'Settings',
     icon: 'pi pi-cog',
-    command: () => console.log('Settings clicked'),
+    command: () => router.push("/settings"),
   },
   {
     label: 'Logout',
