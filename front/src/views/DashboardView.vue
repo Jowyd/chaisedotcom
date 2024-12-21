@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import CreateGameDialog from '@/components/CreateGameDialog.vue';
+import { GameService } from '@/services/GameService';
+import { useToast } from 'primevue/usetoast';
 
+const router = useRouter();
+const toast = useToast();
 const showCreateGame = ref<boolean>(false);
 
 const recentGames = [
@@ -11,9 +16,29 @@ const recentGames = [
   { opponent: 'Beth H.', result: 'Draw', rating: '+0', date: '2024-03-13' },
 ];
 
-const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }) => {
-  console.log('Creating game with:', gameDetails);
-  // TODO: Implement game creation logic
+const handleCreateGame = async (gameDetails: {
+  opponent: string;
+  colorAssignment: 'random' | 'fixed';
+  playerColor?: 'white' | 'black';
+}) => {
+  try {
+    const newGame = await GameService.createGame(gameDetails);
+    toast.add({
+      severity: 'success',
+      summary: 'Game Created',
+      detail: 'New game has been created successfully',
+      life: 3000,
+    });
+    router.push(`/game/${newGame.id}`);
+  } catch (error) {
+    console.error('Error creating game:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to create game. Please try again.',
+      life: 3000,
+    });
+  }
 };
 </script>
 

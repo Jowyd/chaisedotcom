@@ -10,6 +10,8 @@ import TabPanel from 'primevue/tabpanel';
 import App from './App.vue';
 import router from './router';
 import ConfirmationService from 'primevue/confirmationservice';
+import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
 
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
@@ -29,6 +31,7 @@ app.use(PrimeVue, {
 });
 app.use(router);
 app.use(ConfirmationService);
+app.use(ToastService);
 app.component('Button', Button);
 app.component('Card', Card);
 app.component('Avatar', Avatar);
@@ -38,6 +41,7 @@ app.component('Dialog', Dialog);
 app.component('InputText', InputText);
 app.component('Dropdown', Dropdown);
 app.component('RadioButton', RadioButton);
+app.component('Toast', Toast);
 
 app.directive('tooltip', Tooltip);
 

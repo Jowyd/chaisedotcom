@@ -138,6 +138,13 @@ function findMissingPieces(initialPieces: string[], currentPieces: string[]): Ch
 
   return missingPieces;
 }
+
+interface CreateGameDTO {
+  opponent: string;
+  colorAssignment: 'random' | 'fixed';
+  playerColor?: 'white' | 'black';
+}
+
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
     try {
@@ -251,6 +258,21 @@ export const GameService = {
       return response.data;
     } catch (error) {
       console.error(error);
+      throw error;
+    }
+  },
+
+  async createGame(gameDetails: CreateGameDTO): Promise<GameState> {
+    try {
+      const response = await httpHelper.post(`${API_URL}games`, gameDetails);
+      const newGame = response.data;
+      return {
+        ...mockGameState,
+        ...newGame,
+        id: newGame.game_id.toString(),
+      };
+    } catch (error) {
+      console.error('Error creating game:', error);
       throw error;
     }
   },
