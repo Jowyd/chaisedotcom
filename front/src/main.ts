@@ -21,6 +21,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import RadioButton from 'primevue/radiobutton';
+import Password from 'primevue/password';
 
 const app = createApp(App);
 
@@ -42,6 +43,7 @@ app.component('InputText', InputText);
 app.component('Dropdown', Dropdown);
 app.component('RadioButton', RadioButton);
 app.component('Toast', Toast);
+app.component('Password', Password);
 
 app.directive('tooltip', Tooltip);
 

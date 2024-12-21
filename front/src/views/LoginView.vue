@@ -1,75 +1,82 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import InputText from 'primevue/inputtext';
+import { authService } from '@/services/AuthService';
+import { useToast } from 'primevue/usetoast';
 import Password from 'primevue/password';
-import Checkbox from 'primevue/checkbox';
+import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 
 const router = useRouter();
-const email = ref('');
-const password = ref('');
-const rememberMe = ref(false);
+const toast = useToast();
 
-const navigateToRegister = () => {
-  router.push('/register');
+const username = ref('');
+const password = ref('');
+const loading = ref(false);
+
+const handleLogin = async () => {
+  if (!username.value || !password.value) return;
+
+  loading.value = true;
+  try {
+    await authService.login({
+      username: username.value,
+      password: password.value,
+    });
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Login successful',
+      life: 3000,
+    });
+    router.push('/dashboard');
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Login failed',
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 
 <template>
-  <div class="flex align-items-center justify-content-center min-h-screen surface-ground">
-    <div class="surface-card p-6 shadow-2 border-round-xl w-full md:w-6 lg:w-4">
-      <div class="text-center mb-5">
-        <div class="text-3xl font-bold mb-3">Welcome Back</div>
-        <span class="text-600 font-medium">Sign in to continue</span>
-      </div>
-
-      <div class="flex flex-column gap-4">
-        <div class="flex flex-column gap-2">
-          <label for="email" class="font-medium">Email</label>
-          <InputText
-            id="email"
-            type="email"
-            v-model="email"
-            placeholder="Enter your email"
-            class="w-full"
-          />
-        </div>
-
-        <div class="flex flex-column gap-2">
-          <label for="password" class="font-medium">Password</label>
-          <Password
-            id="password"
-            v-model="password"
-            placeholder="Enter your password"
-            :feedback="false"
-            toggleMask
-            class="w-full"
-          />
-        </div>
-
-        <div class="flex align-items-center justify-content-between">
-          <div class="flex align-items-center gap-2">
-            <Checkbox id="rememberMe" v-model="rememberMe" :binary="true" />
-            <label for="rememberMe">Remember me</label>
-          </div>
-          <a class="text-primary font-medium no-underline hover:underline cursor-pointer">
-            Forgot password?
-          </a>
-        </div>
-
-        <Button label="Sign In" severity="primary" class="w-full" />
-
+  <div class="flex align-items-center justify-content-center min-h-screen">
+    <div class="surface-card p-4 shadow-2 border-round w-full lg:w-4">
+      <h2 class="text-center mb-4">Login</h2>
+      <div class="flex flex-column gap-3">
+        <InputText
+          v-model="username"
+          placeholder="Username"
+          :disabled="loading"
+        />
+        <Password
+          v-model="password"
+          placeholder="Password"
+          :feedback="false"
+          :disabled="loading"
+          @keyup.enter="handleLogin"
+          toggleMask
+        />
+        <Button
+          label="Login"
+          @click="handleLogin"
+          :loading="loading"
+          severity="primary"
+        />
         <div class="text-center">
-          <span class="text-600">Don't have an account? </span>
-          <a
-            @click="navigateToRegister"
-            class="text-primary font-medium no-underline hover:underline cursor-pointer"
-          >
-            Sign up
-          </a>
+          <router-link to="/register" class="text-primary">Create account</router-link>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+:deep(.p-password input) {
+  width: 100%;
+}
+</style>
