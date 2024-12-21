@@ -31,6 +31,7 @@ const handleLogin = async () => {
     });
     router.push('/dashboard');
   } catch (error) {
+    console.error(error);
     toast.add({
       severity: 'error',
       summary: 'Error',
@@ -48,11 +49,7 @@ const handleLogin = async () => {
     <div class="surface-card p-4 shadow-2 border-round w-full lg:w-4">
       <h2 class="text-center mb-4">Login</h2>
       <div class="flex flex-column gap-3">
-        <InputText
-          v-model="username"
-          placeholder="Username"
-          :disabled="loading"
-        />
+        <InputText v-model="username" placeholder="Username" :disabled="loading" />
         <Password
           v-model="password"
           placeholder="Password"
@@ -61,12 +58,7 @@ const handleLogin = async () => {
           @keyup.enter="handleLogin"
           toggleMask
         />
-        <Button
-          label="Login"
-          @click="handleLogin"
-          :loading="loading"
-          severity="primary"
-        />
+        <Button label="Login" @click="handleLogin" :loading="loading" severity="primary" />
         <div class="text-center">
           <router-link to="/register" class="text-primary">Create account</router-link>
         </div>
