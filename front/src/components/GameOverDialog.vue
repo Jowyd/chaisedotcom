@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import type { GameState } from '@/services/GameService';
-import type { CapturedPieces } from '@/types';
+import { computed } from 'vue';
+import { stillPlaying, type GameState } from '@/services/GameService';
+import type { CapturedPieces, PieceMove } from '@/types';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
-
-interface GameInfo {
-  timeControl: string;
-  timeWhite: number;
-  timeBlack: number;
-}
 
 interface Props {
   visible: boolean;
   gameState: GameState;
-  gameInfo: GameInfo;
   capturedPieces: CapturedPieces;
-  moves: any[];
+  moves: PieceMove[];
 }
 
 const props = defineProps<Props>();
@@ -36,24 +29,16 @@ const formatTime = (seconds: number): string => {
 };
 
 const gameResult = computed(() => {
-  console.log('Computing game result:', props.gameState?.status);
-  if (props.gameState && props.gameState.status === 'checkmate') {
+  if (props.gameState && !stillPlaying(props.gameState.status)) {
     const winner = props.gameState.turn === 'white' ? 'Black' : 'White';
     return {
-      title: 'Checkmate!',
+      title: 'Game Over',
       winner,
-      message: `${winner} wins by checkmate`,
+      message: `${winner} wins by ${props.gameState.status}`,
     };
   }
   return null;
 });
-
-watch(
-  () => props.visible,
-  (newValue) => {
-    console.log('Dialog visibility changed:', newValue);
-  },
-);
 </script>
 
 <template>
@@ -76,14 +61,12 @@ watch(
             <span class="text-xl font-medium mb-2">White</span>
             <div class="flex flex-column align-items-center gap-2">
               <div class="text-600">Captured pieces: {{ capturedPieces.black.length }}</div>
-              <div class="text-600">Time left: {{ formatTime(gameInfo.timeWhite) }}</div>
             </div>
           </div>
           <div class="col-6 flex flex-column align-items-center">
             <span class="text-xl font-medium mb-2">Black</span>
             <div class="flex flex-column align-items-center gap-2">
               <div class="text-600">Captured pieces: {{ capturedPieces.white.length }}</div>
-              <div class="text-600">Time left: {{ formatTime(gameInfo.timeBlack) }}</div>
             </div>
           </div>
         </div>

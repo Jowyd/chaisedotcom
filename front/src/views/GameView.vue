@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeMount } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
-import { GameService, type GameState } from '@/services/GameService';
+import { GameService, stillPlaying, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
-import Badge from 'primevue/badge';
-import Tag from 'primevue/tag';
 import GameOverDialog from '@/components/GameOverDialog.vue';
+import { useConfirm } from 'primevue/useconfirm';
+import ConfirmDialog from 'primevue/confirmdialog';
+import Dialog from 'primevue/dialog';
+import { type CapturedPieces, type PieceMove } from '@/types';
+import router from '@/router';
 
 interface GameInfo {
   opponent: string;
@@ -15,12 +18,6 @@ interface GameInfo {
   timeBlack: number;
 }
 
-interface PieceMove {
-  color: string;
-  from: string;
-  piece: string;
-  to: string;
-}
 const moves = ref<PieceMove[]>([]);
 
 const filteredMoves = computed(() => {
@@ -44,30 +41,38 @@ const formatTime = (seconds: number): string => {
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
-const handleResign = async () => {
-  try {
-    await GameService.resign(gameId.value);
-    // Gérer la fin de partie
-  } catch (error) {
-    console.error('Error resigning game:', error);
-  }
-};
+// const drawOffer = ref<{ offeredBy: 'white' | 'black' } | null>(null);
+const confirm = useConfirm();
 
-const handleDrawOffer = async () => {
-  try {
-    await GameService.offerDraw(gameId.value);
-    // Afficher un message de confirmation
-  } catch (error) {
-    console.error('Error offering draw:', error);
+const handleResign = () => {
+  const currentColor = gameState.value?.turn;
+  if (!currentColor) {
+    throw new Error('Invalid game state');
   }
-};
-
-onMounted(() => {
-  // Récupérer les informations de la partie
-  GameService.getGame(gameId.value).then((game: GameState) => {
-    updateGameState(game);
-    //     gameInfo.value = game;
+  confirm.require({
+    message: `Are you sure you want to resign as ${currentColor}?`,
+    header: 'Confirm Resignation',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        const newGameState = await GameService.resign(gameId.value, currentColor);
+        updateGameState(newGameState);
+      } catch (error) {
+        console.error('Error resigning game:', error);
+      }
+    },
   });
+};
+
+onBeforeMount(() => {
+  GameService.getGame(gameId.value)
+    .then((game: GameState) => {
+      updateGameState(game);
+    })
+    .catch((error) => {
+      console.error('Error fetching game:', error);
+      router.push('/dashboard');
+    });
 });
 
 // Ajout d'une ref pour la couleur du joueur
@@ -78,20 +83,12 @@ const togglePlayerColor = () => {
   playerColor.value = playerColor.value === 'white' ? 'black' : 'white';
 };
 
-interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
-}
-
 const capturedPieces = ref<CapturedPieces>({
   white: [],
   black: [],
 });
 
-const handleCapturedPiecesUpdate = (pieces: CapturedPieces) => {
-  capturedPieces.value = pieces;
-};
-const gameState = ref<GameState | null>(null);
+const gameState = ref<GameState>();
 
 const currentMoveIndex = ref(-1);
 
@@ -127,7 +124,7 @@ const updateGameState = (newState: GameState) => {
   if (currentMoveIndex.value === -1) {
     currentMoveIndex.value = moves.value.length - 1;
   }
-  if (newState.status === 'checkmate') {
+  if (!stillPlaying(newState.status)) {
     showGameOverDialog.value = true;
   }
 };
@@ -150,10 +147,35 @@ watch(
   () => gameState.value?.status,
   (newStatus) => {
     console.log('Status changed:', newStatus);
-    showGameOverDialog.value = newStatus === 'checkmate';
+    showGameOverDialog.value = !stillPlaying(newStatus!);
   },
   { immediate: true },
 );
+
+const showDrawConfirmDialog = ref(false);
+const drawOfferingPlayer = ref<'white' | 'black' | null>(null);
+
+const handleDrawOffer = () => {
+  if (!gameState.value) {
+    throw new Error('Invalid game state');
+  }
+  const currentColor = gameState.value.turn;
+  drawOfferingPlayer.value = currentColor;
+  showDrawConfirmDialog.value = true;
+};
+
+const handleDrawResponse = async (accept: boolean) => {
+  if (accept) {
+    try {
+      const newGameState = await GameService.acceptDraw(gameId.value);
+      updateGameState(newGameState);
+    } catch (error) {
+      console.error('Error accepting draw:', error);
+    }
+  }
+  showDrawConfirmDialog.value = false;
+  drawOfferingPlayer.value = null;
+};
 </script>
 
 <template>
@@ -236,12 +258,18 @@ watch(
 
           <!-- Game Controls -->
           <div class="game-controls flex justify-content-center gap-3 mt-4">
-            <Button icon="pi pi-flag" severity="danger" text label="Resign" @click="handleResign" />
             <Button
-              icon="pi pi-refresh"
+              icon="pi pi-flag"
+              severity="danger"
+              text
+              :label="`${gameState?.turn === 'white' ? 'White' : 'Black'} resigns`"
+              @click="handleResign"
+            />
+            <Button
+              icon="pi pi-handshake"
               severity="secondary"
               text
-              label="Draw Offer"
+              :label="`${gameState?.turn === 'white' ? 'White' : 'Black'} offers draw`"
               @click="handleDrawOffer"
             />
           </div>
@@ -356,10 +384,46 @@ watch(
   <GameOverDialog
     v-model:visible="showGameOverDialog"
     :game-state="gameState"
-    :game-info="gameInfo"
     :captured-pieces="capturedPieces"
     :moves="moves"
   />
+  <ConfirmDialog />
+  <Dialog
+    v-model:visible="showDrawConfirmDialog"
+    modal
+    :header="`Draw Offer - ${drawOfferingPlayer?.toUpperCase()} Player`"
+    :style="{ width: '400px' }"
+    :closable="false"
+    :draggable="false"
+  >
+    <div class="flex flex-column align-items-center gap-4">
+      <i class="pi pi-handshake text-6xl text-primary"></i>
+      <div class="text-2xl font-bold">{{ drawOfferingPlayer?.toUpperCase() }} offers a draw</div>
+      <div class="text-xl text-600">
+        <strong>{{ drawOfferingPlayer === 'white' ? 'Black' : 'White' }}</strong
+        >, do you accept?
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="flex w-full justify-content-center gap-3">
+        <Button
+          label="Accept"
+          icon="pi pi-check"
+          @click="handleDrawResponse(true)"
+          severity="success"
+          text
+        />
+        <Button
+          label="Decline"
+          icon="pi pi-times"
+          @click="handleDrawResponse(false)"
+          severity="danger"
+          text
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -560,5 +624,20 @@ watch(
 
 .active-player {
   animation: pulse 1s ease-in-out;
+}
+
+.draw-offer {
+  background: var(--surface-hover);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+}
+
+:deep(.p-dialog-content) {
+  padding: 2rem;
+}
+
+:deep(.p-dialog-footer) {
+  padding: 1rem 2rem 2rem 2rem;
+  border-top: none;
 }
 </style>

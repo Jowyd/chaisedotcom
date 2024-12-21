@@ -49,6 +49,20 @@ export interface CapturedPieces {
   black: ChessPiece[];
 }
 
+export interface DrawOffer {
+  offeredBy: 'white' | 'black';
+  accepted?: boolean;
+}
+
+export enum GameStatus {
+  IN_PROGRESS = 'in_progress',
+  CHECKMATE = 'checkmate',
+  STALEMATE = 'stalemate',
+  DRAW = 'draw',
+  SURRENDER = 'surrender',
+  CHECK = 'check',
+}
+
 export interface GameState {
   id: string;
   fen: string;
@@ -56,11 +70,16 @@ export interface GameState {
   isCheck: boolean;
   isCheckmate: boolean;
   turn: 'white' | 'black';
-  status: 'active' | 'finished' | 'checkmate' | 'check';
+  status: GameStatus;
   promotion?: 'white' | 'black' | null;
+  drawOffer?: DrawOffer | null;
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function stillPlaying(status: GameStatus): boolean {
+  return status === GameStatus.IN_PROGRESS || status === GameStatus.CHECK;
+}
 
 function fenToColor(fen: string): string {
   return fen.split(' ')[1];
@@ -192,12 +211,14 @@ export const GameService = {
     }
   },
 
-  async resign(gameId: string): Promise<void> {
-    await delay(200);
-    mockGameState = {
-      ...mockGameState,
-      status: 'finished',
-    };
+  async resign(gameId: string, color: 'white' | 'black'): Promise<GameState> {
+    try {
+      const response = await httpHelper.post(`${API_URL}games/${gameId}/resign`, { color });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   },
 
   async offerDraw(gameId: string): Promise<void> {
@@ -234,6 +255,16 @@ export const GameService = {
         ...newGameState,
         turn: color,
       };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  async acceptDraw(gameId: string): Promise<GameState> {
+    try {
+      const response = await httpHelper.post(`${API_URL}games/${gameId}/draw`, {});
+      return response.data;
     } catch (error) {
       console.error(error);
       throw error;

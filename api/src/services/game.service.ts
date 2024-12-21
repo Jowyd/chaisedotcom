@@ -1,4 +1,4 @@
-import { Game } from "../models/game.model";
+import { Game, GameStatus } from "../models/game.model";
 import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
@@ -102,6 +102,30 @@ class GameService {
     return games.length;
   }
 
+  async draw(gameId: number): Promise<MoveReturnDTO> {
+    const game = await Game.findByPk(gameId);
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
+    game.status = GameStatus.DRAW;
+    await game.save();
+
+    return await moveService.getState(gameId);
+  }
+
+  async resign(gameId: number, color: string): Promise<MoveReturnDTO> {
+    const game = await Game.findByPk(gameId);
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
+    game.status = GameStatus.SURRENDER;
+    game.winner = color === "WHITE" ? "BLACK" : "WHITE";
+    await game.save();
+
+    return await moveService.getState(gameId);
+  }
 }
 
 export const gameService = new GameService();

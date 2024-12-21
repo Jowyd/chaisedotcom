@@ -126,6 +126,19 @@ export class GameController extends Controller {
     const stats = await gameService.getStats(username);
     return { stats };
   }
+
+  @Post("/{game_id}/draw")
+  public async draw(@Path() game_id: number): Promise<MoveReturnDTO> {
+    return await gameService.draw(game_id);
+  }
+
+  @Post("/{game_id}/resign")
+  public async resign(
+    @Path() game_id: number,
+    @Body() body: { color: string }
+  ): Promise<MoveReturnDTO> {
+    return await gameService.resign(game_id, body.color);
+  }
 }
 
 export default GameController;

@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Game } from "../models/game.model";
+import { Game, GameStatus } from "../models/game.model";
 import Move from "../models/move.model";
 import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
@@ -737,14 +737,14 @@ export class MoveService {
       const isPromotion = this.isPromotion(newBoard);
 
       if (isCheckmate) {
-        game.status = "checkmate";
+        game.status = GameStatus.CHECKMATE;
         game.winner = currentPlayer;
         await game.save();
       } else if (isCheck) {
-        game.status = "check";
+        game.status = GameStatus.CHECK;
         await game.save();
-      }else{
-        game.status = "in_progress";
+      } else {
+        game.status = GameStatus.IN_PROGRESS;
         await game.save();
       }
 
@@ -924,42 +924,49 @@ export class MoveService {
       (error as any).status = "404";
       throw error;
     }
-  
+
     const allMoves = await Move.findAll({
       where: { game_id },
       order: [["id", "ASC"]],
     });
-  
+
     if (index < 0 || index > allMoves.length) {
       const error = new Error("Invalid move index");
       (error as any).status = "400";
       throw error;
     }
-  
+
     const movesUntilIndex = allMoves.slice(0, index);
-  
+
     let currentBoard = { ...this.initialBoard };
     for (const move of movesUntilIndex) {
       currentBoard[move.to] = currentBoard[move.from];
       currentBoard[move.from] = null;
-      
+
       if (move.type === "promotion") {
         currentBoard[move.to] = {
-          type: move.piece as "PAWN" | "ROOK" | "KNIGHT" | "BISHOP" | "QUEEN" | "KING",
+          type: move.piece as
+            | "PAWN"
+            | "ROOK"
+            | "KNIGHT"
+            | "BISHOP"
+            | "QUEEN"
+            | "KING",
           color: move.turn as "WHITE" | "BLACK",
         };
       }
     }
-  
-    const currentPlayer = index === 0 ? "WHITE" : movesUntilIndex[index - 1].turn;
+
+    const currentPlayer =
+      index === 0 ? "WHITE" : movesUntilIndex[index - 1].turn;
     const nextPlayer = currentPlayer === "WHITE" ? "BLACK" : "WHITE";
-  
+
     const isCheck = this.isKingInCheck(currentBoard, nextPlayer);
     const isCheckmate = this.isCheckmate(currentBoard, nextPlayer);
     const isPromotion = this.isPromotion(currentBoard);
-  
+
     const fen = await this.getFenFromBoard(currentBoard, game_id);
-  
+
     const moveReturn: MoveReturnDTO = {
       id: game_id.toString(),
       fen: fen,
@@ -980,7 +987,7 @@ export class MoveService {
         username: game.blackPlayerName,
       },
     };
-  
+
     return moveReturn;
   }
 }

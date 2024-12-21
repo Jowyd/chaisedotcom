@@ -2,6 +2,15 @@ import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import { User } from "./user.model";
 
+export enum GameStatus {
+  IN_PROGRESS = "in_progress",
+  CHECKMATE = "checkmate",
+  STALEMATE = "stalemate",
+  DRAW = "draw",
+  SURRENDER = "surrender",
+  CHECK = "check",
+}
+
 export class Game extends Model {
   public id!: number;
   public user_id!: number;
@@ -9,13 +18,7 @@ export class Game extends Model {
   public blackPlayerName!: string;
   public isPublic!: boolean;
   public winner!: string | null;
-  public status!:
-    | "in_progress"
-    | "checkmate"
-    | "stalemate"
-    | "draw"
-    | "surrender"
-    | "check";
+  public status!: GameStatus;
 }
 
 Game.init(
