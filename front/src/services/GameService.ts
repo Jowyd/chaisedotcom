@@ -1,4 +1,5 @@
 import httpHelper from '@/utils/httpHelper';
+import { GameStatus } from '@/types';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
 
 interface ChessPiece {
@@ -34,14 +35,14 @@ let mockGameState: GameState = {
   isCheck: false,
   isCheckmate: false,
   turn: 'white',
-  status: 'active',
+  status: GameStatus.IN_PROGRESS,
 };
 
 export interface Move {
+  to: string;
   color: string;
   from: string;
   piece: string;
-  to: string;
 }
 
 export interface CapturedPieces {
@@ -52,15 +53,6 @@ export interface CapturedPieces {
 export interface DrawOffer {
   offeredBy: 'white' | 'black';
   accepted?: boolean;
-}
-
-export enum GameStatus {
-  IN_PROGRESS = 'in_progress',
-  CHECKMATE = 'checkmate',
-  STALEMATE = 'stalemate',
-  DRAW = 'draw',
-  SURRENDER = 'surrender',
-  CHECK = 'check',
 }
 
 interface Player {
@@ -79,8 +71,6 @@ export interface GameState {
   blackPlayer?: Player;
   whitePlayer?: Player;
 }
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function stillPlaying(status: GameStatus): boolean {
   return status === GameStatus.IN_PROGRESS || status === GameStatus.CHECK;
@@ -226,17 +216,6 @@ export const GameService = {
     }
   },
 
-  async offerDraw(gameId: string): Promise<void> {
-    await delay(200);
-
-    if (Math.random() < 0.5) {
-      mockGameState = {
-        ...mockGameState,
-        status: 'finished',
-      };
-    }
-  },
-
   resetMockState(): void {
     mockGameState = {
       id: 'game-1',
@@ -245,7 +224,7 @@ export const GameService = {
       isCheck: false,
       isCheckmate: false,
       turn: 'white',
-      status: 'active',
+      status: GameStatus.IN_PROGRESS,
     };
   },
 

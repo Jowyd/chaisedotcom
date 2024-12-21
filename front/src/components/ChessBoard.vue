@@ -173,7 +173,6 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
   }
 
   const from = selectedPiece.value;
-  const to = { row, col };
 
   try {
     const move: Move = {
@@ -184,7 +183,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
 
     const capturedPiece = board.value[row][col];
     if (capturedPiece) {
-      const captureColor = capturedPiece.color === 'white' ? 'white' : 'black';
+      const captureColor = capturedPiece.color.toLowerCase() as 'white' | 'black';
       capturedPieces.value[captureColor].push(capturedPiece);
     }
 
@@ -312,10 +311,6 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
     console.error('Error making promotion move:', error);
   }
 };
-
-function typeToFullName(type: string) {
-  throw new Error('Function not implemented.');
-}
 </script>
 
 <template>
