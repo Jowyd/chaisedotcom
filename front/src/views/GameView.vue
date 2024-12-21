@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onBeforeMount } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
 import { GameService, GameStatus, stillPlaying, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
@@ -9,14 +9,7 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import Dialog from 'primevue/dialog';
 import { type CapturedPieces, type PieceMove } from '@/types';
 import router from '@/router';
-
-interface GameInfo {
-  opponent: string;
-  opponentRating: number;
-  timeControl: string;
-  timeWhite: number;
-  timeBlack: number;
-}
+import Checkbox from 'primevue/checkbox';
 
 const moves = ref<PieceMove[]>([]);
 const isReplaying = ref(false);
@@ -24,20 +17,6 @@ const isReplaying = ref(false);
 const filteredMoves = computed(() => {
   return moves.value.filter((_, index) => index % 2 === 0);
 });
-
-const gameInfo = ref<GameInfo>({
-  opponent: 'Magnus Carlsen',
-  opponentRating: 2847,
-  timeControl: '5+3',
-  timeWhite: 300, // 5 minutes in seconds
-  timeBlack: 300,
-});
-
-const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
 
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
@@ -122,10 +101,13 @@ const goToCurrentPosition = () => {
 function canGameOverDialog(newGameStatus: GameStatus): boolean {
   console.log('here', gameState.value?.status, newGameStatus);
   return (
-    !gameState.value?.status ||
-    (gameState.value?.status != newGameStatus && !stillPlaying(newGameStatus))
+    !gameState.value?.status &&
+    gameState.value?.status != newGameStatus &&
+    !stillPlaying(newGameStatus)
   );
 }
+
+const autoRotate = ref(false);
 
 const updateGameState = (newState: GameState) => {
   if (canGameOverDialog(newState.status)) {
@@ -138,6 +120,18 @@ const updateGameState = (newState: GameState) => {
     currentMoveIndex.value = moves.value.length - 1;
   }
 };
+
+watch(
+  () => gameState.value?.turn,
+  (newTurn) => {
+    if (!newTurn) {
+      return;
+    }
+    if (autoRotate.value && newTurn) {
+      playerColor.value = newTurn;
+    }
+  },
+);
 
 const getPieceSymbol = (piece: string): string => {
   const symbols: { [key: string]: string } = {
@@ -204,13 +198,19 @@ const handleReplay = () => {
           <Button icon="pi pi-arrow-left" text @click="$router.back()" />
           <div class="flex align-items-center gap-3">
             <span class="text-xl font-bold">Live Game</span>
-            <!-- Bouton pour changer la perspective -->
-            <Button
-              icon="pi pi-refresh"
-              text
-              @click="togglePlayerColor"
-              v-tooltip.bottom="'Flip board'"
-            />
+            <div class="flex align-items-center gap-2">
+              <Button
+                icon="pi pi-refresh"
+                text
+                @click="togglePlayerColor"
+                v-tooltip.bottom="'Flip board manually'"
+                :disabled="autoRotate"
+              />
+              <div class="flex align-items-center gap-2">
+                <Checkbox v-model="autoRotate" :binary="true" inputId="autoRotate" />
+                <label for="autoRotate" class="text-sm">Auto-rotate board</label>
+              </div>
+            </div>
           </div>
           <Button icon="pi pi-cog" text />
         </div>
@@ -230,14 +230,15 @@ const handleReplay = () => {
             >
               <div class="flex justify-content-between align-items-center">
                 <div class="flex align-items-center gap-3">
-                  <Avatar icon="pi pi-user" size="large" />
+                  <Avatar
+                    icon="pi pi-user"
+                    size="large"
+                    :label="gameState?.blackPlayer?.username.slice(0, 2)"
+                    style="background-color: black; color: white"
+                  />
                   <div>
-                    <div class="text-xl font-bold">{{ gameInfo.opponent }}</div>
-                    <div class="text-500">Rating: {{ gameInfo.opponentRating }}</div>
+                    <div class="text-xl font-bold">{{ gameState?.blackPlayer?.username }}</div>
                   </div>
-                </div>
-                <div class="time-display text-3xl font-bold">
-                  {{ formatTime(gameInfo.timeBlack) }}
                 </div>
               </div>
             </div>
@@ -252,14 +253,15 @@ const handleReplay = () => {
             >
               <div class="flex justify-content-between align-items-center">
                 <div class="flex align-items-center gap-3">
-                  <Avatar icon="pi pi-user" size="large" />
+                  <Avatar
+                    icon="pi pi-user"
+                    size="large"
+                    :label="gameState?.whitePlayer?.username.slice(0, 2)"
+                    style="background-color: white; color: black"
+                  />
                   <div>
-                    <div class="text-xl font-bold">You</div>
-                    <div class="text-500">Rating: 1500</div>
+                    <div class="text-xl font-bold">{{ gameState?.whitePlayer?.username }}</div>
                   </div>
-                </div>
-                <div class="time-display text-3xl font-bold">
-                  {{ formatTime(gameInfo.timeWhite) }}
                 </div>
               </div>
             </div>
@@ -591,11 +593,13 @@ const handleReplay = () => {
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .player-info-card.active-player {
   border-color: var(--primary-color);
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.2);
+  background: linear-gradient(to right, var(--primary-50) 0%, var(--surface-card) 100%);
 }
 
 .player-info-card.active-player::before {
@@ -606,43 +610,60 @@ const handleReplay = () => {
   width: 4px;
   height: 100%;
   background-color: var(--primary-color);
+  animation: pulseBar 2s infinite;
 }
 
-.time-display {
-  background: var(--surface-hover);
-  padding: 0.5rem 1.5rem;
-  border-radius: var(--border-radius);
-  transition: background-color 0.3s ease;
+.player-info-card.active-player::after {
+  content: '►';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  animation: bounce 1s infinite;
 }
 
-.active-player .time-display {
-  background: var(--primary-100);
-  color: var(--primary-700);
+@keyframes pulseBar {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
 
-.order-0 {
-  order: 0;
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(-50%);
+  }
+  50% {
+    transform: translate(3px, -50%);
+  }
 }
 
-.order-1 {
-  order: 1;
-}
-
-/* Animation pour le changement de tour */
+/* Remplacer l'animation pulse existante par celle-ci */
 @keyframes pulse {
   0% {
     transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0.4);
   }
-  50% {
-    transform: scale(1.02);
+  70% {
+    transform: scale(1.01);
+    box-shadow: 0 0 0 10px rgba(var(--primary-color-rgb), 0);
   }
   100% {
     transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(var(--primary-color-rgb), 0);
   }
 }
 
 .active-player {
-  animation: pulse 1s ease-in-out;
+  animation: pulse 2s infinite;
 }
 
 .draw-offer {
@@ -658,5 +679,37 @@ const handleReplay = () => {
 :deep(.p-dialog-footer) {
   padding: 1rem 2rem 2rem 2rem;
   border-top: none;
+}
+
+.flex.align-items-center label {
+  margin: 0;
+  cursor: pointer;
+}
+
+:deep(.p-checkbox) {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Ajoutez ces styles pour une meilleure transition */
+.chess-board {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Style pour le checkbox désactivé */
+:deep(.p-checkbox.p-disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Style pour le label du checkbox */
+.flex.align-items-center label {
+  margin: 0;
+  cursor: pointer;
+}
+
+:deep(.p-checkbox) {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 </style>

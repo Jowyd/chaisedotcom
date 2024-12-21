@@ -63,6 +63,10 @@ export enum GameStatus {
   CHECK = 'check',
 }
 
+interface Player {
+  username: string;
+}
+
 export interface GameState {
   id: string;
   fen: string;
@@ -72,7 +76,8 @@ export interface GameState {
   turn: 'white' | 'black';
   status: GameStatus;
   promotion?: 'white' | 'black' | null;
-  drawOffer?: DrawOffer | null;
+  blackPlayer?: Player;
+  whitePlayer?: Player;
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
