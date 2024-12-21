@@ -7,6 +7,8 @@ import GameView from '@/views/GameView.vue';
 import { authService } from '@/services/AuthService';
 import HistoryView from '@/views/HistoryView.vue';
 import SettingsView from '@/views/SettingsView.vue';
+import ProfileView from '@/views/ProfileView.vue';
+import LeaderboardView from '@/views/LeaderboardView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,6 +56,22 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: SettingsView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profile/:username',
+      name: 'profile',
+      component: ProfileView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/leaderboard',
+      name: 'leaderboard',
+      component: LeaderboardView,
       meta: {
         requiresAuth: true,
       },

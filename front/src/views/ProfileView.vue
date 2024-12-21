@@ -1,0 +1,81 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import DashboardSidebar from '@/components/DashboardSidebar.vue';
+import GameHistoryList from '@/components/profile/GameHistoryList.vue';
+import PlayerStats from '@/components/profile/PlayerStats.vue';
+import { authService } from '@/services/AuthService';
+
+const route = useRoute();
+const username = route.params.username as string;
+const isOwnProfile = computed(() => authService.getUser()?.username === username);
+const privacySettings = ref({
+  publicProfile: true,
+  showGameHistory: true,
+});
+
+const updatePrivacySettings = async () => {
+  // Appel API pour mettre à jour les paramètres de confidentialité
+};
+</script>
+
+<template>
+  <div class="flex">
+    <DashboardSidebar />
+
+    <div class="flex-1 p-4">
+      <div class="grid">
+        <!-- En-tête du profil -->
+        <div class="col-12">
+          <div class="card">
+            <div class="flex align-items-center gap-4">
+              <Avatar
+                :image="`https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`"
+                size="xlarge"
+                shape="circle"
+              />
+              <div>
+                <h1 class="text-3xl font-bold m-0">{{ username }}</h1>
+                <p class="text-600 m-0">Member since {{ new Date().toLocaleDateString() }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paramètres de confidentialité (visible uniquement sur son propre profil) -->
+        <div v-if="isOwnProfile" class="col-12">
+          <div class="card">
+            <h2 class="text-2xl font-bold mb-4">Privacy Settings</h2>
+            <div class="flex flex-column gap-3">
+              <div class="flex align-items-center justify-content-between">
+                <div>
+                  <h3 class="text-lg font-medium m-0">Public Profile</h3>
+                  <p class="text-600 m-0">Allow others to view your profile</p>
+                </div>
+                <InputSwitch v-model="privacySettings.publicProfile" />
+              </div>
+              <div class="flex align-items-center justify-content-between">
+                <div>
+                  <h3 class="text-lg font-medium m-0">Game History</h3>
+                  <p class="text-600 m-0">Allow others to view your game history</p>
+                </div>
+                <InputSwitch v-model="privacySettings.showGameHistory" />
+              </div>
+              <Button label="Save Settings" @click="updatePrivacySettings" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistiques du joueur -->
+        <div class="col-12 lg:col-4">
+          <PlayerStats :username="username" />
+        </div>
+
+        <!-- Historique des parties -->
+        <div class="col-12 lg:col-8">
+          <GameHistoryList :username="username" :public-view="!isOwnProfile" />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
