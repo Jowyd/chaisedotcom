@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const visible = ref(true);
 
 const menuItems = ref([
   {
@@ -17,19 +16,9 @@ const menuItems = ref([
     command: () => console.log('Play clicked'),
   },
   {
-    label: 'Tournaments',
-    icon: 'pi pi-trophy',
-    command: () => console.log('Tournaments clicked'),
-  },
-  {
-    label: 'Analysis',
-    icon: 'pi pi-chart-line',
+    label: 'History',
+    icon: 'pi pi-clock',
     command: () => console.log('Analysis clicked'),
-  },
-  {
-    label: 'Friends',
-    icon: 'pi pi-users',
-    command: () => console.log('Friends clicked'),
   },
   {
     label: 'Settings',
@@ -60,7 +49,6 @@ const menuItems = ref([
         class="mb-2"
       />
       <div class="text-lg font-semibold">John Doe</div>
-      <div class="text-sm text-600">Rating: 1500</div>
     </div>
 
     <!-- Navigation Menu -->

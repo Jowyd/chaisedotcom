@@ -12,12 +12,6 @@ const recentGames = [
   { opponent: 'Beth H.', result: 'Draw', rating: '+0', date: '2024-03-13' },
 ];
 
-const achievements = [
-  { name: 'First Victory', description: 'Win your first game', icon: 'pi pi-star' },
-  { name: 'Strategist', description: 'Win 5 games in a row', icon: 'pi pi-bolt' },
-  { name: 'Grandmaster', description: 'Reach 2000 rating', icon: 'pi pi-crown' },
-];
-
 const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }) => {
   console.log('Creating game with:', gameDetails);
   // TODO: Implement game creation logic
@@ -45,16 +39,16 @@ const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }
       </div>
 
       <div class="grid">
-        <!-- Stats Cards -->
-        <div class="col-12 md:col-6 lg:col-3">
-          <Card class="mb-4">
-            <template #title>Rating</template>
+        <!-- Chess Board -->
+        <!-- <div class="col-12 lg:col-8">
+          <Card>
+            <template #title>Current Game</template>
             <template #content>
-              <div class="text-3xl font-bold text-primary">1500</div>
-              <div class="text-500">+25 this week</div>
+              <ChessBoard />
             </template>
           </Card>
-        </div>
+        </div> -->
+
         <div class="col-12 md:col-6 lg:col-3">
           <Card class="mb-4">
             <template #title>Games Played</template>
@@ -64,57 +58,6 @@ const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }
             </template>
           </Card>
         </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <Card class="mb-4">
-            <template #title>Win Rate</template>
-            <template #content>
-              <div class="text-3xl font-bold text-primary">65%</div>
-              <div class="text-500">Last 30 days</div>
-            </template>
-          </Card>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <Card class="mb-4">
-            <template #title>Tournament Points</template>
-            <template #content>
-              <div class="text-3xl font-bold text-primary">750</div>
-              <div class="text-500">Rank: Gold</div>
-            </template>
-          </Card>
-        </div>
-
-        <!-- Chess Board -->
-        <div class="col-12 lg:col-8">
-          <Card>
-            <template #title>Current Game</template>
-            <template #content>
-              <ChessBoard />
-            </template>
-          </Card>
-        </div>
-
-        <!-- Achievements -->
-        <div class="col-12 lg:col-4">
-          <Card>
-            <template #title>Achievements</template>
-            <template #content>
-              <div class="flex flex-column gap-3">
-                <div
-                  v-for="achievement in achievements"
-                  :key="achievement.name"
-                  class="flex align-items-center p-3 border-round surface-ground"
-                >
-                  <i :class="achievement.icon" class="text-xl mr-3 text-primary"></i>
-                  <div>
-                    <div class="font-medium">{{ achievement.name }}</div>
-                    <div class="text-500">{{ achievement.description }}</div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </Card>
-        </div>
-
         <!-- Recent Games -->
         <div class="col-12">
           <Card>
@@ -146,6 +89,9 @@ const handleCreateGame = (gameDetails: { opponent: string; timeControl: string }
                   </div>
                 </div>
               </div>
+            </template>
+            <template #footer>
+              <Button label="View All" icon="pi pi-angle-right" @click="$router.push('/history')" />
             </template>
           </Card>
         </div>
