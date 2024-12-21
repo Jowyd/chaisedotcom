@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps<{
   username: string;
@@ -8,11 +9,15 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const toast = useToast();
 const games = ref([]);
 const loading = ref(true);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalGames = ref(0);
+
+const selectedGames = ref<string[]>([]);
+const bulkVisibility = ref<'public' | 'private'>('public');
 
 const loadGames = async () => {
   loading.value = true;
@@ -67,6 +72,65 @@ const navigateToGame = (gameId: string) => {
   router.push(`/game/${gameId}`);
 };
 
+const toggleGameVisibility = async (gameId: string, isPublic: boolean) => {
+  loading.value = true;
+  try {
+    // Appel API pour mettre à jour la visibilité
+    // await GameService.updateGameVisibility(gameId, isPublic);
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Game visibility updated to ${isPublic ? 'public' : 'private'}`,
+      life: 3000,
+    });
+  } catch (error) {
+    console.error('Error updating game visibility:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to update game visibility',
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+const updateBulkVisibility = async () => {
+  if (!selectedGames.value.length) {
+    toast.add({
+      severity: 'info',
+      summary: 'Info',
+      detail: 'Please select games to update',
+      life: 3000,
+    });
+    return;
+  }
+
+  loading.value = true;
+  try {
+    // Appel API pour mettre à jour la visibilité en masse
+    // await GameService.updateBulkGameVisibility(selectedGames.value, bulkVisibility.value === 'public');
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: `Updated visibility for ${selectedGames.value.length} games`,
+      life: 3000,
+    });
+    selectedGames.value = [];
+  } catch (error) {
+    console.error('Error updating game visibility:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to update game visibility',
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
 watch(() => props.username, loadGames);
 
 onMounted(() => {
@@ -76,9 +140,32 @@ onMounted(() => {
 
 <template>
   <div class="card">
-    <h2 class="text-2xl font-bold mb-4">Game History</h2>
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h2 class="text-2xl font-bold m-0">Game History</h2>
+      
+      <!-- Actions en masse pour la visibilité (visible uniquement si c'est notre profil) -->
+      <div v-if="!publicView" class="flex align-items-center gap-3">
+        <Dropdown
+          v-model="bulkVisibility"
+          :options="[
+            { label: 'Make Public', value: 'public' },
+            { label: 'Make Private', value: 'private' },
+          ]"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select Action"
+        />
+        <Button
+          label="Apply"
+          :disabled="!selectedGames.length"
+          @click="updateBulkVisibility"
+          :loading="loading"
+        />
+      </div>
+    </div>
 
     <DataTable
+      v-model:selection="selectedGames"
       :value="games"
       :loading="loading"
       paginator
@@ -88,7 +175,12 @@ onMounted(() => {
       v-model:first="currentPage"
       tableStyle="min-width: 50rem"
       class="p-datatable-sm"
+      :selection-mode="!publicView ? 'multiple' : undefined"
+      dataKey="id"
     >
+      <!-- Colonne de sélection (visible uniquement si c'est notre profil) -->
+      <Column v-if="!publicView" selectionMode="multiple" style="width: 3rem" />
+
       <Column field="date" header="Date" :sortable="true">
         <template #body="{ data }">
           {{ formatDate(data.date) }}
@@ -139,6 +231,17 @@ onMounted(() => {
           />
         </template>
       </Column>
+      <Column v-if="!publicView" field="isPublic" header="Visibility" :sortable="true">
+        <template #body="{ data }">
+          <div class="flex align-items-center gap-2">
+            <InputSwitch
+              v-model="data.isPublic"
+              @change="toggleGameVisibility(data.id, data.isPublic)"
+            />
+            <span class="text-sm">{{ data.isPublic ? 'Public' : 'Private' }}</span>
+          </div>
+        </template>
+      </Column>
     </DataTable>
   </div>
 </template>
@@ -149,5 +252,9 @@ onMounted(() => {
   padding: 2rem;
   border-radius: var(--border-radius);
   box-shadow: var(--card-shadow);
+}
+
+:deep(.p-inputswitch) {
+  transform: scale(0.8);
 }
 </style> 

@@ -5,6 +5,7 @@ interface GameCreationDetails {
   opponent: string;
   colorAssignment: 'random' | 'fixed';
   playerColor?: 'white' | 'black';
+  isPublic: boolean;
 }
 
 const props = defineProps<{
@@ -24,6 +25,7 @@ const dialogVisible = computed({
 const opponent = ref('');
 const colorAssignment = ref<'random' | 'fixed'>('random');
 const playerColor = ref<'white' | 'black'>('white');
+const isPublic = ref(true);
 
 const createGame = () => {
   if (opponent.value) {
@@ -31,6 +33,7 @@ const createGame = () => {
       opponent: opponent.value,
       colorAssignment: colorAssignment.value,
       ...(colorAssignment.value === 'fixed' && { playerColor: playerColor.value }),
+      isPublic: isPublic.value,
     };
 
     emit('create-game', gameDetails);
@@ -43,6 +46,7 @@ const resetForm = () => {
   opponent.value = '';
   colorAssignment.value = 'random';
   playerColor.value = 'white';
+  isPublic.value = true;
 };
 
 const closeDialog = () => {
@@ -93,6 +97,19 @@ const closeDialog = () => {
           </div>
         </div>
       </div>
+
+      <div class="flex flex-column gap-2">
+        <label class="font-medium">Game Visibility</label>
+        <div class="flex align-items-center gap-2 p-3 surface-ground border-round">
+          <div class="flex-1">
+            <h3 class="text-base font-medium m-0">Public Game</h3>
+            <p class="text-600 text-sm m-0">
+              {{ isPublic ? 'Anyone can view this game' : 'Only participants can view this game' }}
+            </p>
+          </div>
+          <InputSwitch v-model="isPublic" />
+        </div>
+      </div>
     </div>
 
     <template #footer>
@@ -119,5 +136,9 @@ const closeDialog = () => {
 .color-option.selected {
   background: var(--primary-color);
   color: var(--primary-color-text);
+}
+
+:deep(.p-inputswitch) {
+  transform: scale(0.8);
 }
 </style>

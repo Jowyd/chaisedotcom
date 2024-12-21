@@ -22,6 +22,11 @@ const menuItems = ref([
     command: () => router.push('/history'),
   },
   {
+    label: 'Profile',
+    icon: 'pi pi-user',
+    command: () => router.push('/profile/' + authService.getUser()?.username),
+  },
+  {
     label: 'Settings',
     icon: 'pi pi-cog',
     command: () => router.push('/settings'),
