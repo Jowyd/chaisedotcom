@@ -18,6 +18,7 @@ import Tooltip from 'primevue/tooltip';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
+import RadioButton from 'primevue/radiobutton';
 
 const app = createApp(App);
 
@@ -36,6 +37,7 @@ app.component('TabPanel', TabPanel);
 app.component('Dialog', Dialog);
 app.component('InputText', InputText);
 app.component('Dropdown', Dropdown);
+app.component('RadioButton', RadioButton);
 
 app.directive('tooltip', Tooltip);
 

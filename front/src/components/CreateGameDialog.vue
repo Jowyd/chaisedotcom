@@ -1,51 +1,53 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
+interface GameCreationDetails {
+  opponent: string;
+  colorAssignment: 'random' | 'fixed';
+  playerColor?: 'white' | 'black';
+}
+
 const props = defineProps<{
   visible: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:visible': [value: boolean];
-  'create-game': [{ opponent: string; timeControl: string }];
+  'create-game': [GameCreationDetails];
 }>();
 
-// Utilisez computed au lieu de ref et watch pour la visibilité
 const dialogVisible = computed({
   get: () => props.visible,
   set: (value) => emit('update:visible', value),
 });
 
 const opponent = ref('');
-const timeControl = ref('');
-
-const timeControls = [
-  { name: 'Bullet (1 min)', value: '1+0' },
-  { name: 'Bullet (1|1)', value: '1+1' },
-  { name: 'Blitz (3 min)', value: '3+0' },
-  { name: 'Blitz (3|2)', value: '3+2' },
-  { name: 'Blitz (5 min)', value: '5+0' },
-  { name: 'Rapid (10 min)', value: '10+0' },
-  { name: 'Rapid (15|10)', value: '15+10' },
-  { name: 'Classical (30 min)', value: '30+0' },
-];
+const colorAssignment = ref<'random' | 'fixed'>('random');
+const playerColor = ref<'white' | 'black'>('white');
 
 const createGame = () => {
-  if (opponent.value && timeControl.value) {
-    emit('create-game', {
+  if (opponent.value) {
+    const gameDetails: GameCreationDetails = {
       opponent: opponent.value,
-      timeControl: timeControl.value,
-    });
-    opponent.value = '';
-    timeControl.value = '';
-    dialogVisible.value = false; // Update local state
+      colorAssignment: colorAssignment.value,
+      ...(colorAssignment.value === 'fixed' && { playerColor: playerColor.value }),
+    };
+
+    emit('create-game', gameDetails);
+    resetForm();
+    dialogVisible.value = false;
   }
 };
 
-const closeDialog = () => {
+const resetForm = () => {
   opponent.value = '';
-  timeControl.value = '';
-  dialogVisible.value = false; // Update local state
+  colorAssignment.value = 'random';
+  playerColor.value = 'white';
+};
+
+const closeDialog = () => {
+  resetForm();
+  dialogVisible.value = false;
 };
 </script>
 
@@ -65,33 +67,57 @@ const closeDialog = () => {
       </div>
 
       <div class="flex flex-column gap-2">
-        <label for="timeControl" class="font-medium">Time Control</label>
-        <Dropdown
-          id="timeControl"
-          v-model="timeControl"
-          :options="timeControls"
-          optionLabel="name"
-          optionValue="value"
-          placeholder="Select time control"
-          class="w-full"
-        />
+        <label class="font-medium">Color Assignment</label>
+        <div class="flex gap-4">
+          <div class="flex align-items-center gap-2">
+            <RadioButton v-model="colorAssignment" value="random" inputId="random" />
+            <label for="random">Random</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <RadioButton v-model="colorAssignment" value="fixed" inputId="fixed" />
+            <label for="fixed">Choose Color</label>
+          </div>
+        </div>
       </div>
 
-      <small class="text-600">
-        Time controls are shown as: minutes + seconds increment per move
-      </small>
+      <div v-if="colorAssignment === 'fixed'" class="flex flex-column gap-2">
+        <label class="font-medium">{{ opponent }}'s Color</label>
+        <div class="flex gap-4">
+          <div class="flex align-items-center gap-2">
+            <RadioButton v-model="playerColor" value="white" inputId="white" />
+            <label for="white">White</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <RadioButton v-model="playerColor" value="black" inputId="black" />
+            <label for="black">Black</label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <template #footer>
       <div class="flex justify-content-end gap-2">
         <Button label="Cancel" severity="secondary" text @click="closeDialog" />
-        <Button
-          label="Create Game"
-          severity="primary"
-          @click="createGame"
-          :disabled="!opponent || !timeControl"
-        />
+        <Button label="Create Game" severity="primary" @click="createGame" :disabled="!opponent" />
       </div>
     </template>
   </Dialog>
 </template>
+
+<style scoped>
+.color-option {
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.color-option:hover {
+  background: var(--surface-hover);
+}
+
+.color-option.selected {
+  background: var(--primary-color);
+  color: var(--primary-color-text);
+}
+</style>
