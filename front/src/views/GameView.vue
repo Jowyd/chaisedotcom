@@ -618,7 +618,6 @@ const handleReplay = () => {
   transform: translateY(-50%);
   color: var(--primary-color);
   font-size: 1.2rem;
-  animation: bounce 1s infinite;
 }
 
 @keyframes pulseBar {
@@ -630,16 +629,6 @@ const handleReplay = () => {
   }
   100% {
     opacity: 0.5;
-  }
-}
-
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(-50%);
-  }
-  50% {
-    transform: translate(3px, -50%);
   }
 }
 
