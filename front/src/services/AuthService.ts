@@ -56,10 +56,13 @@ class AuthService {
   async login(credentials: UserCredentials): Promise<void> {
     try {
       const response = await httpHelper.post(`${API_URL}auth/login`, credentials);
-      const { user, ...tokens } = response.data;
-      this.saveTokens(tokens);
+      console.log(response)
+      const { accessToken, refreshToken, user } = response.data;
+      
+      this.saveTokens({ accessToken, refreshToken });
       this.user = user;
       localStorage.setItem('user', JSON.stringify(user));
+      console.log(user)
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -84,7 +87,7 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.accessToken && !this.isTokenExpired(this.accessToken);
+    return !!this.accessToken && !!this.user && !this.isTokenExpired(this.accessToken);
   }
 
   getAccessToken(): string | null {

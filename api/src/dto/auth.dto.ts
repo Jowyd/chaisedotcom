@@ -13,8 +13,12 @@ export interface RegisterRequest {
 }
 
 export interface LoginResponse {
-  token: string;
-  user: UserOutputDTO;
+  accessToken: string;
+  refreshToken: string;
+  user: {
+    id: number;
+    username: string;
+  };
 }
 
 export interface RegisterResponse {

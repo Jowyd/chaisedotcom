@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { authService } from '@/services/AuthService';
 import { useToast } from 'primevue/usetoast';
 import Password from 'primevue/password';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 
+const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
@@ -23,19 +24,22 @@ const handleLogin = async () => {
       username: username.value,
       password: password.value,
     });
+    
     toast.add({
       severity: 'success',
       summary: 'Success',
       detail: 'Login successful',
       life: 3000,
     });
-    router.push('/dashboard');
+
+    const redirectPath = route.query.redirect as string || '/dashboard';
+    router.push(redirectPath);
   } catch (error) {
     console.error(error);
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Login failed',
+      detail: 'Login failed. Please check your credentials.',
       life: 3000,
     });
   } finally {

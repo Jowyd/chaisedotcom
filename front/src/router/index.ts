@@ -48,8 +48,11 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated();
 
   if (requiresAuth && !isAuthenticated) {
-    next('/login');
-  } else if (to.path === '/login' && isAuthenticated) {
+    next({ 
+      path: '/login', 
+      query: { redirect: to.fullPath }  // Sauvegardez la route cible
+    });
+  } else if ((to.path === '/login' || to.path === '/register') && isAuthenticated) {
     next('/dashboard');
   } else {
     next();

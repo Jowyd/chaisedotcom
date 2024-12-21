@@ -2,7 +2,7 @@ import { User } from "../models/user.model"; // Modèle Sequelize
 import jwt from "jsonwebtoken"; // Pour générer le JWT
 import { Buffer } from "buffer"; // Pour décoder Base64
 import { notFound } from "../error/NotFoundError";
-import { generateToken } from "../utils/JwtToken";
+import { generateToken, generateRefreshToken } from "../utils/JwtToken";
 import { Op } from "sequelize";
 import {
   LoginRequest,
@@ -28,12 +28,19 @@ class AuthenticationService {
       throw error;
     }
 
-    const token_user = {
+    const userData = {
       id: user.id,
       username: user.username,
     };
-    const token = generateToken(token_user);
-    return { token, user };
+
+    const accessToken = generateToken(userData);
+    const refreshToken = generateRefreshToken(userData);
+
+    return { 
+      accessToken, 
+      refreshToken,
+      user: userData
+    };
   }
 
   public async registerUser(
