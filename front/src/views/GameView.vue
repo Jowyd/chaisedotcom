@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
-import { GameService, GameStatus, stillPlaying, type GameState } from '@/services/GameService';
+import { GameService, stillPlaying, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
 import GameOverDialog from '@/components/GameOverDialog.vue';
 import { useConfirm } from 'primevue/useconfirm';
@@ -10,6 +10,7 @@ import Dialog from 'primevue/dialog';
 import { type CapturedPieces, type PieceMove } from '@/types';
 import router from '@/router';
 import Checkbox from 'primevue/checkbox';
+import { type GameStatus } from '@/types';
 
 const moves = ref<PieceMove[]>([]);
 const isReplaying = ref(false);
@@ -55,10 +56,8 @@ onMounted(() => {
     });
 });
 
-// Ajout d'une ref pour la couleur du joueur
 const playerColor = ref<'white' | 'black'>('white');
 
-// Fonction pour changer la couleur du joueur
 const togglePlayerColor = () => {
   playerColor.value = playerColor.value === 'white' ? 'black' : 'white';
 };
@@ -133,6 +132,15 @@ watch(
   },
 );
 
+watch(
+  () => autoRotate.value,
+  (autoRotateNew) => {
+    if (autoRotateNew) {
+      playerColor.value = gameState.value?.turn || 'white';
+    }
+  },
+);
+
 const getPieceSymbol = (piece: string): string => {
   const symbols: { [key: string]: string } = {
     PAWN: '♟',
@@ -146,17 +154,6 @@ const getPieceSymbol = (piece: string): string => {
 };
 
 const showGameOverDialog = ref(false);
-
-// watch(
-//   () => gameState.value?.status,
-//   (newStatus) => {
-//     if (!newStatus) {
-//       return;
-//     }
-//     showGameOverDialog.value = canGameOverDialog(newStatus);
-//   },
-//   { immediate: true },
-// );
 
 const showDrawConfirmDialog = ref(false);
 const drawOfferingPlayer = ref<'white' | 'black' | null>(null);
