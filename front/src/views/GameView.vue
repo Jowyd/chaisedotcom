@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, onBeforeMount } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
-import { GameService, stillPlaying, type GameState } from '@/services/GameService';
+import { GameService, GameStatus, stillPlaying, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
 import GameOverDialog from '@/components/GameOverDialog.vue';
 import { useConfirm } from 'primevue/useconfirm';
@@ -19,6 +19,7 @@ interface GameInfo {
 }
 
 const moves = ref<PieceMove[]>([]);
+const isReplaying = ref(false);
 
 const filteredMoves = computed(() => {
   return moves.value.filter((_, index) => index % 2 === 0);
@@ -64,7 +65,7 @@ const handleResign = () => {
   });
 };
 
-onBeforeMount(() => {
+onMounted(() => {
   GameService.getGame(gameId.value)
     .then((game: GameState) => {
       updateGameState(game);
@@ -118,14 +119,23 @@ const goToCurrentPosition = () => {
   goToMove(moves.value.length - 1);
 };
 
+function canGameOverDialog(newGameStatus: GameStatus): boolean {
+  console.log('here', gameState.value?.status, newGameStatus);
+  return (
+    !gameState.value?.status ||
+    (gameState.value?.status != newGameStatus && !stillPlaying(newGameStatus))
+  );
+}
+
 const updateGameState = (newState: GameState) => {
+  if (canGameOverDialog(newState.status)) {
+    showGameOverDialog.value = true;
+  }
+  isReplaying.value = !stillPlaying(newState.status);
   gameState.value = newState;
   moves.value = newState.moves;
   if (currentMoveIndex.value === -1) {
     currentMoveIndex.value = moves.value.length - 1;
-  }
-  if (!stillPlaying(newState.status)) {
-    showGameOverDialog.value = true;
   }
 };
 
@@ -143,14 +153,16 @@ const getPieceSymbol = (piece: string): string => {
 
 const showGameOverDialog = ref(false);
 
-watch(
-  () => gameState.value?.status,
-  (newStatus) => {
-    console.log('Status changed:', newStatus);
-    showGameOverDialog.value = !stillPlaying(newStatus!);
-  },
-  { immediate: true },
-);
+// watch(
+//   () => gameState.value?.status,
+//   (newStatus) => {
+//     if (!newStatus) {
+//       return;
+//     }
+//     showGameOverDialog.value = canGameOverDialog(newStatus);
+//   },
+//   { immediate: true },
+// );
 
 const showDrawConfirmDialog = ref(false);
 const drawOfferingPlayer = ref<'white' | 'black' | null>(null);
@@ -175,6 +187,11 @@ const handleDrawResponse = async (accept: boolean) => {
   }
   showDrawConfirmDialog.value = false;
   drawOfferingPlayer.value = null;
+};
+
+const handleReplay = () => {
+  goToMove(0);
+  showGameOverDialog.value = false;
 };
 </script>
 
@@ -257,7 +274,7 @@ const handleDrawResponse = async (accept: boolean) => {
           />
 
           <!-- Game Controls -->
-          <div class="game-controls flex justify-content-center gap-3 mt-4">
+          <div v-if="!isReplaying" class="game-controls flex justify-content-center gap-3 mt-4">
             <Button
               icon="pi pi-flag"
               severity="danger"
@@ -386,6 +403,8 @@ const handleDrawResponse = async (accept: boolean) => {
     :game-state="gameState"
     :captured-pieces="capturedPieces"
     :moves="moves"
+    @replay="handleReplay"
+    @close="showGameOverDialog = false"
   />
   <ConfirmDialog />
   <Dialog

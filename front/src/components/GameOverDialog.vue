@@ -15,6 +15,8 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
   'update:visible': [value: boolean];
+  'replay': [];
+  'close': [];
 }>();
 
 const dialogVisible = computed({
@@ -35,6 +37,7 @@ const gameResult = computed(() => {
       title: 'Game Over',
       winner,
       message: `${winner} wins by ${props.gameState.status}`,
+      closeable: true,
     };
   }
   return null;
@@ -46,7 +49,7 @@ const gameResult = computed(() => {
     v-model="dialogVisible"
     modal
     :header="gameResult?.title"
-    :closable="false"
+    :closable="true"
     class="game-over-dialog"
     :visible="dialogVisible"
   >
@@ -73,29 +76,30 @@ const gameResult = computed(() => {
       </div>
 
       <!-- Moves summary -->
-      <!-- <div class="moves-summary w-full">
+      <div class="moves-summary justify-content-center surface-ground p-4 border-round">
         <div class="text-xl font-medium mb-2">Game summary</div>
         <div class="surface-ground p-3 border-round">
           <div class="flex justify-content-between">
             <span>Total moves: {{ moves.length }}</span>
-            <span
-              >Game duration:
-              {{ formatTime(gameInfo.timeControl.split('+')[0] * 60 - gameInfo.timeWhite) }}</span
-            >
           </div>
         </div>
-      </div> -->
+      </div>
 
       <!-- Actions -->
       <div class="flex gap-2 mt-4">
         <Button label="New Game" icon="pi pi-plus" @click="$router.push('/new-game')" />
         <Button
-          label="Analysis"
-          icon="pi pi-chart-line"
+          label="Replay"
+          icon="pi pi-replay"
           severity="secondary"
-          @click="$router.push(`/analysis/${gameState?.id}`)"
+          @click="$emit('replay')"
         />
-        <Button label="Back to Home" icon="pi pi-home" text @click="$router.push('/')" />
+        <Button
+          label="Back to Home"
+          icon="pi pi-home"
+          text
+          @click="$emit('close'); $router.push('/dashboard')"
+        />
       </div>
     </div>
   </Dialog>
