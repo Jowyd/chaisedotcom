@@ -5,6 +5,7 @@ import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import CreateGameDialog from '@/components/CreateGameDialog.vue';
 import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
+import { authService } from '@/services/AuthService';
 
 const router = useRouter();
 const toast = useToast();
@@ -50,7 +51,9 @@ const handleCreateGame = async (gameDetails: {
       <!-- Welcome Section -->
       <div class="flex justify-content-between align-items-center mb-4">
         <div>
-          <h1 class="text-4xl font-bold m-0 mb-2">Welcome back, John!</h1>
+          <h1 class="text-4xl font-bold m-0 mb-2">
+            Welcome back, {{ authService.getUser()?.username }}!
+          </h1>
           <p class="text-700 m-0">Ready for your next game?</p>
         </div>
         <Button

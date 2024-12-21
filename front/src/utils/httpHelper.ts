@@ -32,20 +32,16 @@ httpHelper.interceptors.response.use(
     }
 
     // Si l'erreur est 401 et que ce n'est pas déjà une tentative de refresh
-    if (
-      error.response?.status === 401 &&
-      !originalRequest.headers['X-Retry-After-Refresh']
-    ) {
+    if (error.response?.status === 401 && !originalRequest.headers['X-Retry-After-Refresh']) {
       try {
         const newAccessToken = await authService.refreshAccessToken();
-        
-        // Assurez-vous que la requête originale a les bons headers
+
         originalRequest.headers = {
           ...originalRequest.headers,
           Authorization: `Bearer ${newAccessToken}`,
           'X-Retry-After-Refresh': 'true',
         };
-        
+
         return httpHelper(originalRequest);
       } catch (refreshError) {
         authService.logout();

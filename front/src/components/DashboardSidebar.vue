@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { authService } from '@/services/AuthService';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -9,11 +10,6 @@ const menuItems = ref([
     label: 'Dashboard',
     icon: 'pi pi-home',
     command: () => router.push('/dashboard'),
-  },
-  {
-    label: 'Play',
-    icon: 'pi pi-play',
-    command: () => console.log('Play clicked'),
   },
   {
     label: 'History',
@@ -48,7 +44,7 @@ const menuItems = ref([
         shape="circle"
         class="mb-2"
       />
-      <div class="text-lg font-semibold">John Doe</div>
+      <div class="text-lg font-semibold">{{ authService?.getUser()?.username }}</div>
     </div>
 
     <!-- Navigation Menu -->
