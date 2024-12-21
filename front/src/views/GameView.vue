@@ -152,13 +152,13 @@ watch(
     console.log('Status changed:', newStatus);
     showGameOverDialog.value = newStatus === 'checkmate';
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 
 <template>
   <div class="game-view surface-ground">
-    <div class="grid h-screen">
+    <div class="grid h-full">
       <!-- Game Header -->
       <div class="col-12 surface-section shadow-1 p-3">
         <div class="flex justify-content-between align-items-center">
@@ -177,38 +177,51 @@ watch(
         </div>
       </div>
 
-      <div class="col-12 md:col-9 p-3 w-full flex">
+      <div class="col-12 md:col-9 p-3 py-0 w-full flex">
         <div class="game-container surface-section border-round shadow-1 p-3">
-          <!-- Black Player Info -->
-          <div class="flex justify-content-between align-items-center">
+          <!-- Modifiez la section des infos des joueurs -->
+          <div class="flex justify-content-between gap-3">
+            <!-- Black Player Info -->
             <div
-              class="player-info flex justify-content-between align-items-center p-2 border-round-md"
-              :class="{ 'order-1': playerColor === 'black' }"
+              class="player-info-card surface-card p-3 border-round"
+              :class="{
+                'active-player': gameState?.turn === 'black',
+                'order-1': playerColor === 'black',
+              }"
             >
-              <div class="flex align-items-center gap-3">
-                <Avatar icon="pi pi-user" size="large" />
-                <div>
-                  <div class="text-xl font-bold">{{ gameInfo.opponent }}</div>
-                  <div class="text-500">Rating: {{ gameInfo.opponentRating }}</div>
+              <div class="flex justify-content-between align-items-center">
+                <div class="flex align-items-center gap-3">
+                  <Avatar icon="pi pi-user" size="large" />
+                  <div>
+                    <div class="text-xl font-bold">{{ gameInfo.opponent }}</div>
+                    <div class="text-500">Rating: {{ gameInfo.opponentRating }}</div>
+                  </div>
                 </div>
-              </div>
-              <div class="time-display text-3xl font-bold">
-                {{ formatTime(gameInfo.timeBlack) }}
+                <div class="time-display text-3xl font-bold">
+                  {{ formatTime(gameInfo.timeBlack) }}
+                </div>
               </div>
             </div>
+
+            <!-- White Player Info -->
             <div
-              class="player-info flex justify-content-between align-items-center p-2 border-round-md active-player"
-              :class="{ 'order-0': playerColor === 'black' }"
+              class="player-info-card surface-card p-3 border-round"
+              :class="{
+                'active-player': gameState?.turn === 'white',
+                'order-0': playerColor === 'black',
+              }"
             >
-              <div class="flex align-items-center gap-3">
-                <Avatar icon="pi pi-user" size="large" />
-                <div>
-                  <div class="text-xl font-bold">You</div>
-                  <div class="text-500">Rating: 1500</div>
+              <div class="flex justify-content-between align-items-center">
+                <div class="flex align-items-center gap-3">
+                  <Avatar icon="pi pi-user" size="large" />
+                  <div>
+                    <div class="text-xl font-bold">You</div>
+                    <div class="text-500">Rating: 1500</div>
+                  </div>
                 </div>
-              </div>
-              <div class="time-display text-3xl font-bold">
-                {{ formatTime(gameInfo.timeWhite) }}
+                <div class="time-display text-3xl font-bold">
+                  {{ formatTime(gameInfo.timeWhite) }}
+                </div>
               </div>
             </div>
           </div>
@@ -220,8 +233,6 @@ watch(
             v-model:captured-pieces="capturedPieces"
             v-model:gameState="gameState"
           />
-
-          <!-- White Player Info -->
 
           <!-- Game Controls -->
           <div class="game-controls flex justify-content-center gap-3 mt-4">
@@ -352,10 +363,6 @@ watch(
 </template>
 
 <style scoped>
-.game-view {
-  min-height: 100vh;
-}
-
 .game-container {
   max-width: 900px;
   margin: 0 auto;
@@ -494,5 +501,64 @@ watch(
 
 .current-move .piece-symbol {
   color: var(--primary-color-text) !important;
+}
+
+.player-info-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.player-info-card.active-player {
+  border-color: var(--primary-color);
+  box-shadow: var(--card-shadow);
+}
+
+.player-info-card.active-player::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--primary-color);
+}
+
+.time-display {
+  background: var(--surface-hover);
+  padding: 0.5rem 1.5rem;
+  border-radius: var(--border-radius);
+  transition: background-color 0.3s ease;
+}
+
+.active-player .time-display {
+  background: var(--primary-100);
+  color: var(--primary-700);
+}
+
+.order-0 {
+  order: 0;
+}
+
+.order-1 {
+  order: 1;
+}
+
+/* Animation pour le changement de tour */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.active-player {
+  animation: pulse 1s ease-in-out;
 }
 </style>
