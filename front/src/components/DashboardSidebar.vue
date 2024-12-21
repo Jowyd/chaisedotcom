@@ -34,7 +34,7 @@ const menuItems = ref([
 </script>
 
 <template>
-  <div class="sidebar surface-section h-screen flex flex-column">
+  <div class="sidebar surface-section flex flex-column">
     <!-- Logo and Brand -->
     <div class="p-4 text-center border-bottom-1 surface-border">
       <div class="text-xl font-bold">ChaiseDotCom</div>

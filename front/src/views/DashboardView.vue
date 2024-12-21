@@ -2,9 +2,8 @@
 import { ref } from 'vue';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import CreateGameDialog from '@/components/CreateGameDialog.vue';
-import ChessBoard from '@/components/ChessBoard.vue';
 
-const showCreateGame = ref(false);
+const showCreateGame = ref<boolean>(false);
 
 const recentGames = [
   { opponent: 'Magnus C.', result: 'Won', rating: '+12', date: '2024-03-15' },

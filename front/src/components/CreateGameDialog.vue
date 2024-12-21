@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps<{
   visible: boolean;
@@ -10,16 +10,11 @@ const emit = defineEmits<{
   'create-game': [{ opponent: string; timeControl: string }];
 }>();
 
-// Local state for dialog visibility
-const isDialogVisible = ref(props.visible);
-
-// Watch for changes in the prop and update local state
-watch(
-  () => props.visible,
-  (newVal) => {
-    isDialogVisible.value = newVal;
-  },
-);
+// Utilisez computed au lieu de ref et watch pour la visibilité
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: (value) => emit('update:visible', value),
+});
 
 const opponent = ref('');
 const timeControl = ref('');
@@ -43,27 +38,21 @@ const createGame = () => {
     });
     opponent.value = '';
     timeControl.value = '';
-    isDialogVisible.value = false; // Update local state
+    dialogVisible.value = false; // Update local state
   }
 };
 
 const closeDialog = () => {
   opponent.value = '';
   timeControl.value = '';
-  isDialogVisible.value = false; // Update local state
+  dialogVisible.value = false; // Update local state
 };
-
-// Emit 'update:visible' when local state changes
-watch(isDialogVisible, (newVal) => {
-  emit('update:visible', newVal);
-});
 </script>
 
 <template>
   <Dialog
-    v-model:visible="isDialogVisible"
+    v-model:visible="dialogVisible"
     modal
-    appendTo=""
     header="Create New Game"
     :style="{ width: '90%', maxWidth: '500px' }"
     :closable="true"
