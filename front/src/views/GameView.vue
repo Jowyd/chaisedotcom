@@ -88,13 +88,13 @@ const goToPreviousMove = () => {
 };
 
 const goToNextMove = () => {
-  if (currentMoveIndex.value < moves.value.length - 1) {
+  if (currentMoveIndex.value < moves.value.length) {
     goToMove(currentMoveIndex.value + 1);
   }
 };
 
 const goToCurrentPosition = () => {
-  goToMove(moves.value.length - 1);
+  goToMove(moves.value.length);
 };
 
 function canGameOverDialog(newGameStatus: GameStatus): boolean {
@@ -116,7 +116,7 @@ const updateGameState = (newState: GameState) => {
   gameState.value = newState;
   moves.value = newState.moves;
   if (currentMoveIndex.value === -1) {
-    currentMoveIndex.value = moves.value.length - 1;
+    currentMoveIndex.value = newState.moves.length;
   }
 };
 
@@ -323,7 +323,7 @@ watch(moves, async () => {
                     rounded
                     size="small"
                     @click="goToMove(0)"
-                    :disabled="currentMoveIndex === 0"
+                    :disabled="currentMoveIndex <= 0"
                     v-tooltip.bottom="'Go to start'"
                   />
                   <Button
@@ -332,7 +332,7 @@ watch(moves, async () => {
                     rounded
                     size="small"
                     @click="goToPreviousMove"
-                    :disabled="currentMoveIndex === 0"
+                    :disabled="currentMoveIndex <= 0"
                     v-tooltip.bottom="'Previous move'"
                   />
                   <Button
@@ -341,7 +341,7 @@ watch(moves, async () => {
                     rounded
                     size="small"
                     @click="goToNextMove"
-                    :disabled="currentMoveIndex === moves.length - 1"
+                    :disabled="currentMoveIndex === moves.length"
                     v-tooltip.bottom="'Next move'"
                   />
                   <Button
@@ -350,7 +350,7 @@ watch(moves, async () => {
                     rounded
                     size="small"
                     @click="goToCurrentPosition"
-                    :disabled="currentMoveIndex === moves.length - 1"
+                    :disabled="currentMoveIndex === moves.length"
                     v-tooltip.bottom="'Go to current position'"
                   />
                 </div>
