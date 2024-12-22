@@ -133,6 +133,15 @@ watch(
 );
 
 watch(
+  () => gameState.value,
+  (newGameState) => {
+    if (newGameState) {
+      updateGameState(newGameState);
+    }
+  },
+);
+
+watch(
   () => autoRotate.value,
   (autoRotateNew) => {
     if (autoRotateNew) {
