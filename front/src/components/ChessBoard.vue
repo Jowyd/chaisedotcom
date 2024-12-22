@@ -178,7 +178,7 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
     const move: Move = {
       from: toAlgebraic(from.row, from.col),
       to: toAlgebraic(row, col),
-    };
+    } as Move;
     const newGameState = await GameService.makeMove(gameId.value, move);
 
     const capturedPiece = board.value[row][col];
