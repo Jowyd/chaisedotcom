@@ -6,12 +6,14 @@ import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import GameHistoryList from '@/components/profile/GameHistoryList.vue';
 
 const router = useRouter();
 const games = ref([]);
 const loading = ref(true);
 const dateRange = ref();
 const selectedResult = ref();
+const username = 'aze';
 
 const results = [
   { label: 'All Results', value: null },
@@ -19,21 +21,6 @@ const results = [
   { label: 'Defeat', value: 'lost' },
   { label: 'Draw', value: 'draw' },
 ];
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString();
-};
-
-const getResultClass = (result: string) => {
-  switch (result.toLowerCase()) {
-    case 'won':
-      return 'bg-green-100 text-green-700 border-round-sm px-2 py-1';
-    case 'lost':
-      return 'bg-red-100 text-red-700 border-round-sm px-2 py-1';
-    default:
-      return 'bg-gray-100 text-gray-700 border-round-sm px-2 py-1';
-  }
-};
 
 const navigateToGame = (gameId: string) => {
   router.push(`/game/${gameId}`);
@@ -52,7 +39,6 @@ onMounted(() => {
         moves: 45,
         duration: '25:30',
       },
-      // ... ajoutez plus de données simulées
     ];
     loading.value = false;
   }, 1000);
@@ -84,48 +70,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Table des parties -->
-        <DataTable
-          :value="games"
-          :loading="loading"
-          paginator
-          :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
-          tableStyle="min-width: 50rem"
-          class="p-datatable-sm"
-        >
-          <Column field="date" header="Date" :sortable="true">
-            <template #body="{ data }">
-              {{ formatDate(data.date) }}
-            </template>
-          </Column>
-          <Column field="opponent" header="Opponent" :sortable="true" />
-          <Column field="result" header="Result" :sortable="true">
-            <template #body="{ data }">
-              <span :class="getResultClass(data.result)">{{ data.result }}</span>
-            </template>
-          </Column>
-          <Column field="rating_change" header="Rating" :sortable="true">
-            <template #body="{ data }">
-              <span :class="data.rating_change.includes('+') ? 'text-green-500' : 'text-red-500'">
-                {{ data.rating_change }}
-              </span>
-            </template>
-          </Column>
-          <Column field="moves" header="Moves" :sortable="true" />
-          <Column field="duration" header="Duration" :sortable="true" />
-          <Column header="Actions">
-            <template #body="{ data }">
-              <Button
-                icon="pi pi-eye"
-                text
-                rounded
-                @click="navigateToGame(data.id)"
-                v-tooltip.top="'View Game'"
-              />
-            </template>
-          </Column>
-        </DataTable>
+        <GameHistoryList :username="username" :public-view="true" />
       </div>
     </div>
   </div>
@@ -138,4 +83,4 @@ onMounted(() => {
   border-radius: var(--border-radius);
   box-shadow: var(--card-shadow);
 }
-</style> 
+</style>
