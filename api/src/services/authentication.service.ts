@@ -36,10 +36,10 @@ class AuthenticationService {
     const accessToken = generateToken(userData);
     const refreshToken = generateRefreshToken(userData);
 
-    return { 
-      accessToken, 
+    return {
+      accessToken,
       refreshToken,
-      user: userData
+      user: userData,
     };
   }
 
@@ -62,6 +62,25 @@ class AuthenticationService {
 
     const user = await User.create({ username, password });
     return { user };
+  }
+
+  public getRefreshToken(): string {
+    const token = Buffer.from(
+      (process.env.REFRESH_TOKEN as string).split(" ")[1],
+      "base64"
+    ).toString();
+    return token;
+  }
+
+  public async refreshToken(): Promise<{ accessToken: string }> {
+    const token = this.getRefreshToken();
+    const decoded = jwt.decode(token) as any;
+    const userData = {
+      id: decoded.id,
+      username: decoded.username,
+    };
+    const accessToken = generateToken(userData);
+    return { accessToken };
   }
 }
 

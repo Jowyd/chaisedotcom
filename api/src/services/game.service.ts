@@ -3,19 +3,34 @@ import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
 import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
-import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
-import { GameState } from "../interfaces/game.interface";
-import { MakeMoveDTO } from "../dto/move.dto";
+import { ChessMove } from "../interfaces/chess.interface";
 import { MoveReturnDTO } from "../dto/move.dto";
-import { ChessBoard } from "../interfaces/chess.interface";
 import moveService from "./move.service";
+import { Token } from "../dto/auth.dto";
 
 class GameService {
-  async createGame(dto: CreateGameDTO): Promise<Game> {
+  async createGame(dto: CreateGameDTO, user: Token): Promise<Game> {
+    if (dto.colorAssignment === "fixed" && !dto.playerColor) {
+      throw new Error("playerColor is required when colorAssignment is fixed");
+    }
+    if (
+      dto.colorAssignment === "fixed" &&
+      dto.playerColor !== "white" &&
+      dto.playerColor !== "black"
+    ) {
+      throw new Error("playerColor must be white or black");
+    }
+    if (dto.colorAssignment === "random") {
+      dto.playerColor = Math.random() < 0.5 ? "white" : "black";
+    }
+    const whitePlayerName =
+      dto.playerColor === "white" ? dto.opponent : user.username;
+    const blackPlayerName =
+      dto.playerColor === "black" ? dto.opponent : user.username;
     return Game.create({
-      user_id: dto.userId,
-      whitePlayerName: dto.whitePlayerName,
-      blackPlayerName: dto.blackPlayerName,
+      user_id: user.id,
+      whitePlayerName: whitePlayerName,
+      blackPlayerName: blackPlayerName,
       isPublic: dto.isPublic,
     });
   }

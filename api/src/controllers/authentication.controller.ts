@@ -21,4 +21,8 @@ export class AuthController extends Controller {
   ): Promise<RegisterResponse> {
     return await authService.registerUser(request);
   }
+  @Post("/refresh")
+  public async refresh(): Promise<{ accessToken: string }> {
+    return await authService.refreshToken();
+  }
 }

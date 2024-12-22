@@ -143,6 +143,7 @@ interface CreateGameDTO {
   opponent: string;
   colorAssignment: 'random' | 'fixed';
   playerColor?: 'white' | 'black';
+  isPublic: boolean;
 }
 
 export const GameService = {

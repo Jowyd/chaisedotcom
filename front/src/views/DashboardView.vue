@@ -21,6 +21,7 @@ const handleCreateGame = async (gameDetails: {
   opponent: string;
   colorAssignment: 'random' | 'fixed';
   playerColor?: 'white' | 'black';
+  isPublic: boolean;
 }) => {
   try {
     const newGame = await GameService.createGame(gameDetails);

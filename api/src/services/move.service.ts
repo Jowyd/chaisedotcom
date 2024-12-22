@@ -576,7 +576,7 @@ export class MoveService {
       order: [["id", "DESC"]],
     });
 
-    return lastMove ? lastMove.turn : "WHITE";
+    return lastMove ? lastMove.turn : "BLACK";
   }
 
   async getNextPlayer(game_id: number): Promise<string> {

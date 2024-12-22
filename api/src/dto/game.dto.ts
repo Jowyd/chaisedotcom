@@ -8,9 +8,8 @@ export interface GameHistoryDTO {
 }
 
 export interface CreateGameDTO {
-  userId: number;
-  whitePlayerName: string;
-  blackPlayerName: string;
+  opponent: string;
+  colorAssignment: "random" | "fixed";
+  playerColor?: "white" | "black";
   isPublic: boolean;
 }
-
