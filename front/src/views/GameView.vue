@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import ChessBoard from '@/components/ChessBoard.vue';
 import { GameService, stillPlaying, type GameState } from '@/services/GameService';
 import { useRoute } from 'vue-router';
@@ -193,6 +193,16 @@ const handleReplay = () => {
   goToMove(0);
   showGameOverDialog.value = false;
 };
+
+const movesList = ref<HTMLElement | null>(null);
+
+// Watch for changes in moves and scroll to the bottom
+watch(moves, async () => {
+  await nextTick(); // Wait for DOM updates
+  if (movesList.value) {
+    movesList.value.scrollTop = movesList.value.scrollHeight; // Scroll to bottom
+  }
+});
 </script>
 
 <template>
@@ -344,7 +354,7 @@ const handleReplay = () => {
                     v-tooltip.bottom="'Go to current position'"
                   />
                 </div>
-                <div class="moves-list">
+                <div class="moves-list" ref="movesList">
                   <div
                     v-for="(move, index) in filteredMoves"
                     :key="index"
@@ -364,7 +374,7 @@ const handleReplay = () => {
                       }"
                       @click="goToMove(index * 2)"
                     >
-                      <div class="flex align-items-center justify-content-between">
+                      <div class="flex align-items-center justify-content-start gap-2">
                         <div class="flex align-items-center gap-2">
                           <i class="pi pi-circle-fill text-white" style="font-size: 0.5rem" />
                           <span class="font-medium">{{ move.from }}-{{ move.to }}</span>
