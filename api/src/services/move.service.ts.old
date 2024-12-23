@@ -5,7 +5,7 @@ import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
 import { MoveOptions } from "../interfaces/move.interface";
 import { MakeMoveDTO, MoveCreateDTO } from "../dto/move.dto";
-import { MoveReturnDTO } from "../dto/move.dto";
+import { GameReturnDTO } from "../dto/move.dto";
 
 export class MoveService {
   async createMove(dto: MoveCreateDTO) {
@@ -520,7 +520,7 @@ export class MoveService {
   async makeMove(
     game_id: number,
     moveDto: MakeMoveDTO
-  ): Promise<MoveReturnDTO> {
+  ): Promise<GameReturnDTO> {
     // Récupérer l'état actuel du jeu
     const { board, moves } = await this.reconstructGameState(game_id);
 

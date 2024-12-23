@@ -2,6 +2,7 @@ import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database"; // Connexion à la base de données
 import { allow } from "joi";
 import bcrypt from "bcrypt";
+import Game from "./game.model";
 
 export interface UserAttributes {
   id?: number;
@@ -10,6 +11,7 @@ export interface UserAttributes {
   created_at?: Date;
   public_profile?: boolean;
   show_game_history?: boolean;
+  games?: Game[];
 }
 
 export class User extends Model<UserAttributes> implements UserAttributes {
@@ -19,6 +21,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
   public readonly created_at!: Date;
   public public_profile!: boolean;
   public show_game_history!: boolean;
+  public games?: Game[];
 
   public async validatePassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);

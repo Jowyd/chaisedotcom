@@ -10,6 +10,7 @@ import {
   Patch,
   Security,
   Request,
+  Query,
 } from "tsoa";
 import { userService } from "../services/user.service";
 import * as express from "express";
@@ -22,6 +23,7 @@ import {
   PrivacySettings,
 } from "../dto/user.dto";
 import { AuthRequest } from "../dto/auth.dto";
+import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 
 @Route("users")
 @Tags("Users")
@@ -100,5 +102,15 @@ export class UserController extends Controller {
     @Body() body: PrivacySettings
   ): Promise<void> {
     await userService.updatePrivacySettings(req.user.id, body);
+  }
+
+  @Get("/leaderboard")
+  public async getLeaderboard(
+    @Query() timeRange?: string,
+    @Query() page?: number,
+    @Query() itemsPerPage?: number
+  ): Promise<LeaderboardResponse> {
+    const { players, total } = await userService.getLeaderboard(timeRange, page, itemsPerPage);
+    return { players, total };
   }
 }

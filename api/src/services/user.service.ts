@@ -8,6 +8,9 @@ import { notFound } from "../error/NotFoundError";
 import { UserMapper } from "../mapper/user.mapper";
 import { User } from "../models/user.model";
 import bcrypt from "bcrypt";
+import { Op } from "sequelize";
+import { Game } from "../models/game.model";
+import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 
 export class UserService {
   // Récupère tous les utilisateurs
@@ -146,6 +149,63 @@ export class UserService {
     user.public_profile = settings.publicProfile;
     user.show_game_history = settings.showGameHistory;
     await user.save();
+  }
+
+  public async getLeaderboard(
+    timeRange?: string,
+    page: number = 0,
+    itemsPerPage: number = 10
+  ): Promise<LeaderboardResponse> {
+    const whereClause: any = {};
+
+    if (timeRange && timeRange !== "all") {
+      const startDate =
+        timeRange === "month"
+          ? new Date(new Date().setMonth(new Date().getMonth() - 1))
+          : new Date(new Date().setDate(new Date().getDate() - 7));
+
+      whereClause.created_at = {
+        [Op.gte]: startDate,
+      };
+    }
+
+    const { count, rows: users } = await User.findAndCountAll({
+      include: [
+        {
+          model: Game,
+          as: "games",
+          where: whereClause,
+          required: false,
+        },
+      ],
+      limit: itemsPerPage,
+      offset: page * itemsPerPage,
+    });
+
+    const players = users
+      .map((user) => {
+        const games = user.games || [];
+        const totalGames = games.length;
+        const wins = games.filter(
+          (game: Game) => game.result != null && game.result > 0
+        ).length;
+
+        return {
+          username: user.username,
+          rating: games.reduce(
+            (sum: number, game: Game) => sum + (game.result || 0),
+            1500
+          ), // Rating de base: 1500
+          gamesPlayed: totalGames,
+          winRate: totalGames ? (wins / totalGames) * 100 : 0,
+        };
+      })
+      .sort((a, b) => b.rating - a.rating);
+
+    return {
+      players,
+      total: count,
+    };
   }
 }
 
