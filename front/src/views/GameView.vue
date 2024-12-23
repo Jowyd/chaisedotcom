@@ -418,7 +418,7 @@ watch(moves, async () => {
   </div>
   <GameOverDialog
     v-model:visible="showGameOverDialog"
-    :game-state="gameState"
+    :game-state="gameState!"
     :captured-pieces="capturedPieces"
     :moves="moves"
     @replay="handleReplay"

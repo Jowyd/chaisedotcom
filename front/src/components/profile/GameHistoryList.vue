@@ -14,7 +14,7 @@ const props = defineProps<{
 const router = useRouter();
 const toast = useToast();
 const games = ref<GameHistoryItem[]>([]);
-const currentPage = ref(1);
+const currentPage = ref(0);
 const itemsPerPage = ref(10);
 const totalGames = ref(0);
 
@@ -26,6 +26,8 @@ const loadGames = async () => {
     const filters: GameHistoryFilters = {
       dateRange: dateRange.value,
       result: selectedResult.value,
+      page: currentPage.value,
+      itemsPerPage: itemsPerPage.value,
     };
     games.value = await GameService.getGameHistory(filters);
   } catch (error) {
@@ -34,15 +36,16 @@ const loadGames = async () => {
 };
 
 const getResultClass = (game: GameHistoryItem) => {
-  const hasWinner = game.status.toLowerCase() != 'draw';
-  if (!hasWinner) {
+  if (!game.result) {
     return 'bg-gray-100 text-gray-700 border-round-sm px-2 py-1';
   }
-  const isWinner = game.winner === props.username;
-  if (isWinner) {
-    return 'bg-green-100 text-green-700 border-round-sm px-2 py-1';
+  if (game.result == 0) {
+    return 'bg-gray-100 text-gray-700 border-round-sm px-2 py-1';
+  }
+  if (game.result > 0) {
+    return 'bg-green-100 text-gray-700 border-round-sm px-2 py-1';
   } else {
-    return 'bg-red-100 text-red-700 border-round-sm px-2 py-1';
+    return 'bg-red-100 text-green-700 border-round-sm px-2 py-1';
   }
 };
 
@@ -110,40 +113,35 @@ const updateBulkVisibility = async () => {
 };
 
 const isGameEnded = (game: GameHistoryItem) => {
-  return (
-    game.status.toLowerCase() === 'checkmate' ||
-    game.status.toLowerCase() === 'stalemate' ||
-    game.status.toLowerCase() === 'draw' ||
-    game.status.toLowerCase() === 'surrender'
-  );
-};
-
-const getOpponent = (game: GameHistoryItem) => {
-  return game.whitePlayerName === props.username ? game.blackPlayerName : game.whitePlayerName;
+  return game.status.toLowerCase() !== 'in_progress' && game.status.toLowerCase() !== 'check';
 };
 
 const getUserColor = (game: GameHistoryItem) => {
-  return game.whitePlayerName === props.username ? 'white' : 'black';
+  return game.opponentColor === 'black' ? 'white' : 'black';
 };
 
 const dateRange = ref();
 const selectedResult = ref();
-watch([dateRange, selectedResult], () => {
+
+watch([currentPage, itemsPerPage], () => {
   loadGames();
 });
 
-watch(() => props.username, loadGames);
+watch([dateRange, selectedResult, currentPage, itemsPerPage], () => {
+  loadGames();
+});
 
 onMounted(() => {
   loadGames();
 });
 
-const results = [
-  { label: 'All Results', value: null },
-  { label: 'Victory', value: 'won' },
-  { label: 'Defeat', value: 'lost' },
-  { label: 'Draw', value: 'draw' },
-];
+// TODO: Implement filtering by result if time permits
+// const results = [
+//   { label: 'All Results', value: null },
+//   { label: 'Victory', value: 'won' },
+//   { label: 'Defeat', value: 'lost' },
+//   { label: 'Draw', value: 'draw' },
+// ];
 </script>
 
 <template>
@@ -159,14 +157,14 @@ const results = [
             class="w-20rem"
             :showIcon="true"
           />
-          <Dropdown
+          <!-- <Dropdown
             v-model="selectedResult"
             :options="results"
             optionLabel="label"
             optionValue="value"
             placeholder="Filter by Result"
             class="w-12rem"
-          />
+          /> -->
         </div>
         <!-- Actions en masse pour la visibilité (visible uniquement si c'est notre profil) -->
         <div v-if="!publicView" class="flex align-items-center gap-3">
@@ -220,7 +218,7 @@ const results = [
               size="normal"
               shape="circle"
             />
-            <span>{{ getOpponent(data) }}</span>
+            <span>{{ data.opponentName }}</span>
           </div>
         </template>
       </Column>
@@ -235,7 +233,7 @@ const results = [
       </Column>
       <Column field="result" header="Result" :sortable="true">
         <template #body="{ data }">
-          <span :class="getResultClass(data)">{{ data.winner }}</span>
+          <span :class="getResultClass(data)">{{ data.result }}</span>
         </template>
       </Column>
       <Column field="rating_change" header="Rating" :sortable="true">

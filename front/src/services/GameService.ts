@@ -294,6 +294,12 @@ export const GameService = {
         if (filters.isPublic !== undefined) {
           params.append('isPublic', filters.isPublic.toString());
         }
+        if (filters.page) {
+          params.append('page', filters.page.toString());
+        }
+        if (filters.itemsPerPage) {
+          params.append('itemsPerPage', filters.itemsPerPage.toString());
+        }
       }
 
       if (params.toString()) {
