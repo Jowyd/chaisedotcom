@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+import { GameService } from '@/services/GameService';
+import { useToast } from 'primevue/usetoast';
+import { authService } from '@/services/AuthService';
+import type { GameHistoryFilters, GameHistoryItem } from '@/types';
 import GameHistoryList from '@/components/profile/GameHistoryList.vue';
-
-const router = useRouter();
-const games = ref([]);
+const toast = useToast();
 const loading = ref(true);
 const dateRange = ref();
 const selectedResult = ref();
-const username = 'aze';
-
+const games = ref<GameHistoryItem[]>([]);
 const results = [
   { label: 'All Results', value: null },
   { label: 'Victory', value: 'won' },
@@ -22,26 +20,33 @@ const results = [
   { label: 'Draw', value: 'draw' },
 ];
 
-const navigateToGame = (gameId: string) => {
-  router.push(`/game/${gameId}`);
+const loadGames = async () => {
+  loading.value = true;
+  try {
+    const filters: GameHistoryFilters = {
+      dateRange: dateRange.value,
+      result: selectedResult.value,
+    };
+    games.value = await GameService.getGameHistory(filters);
+  } catch (error) {
+    console.error('Error loading games:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load game history',
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
 };
 
-// Simulons des données pour l'exemple
+watch([dateRange, selectedResult], () => {
+  loadGames();
+});
+
 onMounted(() => {
-  setTimeout(() => {
-    games.value = [
-      {
-        id: '1',
-        opponent: 'Magnus C.',
-        date: '2024-03-15',
-        result: 'Won',
-        rating_change: '+12',
-        moves: 45,
-        duration: '25:30',
-      },
-    ];
-    loading.value = false;
-  }, 1000);
+  loadGames();
 });
 </script>
 
@@ -53,24 +58,11 @@ onMounted(() => {
       <div class="card">
         <h1 class="text-3xl font-bold mb-4">Game History</h1>
 
-        <!-- Filtres -->
-        <div class="flex gap-3 mb-4">
-          <Calendar
-            v-model="dateRange"
-            selectionMode="range"
-            placeholder="Date Range"
-            class="w-20rem"
-          />
-          <Dropdown
-            v-model="selectedResult"
-            :options="results"
-            optionLabel="label"
-            placeholder="Filter by Result"
-            class="w-12rem"
-          />
-        </div>
-
-        <GameHistoryList :username="username" :public-view="true" />
+        <GameHistoryList
+          :username="authService.getUser()?.username || ''"
+          :public-view="false"
+          :loading="loading"
+        />
       </div>
     </div>
   </div>

@@ -29,3 +29,20 @@ export interface CapturedPieces {
   white: ChessPiece[];
   black: ChessPiece[];
 }
+
+export interface GameHistoryItem {
+  game_id: number;
+  whitePlayerName: string;
+  blackPlayerName: string;
+  isPublic: boolean;
+  winner: string | null;
+  status: GameStatus;
+  createdAt?: string;
+  moves?: number;
+}
+
+export interface GameHistoryFilters {
+  dateRange?: [Date, Date];
+  result?: 'won' | 'lost' | 'draw' | null;
+  isPublic?: boolean;
+}
