@@ -7,14 +7,18 @@ export interface UserAttributes {
   id?: number;
   username: string;
   password: string;
-  created_at?: number;
+  created_at?: Date;
+  public_profile?: boolean;
+  show_game_history?: boolean;
 }
 
 export class User extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
   public username!: string;
   public password!: string;
-  public created_at!: number;
+  public readonly created_at!: Date;
+  public public_profile!: boolean;
+  public show_game_history!: boolean;
 
   public async validatePassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);
@@ -43,6 +47,17 @@ User.init(
     },
     created_at: {
       type: DataTypes.TIME,
+      defaultValue: DataTypes.NOW,
+    },
+    public_profile: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    show_game_history: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
   },
   {

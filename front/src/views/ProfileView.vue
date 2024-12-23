@@ -1,22 +1,66 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import GameHistoryList from '@/components/profile/GameHistoryList.vue';
 import PlayerStats from '@/components/profile/PlayerStats.vue';
 import { authService } from '@/services/AuthService';
+import { userService, type UserProfile } from '@/services/UserService';
 
 const route = useRoute();
+const toast = useToast();
 const username = route.params.username as string;
 const isOwnProfile = computed(() => authService.getUser()?.username === username);
+
+const loading = ref(false);
+const userProfile = ref<UserProfile | undefined>();
 const privacySettings = ref({
   publicProfile: true,
   showGameHistory: true,
 });
 
-const updatePrivacySettings = async () => {
-  // Appel API pour mettre à jour les paramètres de confidentialité
+const loadProfile = async () => {
+  try {
+    const profile = await userService.getProfile(username);
+    userProfile.value = profile;
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load profile',
+      life: 3000,
+    });
+  }
 };
+
+const updatePrivacySettings = async () => {
+  loading.value = true;
+  try {
+    await userService.updatePrivacySettings(privacySettings.value);
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Privacy settings updated successfully',
+      life: 3000,
+    });
+  } catch (error) {
+    console.error('Error updating privacy settings:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to update privacy settings',
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadProfile();
+});
 </script>
 
 <template>
@@ -36,7 +80,14 @@ const updatePrivacySettings = async () => {
               />
               <div>
                 <h1 class="text-3xl font-bold m-0">{{ username }}</h1>
-                <p class="text-600 m-0">Member since {{ new Date().toLocaleDateString() }}</p>
+                <p class="text-600 m-0">
+                  Member since
+                  {{
+                    userProfile?.createdAt
+                      ? new Date(userProfile.createdAt).toLocaleDateString()
+                      : '-'
+                  }}
+                </p>
               </div>
             </div>
           </div>
@@ -61,7 +112,12 @@ const updatePrivacySettings = async () => {
                 </div>
                 <InputSwitch v-model="privacySettings.showGameHistory" />
               </div>
-              <Button label="Save Settings" @click="updatePrivacySettings" />
+              <Button
+                label="Save Settings"
+                @click="updatePrivacySettings"
+                :loading="loading"
+                severity="primary"
+              />
             </div>
           </div>
         </div>
@@ -73,9 +129,23 @@ const updatePrivacySettings = async () => {
 
         <!-- Historique des parties -->
         <div class="col-12 lg:col-8">
-          <GameHistoryList :username="username" :public-view="!isOwnProfile" />
+          <GameHistoryList
+            :username="username"
+            :public-view="!isOwnProfile"
+            :visible="privacySettings.showGameHistory || isOwnProfile"
+          />
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.card {
+  background: var(--surface-card);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1rem;
+}
+</style>

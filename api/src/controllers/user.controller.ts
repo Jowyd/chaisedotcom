@@ -17,6 +17,9 @@ import {
   UserInputDTO,
   UserInputPatchDTO,
   UserOutputDTO,
+  UserProfile,
+  PasswordUpdate,
+  PrivacySettings,
 } from "../dto/user.dto";
 import { AuthRequest } from "../dto/auth.dto";
 
@@ -65,5 +68,37 @@ export class UserController extends Controller {
   public async getMe(@Request() req: AuthRequest): Promise<UserOutputDTO> {
     const { id } = req.user;
     return userService.getUserById(id);
+  }
+
+  @Get("/profile/{username}")
+  public async getProfile(@Path() username: string): Promise<UserProfile> {
+    return await userService.getProfile(username);
+  }
+
+  @Patch("/me/username")
+  @Security("jwt")
+  public async updateUsername(
+    @Request() req: AuthRequest,
+    @Body() body: { username: string }
+  ): Promise<void> {
+    await userService.updateUsername(req.user.id, body.username);
+  }
+
+  @Patch("/me/password")
+  @Security("jwt")
+  public async updatePassword(
+    @Request() req: AuthRequest,
+    @Body() body: PasswordUpdate
+  ): Promise<void> {
+    await userService.updatePassword(req.user.id, body);
+  }
+
+  @Patch("/me/privacy")
+  @Security("jwt")
+  public async updatePrivacySettings(
+    @Request() req: AuthRequest,
+    @Body() body: PrivacySettings
+  ): Promise<void> {
+    await userService.updatePrivacySettings(req.user.id, body);
   }
 }

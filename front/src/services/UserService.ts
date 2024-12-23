@@ -1,14 +1,59 @@
 import httpHelper from '@/utils/httpHelper';
-import type { User } from './AuthService';
 
-export const UserService = {
-  async getProfile(): Promise<User> {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
+
+export interface UserProfile {
+  username: string;
+  createdAt: string;
+}
+
+export interface PasswordUpdate {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface PrivacySettings {
+  publicProfile: boolean;
+  showGameHistory: boolean;
+}
+
+class UserService {
+  async getProfile(username: string): Promise<UserProfile> {
     try {
-      const response = await httpHelper.get<User>(`/profile`);
+      const response = await httpHelper.get(`${API_URL}users/profile/${username}`);
       return response.data;
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching profile:', error);
       throw error;
     }
-  },
-};
+  }
+
+  async updateUsername(newUsername: string): Promise<void> {
+    try {
+      await httpHelper.patch(`${API_URL}users/me/username`, { username: newUsername });
+    } catch (error) {
+      console.error('Error updating username:', error);
+      throw error;
+    }
+  }
+
+  async updatePassword(passwords: PasswordUpdate): Promise<void> {
+    try {
+      await httpHelper.patch(`${API_URL}users/me/password`, passwords);
+    } catch (error) {
+      console.error('Error updating password:', error);
+      throw error;
+    }
+  }
+
+  async updatePrivacySettings(settings: PrivacySettings): Promise<void> {
+    try {
+      await httpHelper.patch(`${API_URL}users/me/privacy`, settings);
+    } catch (error) {
+      console.error('Error updating privacy settings:', error);
+      throw error;
+    }
+  }
+}
+
+export const userService = new UserService();

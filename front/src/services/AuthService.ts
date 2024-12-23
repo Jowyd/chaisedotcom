@@ -56,13 +56,13 @@ class AuthService {
   async login(credentials: UserCredentials): Promise<void> {
     try {
       const response = await httpHelper.post(`${API_URL}auth/login`, credentials);
-      console.log(response)
+      console.log(response);
       const { accessToken, refreshToken, user } = response.data;
-      
+
       this.saveTokens({ accessToken, refreshToken });
       this.user = user;
       localStorage.setItem('user', JSON.stringify(user));
-      console.log(user)
+      console.log(user);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -98,6 +98,11 @@ class AuthService {
     return this.user;
   }
 
+  setUser(user: User): void {
+    this.user = user;
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+
   private isTokenExpired(token: string): boolean {
     try {
       const decoded = jwtDecode(token);
@@ -127,4 +132,4 @@ class AuthService {
   }
 }
 
-export const authService = new AuthService(); 
+export const authService = new AuthService();
