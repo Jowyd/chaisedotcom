@@ -10,11 +10,20 @@ import {
   Security,
   Tags,
   Request,
+  Query,
+  Patch,
+  Queries,
 } from "tsoa";
 import { gameService } from "../services/game.service";
 import { Game } from "../models/game.model";
 import { AuthRequest } from "../dto/auth.dto";
-import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
+import {
+  CreateGameDTO,
+  GameHistoryDTO,
+  GameHistoryFiltersDTO,
+  UpdateGameVisibilityDTO,
+  BulkUpdateVisibilityDTO,
+} from "../dto/game.dto";
 import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
 import {
   MakeMoveDTO,
@@ -76,11 +85,6 @@ export class GameController extends Controller {
     return await moveService.makeMove(game_id, move);
   }
 
-  @Get("/{game_id}")
-  public async getState(@Path() game_id: number): Promise<MoveReturnDTO> {
-    return await moveService.getState(game_id);
-  }
-
   @Post("/{game_id}/promotion")
   public async promotion(
     @Path() game_id: number,
@@ -123,10 +127,42 @@ export class GameController extends Controller {
 
   @Get("/history")
   public async getHistory(
-    @Request() req: AuthRequest
+    @Request() req: AuthRequest,
+    @Queries() filters?: GameHistoryFiltersDTO
   ): Promise<GameHistoryDTO[]> {
     const user = req.user;
-    return await gameService.getHistory(user.id);
+    return await gameService.getHistory(user.id, filters);
+  }
+
+  @Get("/public-history/:username")
+  public async getPublicHistory(
+    @Path() username: string,
+    @Queries() filters?: GameHistoryFiltersDTO
+  ): Promise<GameHistoryDTO[]> {
+    return await gameService.getPublicHistory(username, filters);
+  }
+
+  @Patch("/{game_id}/visibility")
+  public async updateVisibility(
+    @Path() game_id: number,
+    @Body() body: UpdateGameVisibilityDTO,
+    @Request() req: AuthRequest
+  ): Promise<void> {
+    const user = req.user;
+    await gameService.updateGameVisibility(game_id, body.isPublic, user.id);
+  }
+
+  @Patch("/bulk-visibility")
+  public async updateBulkVisibility(
+    @Body() body: BulkUpdateVisibilityDTO,
+    @Request() req: AuthRequest
+  ): Promise<void> {
+    const user = req.user;
+    await gameService.updateBulkVisibility(
+      body.gameIds,
+      body.isPublic,
+      user.id
+    );
   }
 
   @Get("/stats/{username}")
@@ -146,6 +182,11 @@ export class GameController extends Controller {
     @Body() body: { color: string }
   ): Promise<MoveReturnDTO> {
     return await gameService.resign(game_id, body.color);
+  }
+
+  @Get("/{game_id}")
+  public async getState(@Path() game_id: number): Promise<MoveReturnDTO> {
+    return await moveService.getState(game_id);
   }
 }
 

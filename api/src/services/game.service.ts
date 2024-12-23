@@ -2,7 +2,11 @@ import { Game, GameStatus } from "../models/game.model";
 import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
-import { CreateGameDTO, GameHistoryDTO } from "../dto/game.dto";
+import {
+  CreateGameDTO,
+  GameHistoryDTO,
+  GameHistoryFiltersDTO,
+} from "../dto/game.dto";
 import { ChessMove } from "../interfaces/chess.interface";
 import { MoveReturnDTO } from "../dto/move.dto";
 import moveService from "./move.service";
@@ -76,20 +80,51 @@ class GameService {
     await game.destroy();
   }
 
-  async getHistory(userId: number): Promise<GameHistoryDTO[]> {
-    const user = await User.findByPk(userId);
-    if (!user) {
-      throw new Error("Utilisateur non trouvé");
+  async getHistory(
+    userId: number,
+    filters?: GameHistoryFiltersDTO
+  ): Promise<GameHistoryDTO[]> {
+    const whereClause: any = {
+      user_id: userId,
+    };
+
+    if (filters) {
+      if (filters.startDate && filters.endDate) {
+        whereClause.created_at = {
+          [Op.between]: [
+            new Date(filters.startDate),
+            new Date(filters.endDate),
+          ],
+        };
+      }
+
+      if (filters.result) {
+        switch (filters.result) {
+          case "won":
+            whereClause.winner = userId;
+            break;
+          case "lost":
+            whereClause.winner = {
+              [Op.and]: [{ [Op.ne]: userId }, { [Op.ne]: null }],
+            };
+            break;
+          case "draw":
+            whereClause.status = GameStatus.DRAW;
+            break;
+        }
+      }
+
+      if (filters.isPublic !== undefined) {
+        whereClause.isPublic = filters.isPublic;
+      }
     }
+
     const games = await Game.findAll({
-      where: {
-        [Op.or]: [
-          { whitePlayerName: user.username },
-          { blackPlayerName: user.username },
-        ],
-      },
+      where: whereClause,
       order: [["created_at", "DESC"]],
+      include: [{ model: Move, as: "moves" }],
     });
+
     return games.map((game) => ({
       game_id: game.id,
       whitePlayerName: game.whitePlayerName,
@@ -97,7 +132,100 @@ class GameService {
       isPublic: game.isPublic,
       winner: game.winner,
       status: game.status,
+      createdAt: game.created_at,
+      moves: game.moves?.length || 0,
     }));
+  }
+
+  async getPublicHistory(
+    username: string,
+    filters?: GameHistoryFiltersDTO
+  ): Promise<GameHistoryDTO[]> {
+    const whereClause: any = {
+      isPublic: true,
+      [Op.or]: [{ whitePlayerName: username }, { blackPlayerName: username }],
+    };
+
+    if (filters) {
+      if (filters.startDate && filters.endDate) {
+        whereClause.createdAt = {
+          [Op.between]: [
+            new Date(filters.startDate),
+            new Date(filters.endDate),
+          ],
+        };
+      }
+
+      if (filters.result) {
+        switch (filters.result) {
+          case "won":
+            whereClause.winner = username;
+            break;
+          case "lost":
+            whereClause.winner = {
+              [Op.and]: [{ [Op.ne]: username }, { [Op.ne]: null }],
+            };
+            break;
+          case "draw":
+            whereClause.status = GameStatus.DRAW;
+            break;
+        }
+      }
+
+      if (filters.isPublic !== undefined) {
+        whereClause.isPublic = filters.isPublic;
+      }
+    }
+
+    const games = await Game.findAll({
+      where: whereClause,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return games.map((game) => ({
+      game_id: game.id,
+      whitePlayerName: game.whitePlayerName,
+      blackPlayerName: game.blackPlayerName,
+      isPublic: game.isPublic,
+      winner: game.winner,
+      status: game.status,
+      createdAt: game.created_at,
+      moves: game.moves?.length || 0,
+    }));
+  }
+
+  async updateGameVisibility(
+    gameId: number,
+    isPublic: boolean,
+    userId: number
+  ): Promise<void> {
+    const game = await Game.findByPk(gameId);
+
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
+    if (game.user_id !== userId) {
+      throw new Error("Unauthorized to update this game");
+    }
+
+    await game.update({ isPublic });
+  }
+
+  async updateBulkVisibility(
+    gameIds: number[],
+    isPublic: boolean,
+    userId: number
+  ): Promise<void> {
+    await Game.update(
+      { isPublic },
+      {
+        where: {
+          id: { [Op.in]: gameIds },
+          user_id: userId,
+        },
+      }
+    );
   }
 
   async getStats(username: string): Promise<number> {

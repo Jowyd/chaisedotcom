@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database";
-import { Game } from "./game.model";
+import Game from "./game.model";
 
 class Move extends Model {
   public id!: number;
@@ -61,6 +61,10 @@ Move.init(
   }
 );
 
-Move.belongsTo(Game, { foreignKey: "game_id" });
-
+Move.belongsTo(Game, { foreignKey: "game_id", as: "game" });
+Game.hasMany(Move, {
+  sourceKey: "id",
+  foreignKey: "game_id",
+  as: "moves",
+});
 export default Move;

@@ -1,6 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import { User } from "./user.model";
+import Move from "./move.model";
 
 export enum GameStatus {
   IN_PROGRESS = "in_progress",
@@ -19,6 +20,8 @@ export class Game extends Model {
   public isPublic!: boolean;
   public winner!: string | null;
   public status!: GameStatus;
+  public readonly created_at!: Date;
+  public moves!: Move[];
 }
 
 Game.init(
@@ -59,6 +62,10 @@ Game.init(
       ),
       defaultValue: "in_progress",
     },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize,
@@ -66,3 +73,5 @@ Game.init(
     tableName: "games",
   }
 );
+
+export default Game;
