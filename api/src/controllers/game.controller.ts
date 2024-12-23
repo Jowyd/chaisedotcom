@@ -27,11 +27,12 @@ import {
 import { ChessMove, ChessPiece } from "../interfaces/chess.interface";
 import {
   MakeMoveDTO,
-  MoveReturnDTO,
+  GameReturnDTO,
   SuggestionsDTORequest,
 } from "../dto/move.dto";
 import moveService from "../services/move.service";
 import { User } from "../models/user.model";
+import { ChessColor } from "../types";
 
 @Route("games")
 @Tags("Games")
@@ -74,23 +75,26 @@ export class GameController extends Controller {
   @Post("/{game_id}/move")
   public async makeMove(
     @Path() game_id: number,
-    @Body() move: MakeMoveDTO
-  ): Promise<MoveReturnDTO> {
+    @Body() move: MakeMoveDTO,
+    @Request() req: AuthRequest
+  ): Promise<GameReturnDTO> {
     console.log(move);
     if (!game_id || !move.from || !move.to) {
       this.setStatus(400);
       throw new Error("Missing required fields");
     }
     console.log("game_id", game_id, "move", move);
-    return await moveService.makeMove(game_id, move);
+    const user = req.user;
+    return await moveService.makeMove(game_id, move, user);
   }
 
   @Post("/{game_id}/promotion")
   public async promotion(
     @Path() game_id: number,
-    @Body() piece: ChessPiece
-  ): Promise<MoveReturnDTO> {
-    return await moveService.promotion(game_id, piece);
+    @Body() piece: ChessPiece,
+    @Request() req: AuthRequest
+  ): Promise<GameReturnDTO> {
+    return await moveService.promotion(game_id, piece, req.user);
   }
 
   @Delete("/{game_id}")
@@ -116,13 +120,14 @@ export class GameController extends Controller {
   @Post("/{game_id}/goto")
   public async goto(
     @Path() game_id: number,
-    @Body() body: { index: number }
-  ): Promise<MoveReturnDTO> {
+    @Body() body: { index: number },
+    @Request() req: AuthRequest
+  ): Promise<GameReturnDTO> {
     if (!game_id || body.index === undefined) {
       this.setStatus(400);
       throw new Error("Missing required fields");
     }
-    return await moveService.goto(game_id, body.index);
+    return await moveService.goto(game_id, body.index, req.user);
   }
 
   @Get("/history")
@@ -166,27 +171,37 @@ export class GameController extends Controller {
   }
 
   @Get("/stats/{username}")
-  public async getStats(@Path() username: string): Promise<{ stats: number }> {
-    const stats = await gameService.getStats(username);
+  public async getStats(
+    @Path() username: string,
+    @Request() req: AuthRequest
+  ): Promise<{ stats: number }> {
+    const stats = await gameService.getStats(username, req.user);
     return { stats };
   }
 
   @Post("/{game_id}/draw")
-  public async draw(@Path() game_id: number): Promise<MoveReturnDTO> {
-    return await gameService.draw(game_id);
+  public async draw(
+    @Path() game_id: number,
+    @Request() req: AuthRequest
+  ): Promise<GameReturnDTO> {
+    return await gameService.draw(game_id, req.user);
   }
 
   @Post("/{game_id}/resign")
   public async resign(
     @Path() game_id: number,
-    @Body() body: { color: string }
-  ): Promise<MoveReturnDTO> {
-    return await gameService.resign(game_id, body.color);
+    @Body() body: { color: ChessColor },
+    @Request() req: AuthRequest
+  ): Promise<GameReturnDTO> {
+    return await gameService.resign(game_id, body.color, req.user);
   }
 
   @Get("/{game_id}")
-  public async getState(@Path() game_id: number): Promise<MoveReturnDTO> {
-    return await moveService.getState(game_id);
+  public async getState(
+    @Path() game_id: number,
+    @Request() req: AuthRequest
+  ): Promise<GameReturnDTO> {
+    return await moveService.getState(game_id, req.user);
   }
 }
 

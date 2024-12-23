@@ -8,7 +8,11 @@ import {
   MoveCreateDTO,
   SuggestionsDTORequest,
 } from "../dto/move.dto";
-import { MoveReturnDTO } from "../dto/move.dto";
+import { GameReturnDTO, PlayersGameInformations } from "../dto/move.dto";
+import { UserToken } from "../dto/auth.dto";
+import { GameService } from "../../../front/src/services/GameService";
+import { gameService } from "./game.service";
+import { ChessColor } from "../types";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -51,10 +55,12 @@ export class MoveService {
   private COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h"];
   private ROWS = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-  async getInitialBoard(game: Game): Promise<MoveReturnDTO> {
+  async getInitialBoard(game: Game, user: UserToken): Promise<GameReturnDTO> {
     const fen = await this.getFenFromBoard(this.initialBoard, game.id);
 
-    const moveReturn: MoveReturnDTO = {
+    const playersInformations = gameService.getPlayersInformations(game, user);
+
+    const moveReturn: GameReturnDTO = {
       id: game.id.toString(),
       fen: fen,
       moves: [],
@@ -62,12 +68,8 @@ export class MoveService {
       isCheckmate: false,
       status: game.status,
       promotion: null,
-      whitePlayer: {
-        username: game.whitePlayerName,
-      },
-      blackPlayer: {
-        username: game.blackPlayerName,
-      },
+      whitePlayer: playersInformations.whitePlayer,
+      blackPlayer: playersInformations.blackPlayer,
     };
 
     return moveReturn;
@@ -570,7 +572,7 @@ export class MoveService {
     return newBoard;
   }
 
-  async getCurrentPlayer(game_id: number): Promise<string> {
+  async getCurrentPlayer(game_id: number): Promise<ChessColor> {
     const lastMove = await Move.findOne({
       where: { game_id },
       order: [["id", "DESC"]],
@@ -579,7 +581,7 @@ export class MoveService {
     return lastMove ? lastMove.turn : "BLACK";
   }
 
-  async getNextPlayer(game_id: number): Promise<string> {
+  async getNextPlayer(game_id: number): Promise<ChessColor> {
     const currentPlayer = await this.getCurrentPlayer(game_id);
     return currentPlayer === "WHITE" ? "BLACK" : "WHITE";
   }
@@ -693,7 +695,7 @@ export class MoveService {
     return fen;
   }
 
-  async makeMove(game_id: number, move: MakeMoveDTO) {
+  async makeMove(game_id: number, move: MakeMoveDTO, user: UserToken) {
     const game = await Game.findByPk(game_id);
     if (!game) {
       const error = new Error("Game not found");
@@ -737,8 +739,16 @@ export class MoveService {
       const isPromotion = this.isPromotion(newBoard);
 
       if (isCheckmate) {
-        game.status = GameStatus.CHECKMATE;
-        game.winner = currentPlayer;
+        if (currentPlayer == "WHITE") {
+          game.status == GameStatus.CHECKMATE_WHITE;
+        } else {
+          game.status == GameStatus.CHECKMATE_BLACK;
+        }
+        if (currentPlayer == "BLACK" && game.opponentColor == "BLACK") {
+          game.result = gameService.LOSER_POINTS;
+        } else {
+          game.result = gameService.WINNER_POINTS;
+        }
         await game.save();
       } else if (isCheck) {
         game.status = GameStatus.CHECK;
@@ -768,7 +778,12 @@ export class MoveService {
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
 
-      const moveReturn: MoveReturnDTO = {
+      const playersInformations = gameService.getPlayersInformations(
+        game,
+        user
+      );
+
+      const moveReturn: GameReturnDTO = {
         id: game_id.toString(),
         fen: fen,
         moves: allMoves.map((m) => ({
@@ -781,12 +796,8 @@ export class MoveService {
         isCheckmate: isCheckmate,
         status: game.status,
         promotion: isPromotion ? piece.type : null,
-        whitePlayer: {
-          username: game.whitePlayerName,
-        },
-        blackPlayer: {
-          username: game.blackPlayerName,
-        },
+        whitePlayer: playersInformations.whitePlayer,
+        blackPlayer: playersInformations.blackPlayer,
       };
 
       return moveReturn;
@@ -797,7 +808,7 @@ export class MoveService {
     }
   }
 
-  async getState(game_id: number): Promise<MoveReturnDTO> {
+  async getState(game_id: number, user: UserToken): Promise<GameReturnDTO> {
     const game = await Game.findByPk(game_id);
     if (!game) {
       const error = new Error("Game not found");
@@ -818,8 +829,9 @@ export class MoveService {
     });
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
+    const playersInformations = gameService.getPlayersInformations(game, user);
 
-    const moveReturn: MoveReturnDTO = {
+    const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
       fen: fen,
       moves: allMoves.map((m) => ({
@@ -832,12 +844,8 @@ export class MoveService {
       isCheckmate: isCheckmate,
       status: game.status,
       promotion: isPromotion ? currentPlayer : null,
-      whitePlayer: {
-        username: game.whitePlayerName,
-      },
-      blackPlayer: {
-        username: game.blackPlayerName,
-      },
+      whitePlayer: playersInformations.whitePlayer,
+      blackPlayer: playersInformations.blackPlayer,
     };
 
     return moveReturn;
@@ -861,7 +869,7 @@ export class MoveService {
     );
   }
 
-  async promotion(game_id: number, piece: ChessPiece) {
+  async promotion(game_id: number, piece: ChessPiece, user: UserToken) {
     const game = await Game.findByPk(game_id);
     if (!game) {
       const error = new Error("Game not found");
@@ -893,7 +901,9 @@ export class MoveService {
     lastMove.type = "promotion";
     await lastMove.save();
 
-    const moveReturn: MoveReturnDTO = {
+    const playersInformations = gameService.getPlayersInformations(game, user);
+
+    const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
       fen: fen,
       moves: allMoves.map((m) => ({
@@ -906,18 +916,18 @@ export class MoveService {
       isCheckmate: isCheckmate,
       status: game.status,
       promotion: null,
-      whitePlayer: {
-        username: game.whitePlayerName,
-      },
-      blackPlayer: {
-        username: game.blackPlayerName,
-      },
+      whitePlayer: playersInformations.whitePlayer,
+      blackPlayer: playersInformations.blackPlayer,
     };
 
     return moveReturn;
   }
 
-  async goto(game_id: number, index: number): Promise<MoveReturnDTO> {
+  async goto(
+    game_id: number,
+    index: number,
+    user: UserToken
+  ): Promise<GameReturnDTO> {
     const game = await Game.findByPk(game_id);
     if (!game) {
       const error = new Error("Game not found");
@@ -967,7 +977,9 @@ export class MoveService {
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
 
-    const moveReturn: MoveReturnDTO = {
+    const playersInformations = gameService.getPlayersInformations(game, user);
+
+    const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
       fen: fen,
       moves: allMoves.map((m) => ({
@@ -980,12 +992,8 @@ export class MoveService {
       isCheckmate: isCheckmate,
       status: game.status,
       promotion: isPromotion ? currentPlayer : null,
-      whitePlayer: {
-        username: game.whitePlayerName,
-      },
-      blackPlayer: {
-        username: game.blackPlayerName,
-      },
+      whitePlayer: playersInformations.whitePlayer,
+      blackPlayer: playersInformations.blackPlayer,
     };
 
     return moveReturn;

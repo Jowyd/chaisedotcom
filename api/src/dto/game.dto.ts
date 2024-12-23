@@ -1,9 +1,11 @@
+import { ChessColor } from "../types";
+
 export interface GameHistoryDTO {
   game_id: number;
-  whitePlayerName: string;
-  blackPlayerName: string;
+  opponentName: string;
+  opponentColor: ChessColor;
   isPublic: boolean;
-  winner: string | null;
+  result: number | null;
   status: string;
   createdAt: Date;
   moves?: number;
@@ -14,6 +16,8 @@ export interface GameHistoryFiltersDTO {
   endDate?: string;
   result?: "won" | "lost" | "draw";
   isPublic?: boolean;
+  page?: number;
+  itemsPerPage?: number;
 }
 
 export interface UpdateGameVisibilityDTO {
@@ -28,6 +32,6 @@ export interface BulkUpdateVisibilityDTO {
 export interface CreateGameDTO {
   opponent: string;
   colorAssignment: "random" | "fixed";
-  playerColor?: "white" | "black";
+  playerColor?: ChessColor;
   isPublic: boolean;
 }

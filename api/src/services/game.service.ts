@@ -8,33 +8,58 @@ import {
   GameHistoryFiltersDTO,
 } from "../dto/game.dto";
 import { ChessMove } from "../interfaces/chess.interface";
-import { MoveReturnDTO } from "../dto/move.dto";
+import { GameReturnDTO, PlayersGameInformations } from "../dto/move.dto";
 import moveService from "./move.service";
-import { Token } from "../dto/auth.dto";
+import { UserToken } from "../dto/auth.dto";
+import { ChessColor } from "../types";
+import { notFound } from "../error/NotFoundError";
 
 class GameService {
-  async createGame(dto: CreateGameDTO, user: Token): Promise<Game> {
+  WINNER_POINTS = 5;
+  DRAW_POINTS = 0;
+  LOSER_POINTS = -3;
+
+  // private async getGameIntoGameReturnDTO(
+  //   game_id: number
+  // ): Promise<GameReturnDTO> {
+  //   const game = await this.getGameUserMoves(game_id);
+  //   const fen =
+  //   return {
+  //     id: game.id.toString(),
+  //     fen: ;
+  //     moves: {
+  //       from: string;
+  //       to: string;
+  //       piece: string;
+  //       color: string;
+  //     }[];
+  //     isCheck: boolean;
+  //     isCheckmate: boolean;
+  //     status: string;
+  //     promotion: string | null;
+  //     whitePlayer: PlayerGameInformations;
+  //     blackPlayer: PlayerGameInformations;
+  //   }
+  // }
+
+  async createGame(dto: CreateGameDTO, user: UserToken): Promise<Game> {
     if (dto.colorAssignment === "fixed" && !dto.playerColor) {
       throw new Error("playerColor is required when colorAssignment is fixed");
     }
     if (
       dto.colorAssignment === "fixed" &&
-      dto.playerColor !== "white" &&
-      dto.playerColor !== "black"
+      dto.playerColor !== "WHITE" &&
+      dto.playerColor !== "BLACK"
     ) {
       throw new Error("playerColor must be white or black");
     }
     if (dto.colorAssignment === "random") {
-      dto.playerColor = Math.random() < 0.5 ? "white" : "black";
+      dto.playerColor = Math.random() < 0.5 ? "WHITE" : "BLACK";
     }
-    const whitePlayerName =
-      dto.playerColor === "white" ? dto.opponent : user.username;
-    const blackPlayerName =
-      dto.playerColor === "black" ? dto.opponent : user.username;
     return Game.create({
       user_id: user.id,
-      whitePlayerName: whitePlayerName,
-      blackPlayerName: blackPlayerName,
+      opponentName: dto.opponent,
+      opponentColor: dto.playerColor,
       isPublic: dto.isPublic,
     });
   }
@@ -43,7 +68,7 @@ class GameService {
     const game = await Game.findByPk(game_id);
 
     if (!game) {
-      throw new Error("Partie non trouvée");
+      throw new Error("Game not found");
     }
 
     return game;
@@ -87,6 +112,8 @@ class GameService {
     const whereClause: any = {
       user_id: userId,
     };
+    const page = filters?.page || 0;
+    const itemsPerPage = filters?.itemsPerPage || 50;
 
     if (filters) {
       if (filters.startDate && filters.endDate) {
@@ -101,12 +128,10 @@ class GameService {
       if (filters.result) {
         switch (filters.result) {
           case "won":
-            whereClause.winner = userId;
+            whereClause.status = GameStatus.WON;
             break;
           case "lost":
-            whereClause.winner = {
-              [Op.and]: [{ [Op.ne]: userId }, { [Op.ne]: null }],
-            };
+            whereClause.status = GameStatus.LOST;
             break;
           case "draw":
             whereClause.status = GameStatus.DRAW;
@@ -123,14 +148,16 @@ class GameService {
       where: whereClause,
       order: [["created_at", "DESC"]],
       include: [{ model: Move, as: "moves" }],
+      limit: itemsPerPage,
+      offset: page,
     });
 
     return games.map((game) => ({
       game_id: game.id,
-      whitePlayerName: game.whitePlayerName,
-      blackPlayerName: game.blackPlayerName,
+      opponentName: game.opponentName,
+      opponentColor: game.opponentColor,
       isPublic: game.isPublic,
-      winner: game.winner,
+      result: game.result,
       status: game.status,
       createdAt: game.created_at,
       moves: game.moves?.length || 0,
@@ -184,10 +211,10 @@ class GameService {
 
     return games.map((game) => ({
       game_id: game.id,
-      whitePlayerName: game.whitePlayerName,
-      blackPlayerName: game.blackPlayerName,
+      opponentName: game.opponentName,
+      opponentColor: game.opponentColor,
       isPublic: game.isPublic,
-      winner: game.winner,
+      result: game.result,
       status: game.status,
       createdAt: game.created_at,
       moves: game.moves?.length || 0,
@@ -228,46 +255,76 @@ class GameService {
     );
   }
 
-  async getStats(username: string): Promise<number> {
-    const user = await Game.findOne({
+  async getStats(username: string, user: UserToken): Promise<number> {
+    const userDb = await User.findOne({
       where: {
-        [Op.or]: [{ whitePlayerName: username }, { blackPlayerName: username }],
+        username,
       },
     });
-    if (!user) {
-      throw new Error("Utilisateur non trouvé");
+    if (!userDb) {
+      return notFound("User: " + username);
     }
-    const games = await Game.findAll({
-      where: {
-        [Op.or]: [{ winner: username }],
-      },
-    });
-    return games.length;
+    return 0;
   }
 
-  async draw(gameId: number): Promise<MoveReturnDTO> {
-    const game = await Game.findByPk(gameId);
-    if (!game) {
-      throw new Error("Game not found");
+  async getGameUserMoves(gameId: number, user_id?: number): Promise<Game> {
+    const game = await Game.findOne({
+      where: {
+        id: gameId,
+      },
+      include: [
+        { model: Move, as: "moves" },
+        { model: User, as: "user" },
+      ],
+    });
+    if (!game || (user_id && game.user_id !== user_id)) {
+      return notFound("Game: " + gameId);
     }
+    return game;
+  }
+
+  async draw(gameId: number, user: UserToken): Promise<GameReturnDTO> {
+    let game = await this.getGameUserMoves(gameId, user.id);
 
     game.status = GameStatus.DRAW;
     await game.save();
 
-    return await moveService.getState(gameId);
+    return await moveService.getState(gameId, user);
   }
 
-  async resign(gameId: number, color: string): Promise<MoveReturnDTO> {
-    const game = await Game.findByPk(gameId);
-    if (!game) {
-      throw new Error("Game not found");
-    }
+  async resign(
+    gameId: number,
+    color: ChessColor,
+    user: UserToken
+  ): Promise<GameReturnDTO> {
+    let game = await this.getGameUserMoves(gameId, user.id);
 
-    game.status = GameStatus.SURRENDER;
-    game.winner = color === "WHITE" ? "BLACK" : "WHITE";
+    const currentPlayerColor = await moveService.getCurrentPlayer(gameId);
+    if (currentPlayerColor == "BLACK") game.status = GameStatus.SURRENDER_BLACK;
+    else game.status = GameStatus.SURRENDER_WHITE;
+    if (game.opponentColor === color) {
+      game.result = this.WINNER_POINTS;
+    } else {
+      game.result = this.LOSER_POINTS;
+    }
     await game.save();
 
-    return await moveService.getState(gameId);
+    return await moveService.getState(gameId, user);
+  }
+
+  getPlayersInformations(game: Game, user: UserToken): PlayersGameInformations {
+    const whitePlayerName =
+      game.opponentColor === "WHITE" ? game.opponentName : user.username;
+    const blackPlayerName =
+      game.opponentColor === "BLACK" ? game.opponentName : user.username;
+    return {
+      whitePlayer: {
+        username: whitePlayerName,
+      },
+      blackPlayer: {
+        username: blackPlayerName,
+      },
+    };
   }
 }
 

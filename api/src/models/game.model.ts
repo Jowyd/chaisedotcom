@@ -2,23 +2,43 @@ import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import { User } from "./user.model";
 import Move from "./move.model";
+import { ChessColor } from "../types";
 
 export enum GameStatus {
   IN_PROGRESS = "in_progress",
-  CHECKMATE = "checkmate",
+  CHECKMATE_WHITE = "checkmate_black",
+  CHECKMATE_BLACK = "checkmate_white",
   STALEMATE = "stalemate",
   DRAW = "draw",
-  SURRENDER = "surrender",
+  SURRENDER_WHITE = "surrender_white",
+  SURRENDER_BLACK = "surrender_black",
   CHECK = "check",
+  WON = "won",
+  LOST = "lost",
+
+  // 'IN_PROGRESS',      -- Partie en cours
+  // 'CHECKMATE_WHITE',  -- Échec et mat - Victoire des blancs
+  // 'CHECKMATE_BLACK',  -- Échec et mat - Victoire des noirs
+  // 'STALEMATE',        -- Pat
+  // 'DRAW_AGREEMENT',   -- Nulle par accord mutuel
+  // 'DRAW_50_MOVES',    -- Nulle par la règle des 50 coups
+  // 'DRAW_REPETITION',  -- Nulle par triple répétition
+  // 'DRAW_DEAD_POSITION', -- Nulle par position morte
+  // 'RESIGNED_WHITE',   -- Abandon des blancs
+  // 'RESIGNED_BLACK',   -- Abandon des noirs
+  // 'TIMEOUT_WHITE',    -- Temps écoulé pour les blancs
+  // 'TIMEOUT_BLACK',    -- Temps écoulé pour les noirs
+  // 'NO_SHOW_WHITE',    -- Non présentation des blancs
+  // 'NO_SHOW_BLACK'     -- Non présentation des noirs
 }
 
 export class Game extends Model {
   public id!: number;
   public user_id!: number;
-  public whitePlayerName!: string;
-  public blackPlayerName!: string;
+  public opponentName!: string;
+  public opponentColor!: ChessColor;
   public isPublic!: boolean;
-  public winner!: string | null;
+  public result!: number | null;
   public status!: GameStatus;
   public readonly created_at!: Date;
   public moves!: Move[];
@@ -35,20 +55,21 @@ Game.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    whitePlayerName: {
+    opponentName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    blackPlayerName: {
-      type: DataTypes.STRING,
+    opponentColor: {
+      type: DataTypes.ENUM("WHITE", "BLACK"),
       allowNull: false,
     },
     isPublic: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    winner: {
-      type: DataTypes.STRING,
+    result: {
+      // THIS IS THE NUMBER OF ELO POINTS WON OR LOST
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
     status: {
@@ -74,4 +95,10 @@ Game.init(
   }
 );
 
+Game.belongsTo(User, { foreignKey: "user_id", as: "user" });
+User.hasMany(Game, {
+  sourceKey: "id",
+  foreignKey: "user_id",
+  as: "games",
+});
 export default Game;

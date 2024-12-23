@@ -60,4 +60,10 @@ export class UserController extends Controller {
     const { username, password } = requestBody;
     return userService.updateUser(id, username, password);
   }
+
+  @Get("/me")
+  public async getMe(@Request() req: AuthRequest): Promise<UserOutputDTO> {
+    const { id } = req.user;
+    return userService.getUserById(id);
+  }
 }

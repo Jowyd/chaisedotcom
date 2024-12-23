@@ -25,11 +25,11 @@ export interface RegisterResponse {
   user: UserOutputDTO;
 }
 
-export interface Token {
+export interface UserToken {
   id: number;
   username: string;
 }
 
 export interface AuthRequest extends express.Request {
-  user: Token;
+  user: UserToken;
 }

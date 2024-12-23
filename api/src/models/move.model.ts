@@ -1,6 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database";
 import Game from "./game.model";
+import { ChessColor } from "../types";
 
 class Move extends Model {
   public id!: number;
@@ -11,7 +12,7 @@ class Move extends Model {
   public type!: string;
   public isCheck?: boolean;
   public isCheckmate?: boolean;
-  public turn!: string;
+  public turn!: ChessColor;
 }
 
 Move.init(

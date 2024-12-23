@@ -12,8 +12,16 @@ export interface MakeMoveDTO {
   from: string;
   to: string;
 }
+export interface PlayersGameInformations {
+  whitePlayer: PlayerGameInformations;
+  blackPlayer: PlayerGameInformations;
+}
 
-export interface MoveReturnDTO {
+export interface PlayerGameInformations {
+  username: string;
+}
+
+export interface GameReturnDTO {
   id: string;
   fen: string;
   moves: {
@@ -26,12 +34,8 @@ export interface MoveReturnDTO {
   isCheckmate: boolean;
   status: string;
   promotion: string | null;
-  whitePlayer: {
-    username: string;
-  };
-  blackPlayer: {
-    username: string;
-  };
+  whitePlayer: PlayerGameInformations;
+  blackPlayer: PlayerGameInformations;
 }
 
 export interface MoveCreateDTO {
