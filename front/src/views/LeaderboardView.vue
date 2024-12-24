@@ -111,6 +111,7 @@ onMounted(() => {
           :rowsPerPageOptions="[10, 20, 50]"
           tableStyle="min-width: 50rem"
           class="p-datatable-sm"
+          :total-records="totalPlayers"
         >
           <Column field="rank" header="Rank" style="width: 5rem">
             <template #body="{ data }">
