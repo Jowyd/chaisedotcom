@@ -122,12 +122,10 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Statistiques du joueur -->
         <div class="col-12 lg:col-4">
           <PlayerStats :username="username" />
         </div>
 
-        <!-- Historique des parties -->
         <div class="col-12 lg:col-8">
           <GameHistoryList
             :username="username"

@@ -31,7 +31,6 @@ httpHelper.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Si l'erreur est 401 et que ce n'est pas déjà une tentative de refresh
     if (error.response?.status === 401 && !originalRequest.headers['X-Retry-After-Refresh']) {
       try {
         const newAccessToken = await authService.refreshAccessToken();
