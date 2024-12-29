@@ -20,6 +20,27 @@ const privacySettings = ref({
   showGameHistory: true,
 });
 
+const userStats = ref({
+  rating: 1500,
+  gamesPlayed: {
+    total: 0,
+    asWhite: 0,
+    asBlack: 0,
+  },
+  results: {
+    wins: { total: 0, asWhite: 0, asBlack: 0 },
+    losses: { total: 0, asWhite: 0, asBlack: 0 },
+    draws: { total: 0, asWhite: 0, asBlack: 0 },
+  },
+  averages: {
+    movesPerGame: 0,
+    gameLength: '00:00',
+    capturedPieces: 0,
+  },
+  bestWinStreak: 0,
+  currentStreak: 0,
+});
+
 const loadProfile = async () => {
   try {
     const profile = await userService.getProfile(username);
@@ -32,6 +53,15 @@ const loadProfile = async () => {
       detail: 'Failed to load profile',
       life: 3000,
     });
+  }
+};
+
+const loadUserStats = async () => {
+  try {
+    const stats = await userService.getUserStats(username);
+    userStats.value = stats;
+  } catch (error) {
+    console.error('Error loading user stats:', error);
   }
 };
 
@@ -60,6 +90,7 @@ const updatePrivacySettings = async () => {
 
 onMounted(() => {
   loadProfile();
+  loadUserStats();
 });
 </script>
 
@@ -123,7 +154,7 @@ onMounted(() => {
         </div>
 
         <div class="col-12 lg:col-4">
-          <PlayerStats :username="username" />
+          <PlayerStats :username="username" :stats="userStats" />
         </div>
 
         <div class="col-12 lg:col-8">

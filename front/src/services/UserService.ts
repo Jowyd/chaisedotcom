@@ -54,6 +54,16 @@ class UserService {
       throw error;
     }
   }
+
+  async getUserStats(username: string): Promise<any> {
+    try {
+      const response = await httpHelper.get(`${API_URL}users/${username}/stats`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      throw error;
+    }
+  }
 }
 
 export const userService = new UserService();

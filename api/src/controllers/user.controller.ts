@@ -24,6 +24,7 @@ import {
 } from "../dto/user.dto";
 import { AuthRequest } from "../dto/auth.dto";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
+import { UserStats } from "../dto/stats.dto";
 
 @Route("users")
 @Tags("Users")
@@ -112,5 +113,10 @@ export class UserController extends Controller {
   ): Promise<LeaderboardResponse> {
     const { players, total } = await userService.getLeaderboard(timeRange, page, itemsPerPage);
     return { players, total };
+  }
+
+  @Get("{username}/stats")
+  public async getStats(@Path() username: string): Promise<UserStats> {
+    return await userService.getStats(username);
   }
 }

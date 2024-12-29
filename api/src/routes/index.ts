@@ -97,6 +97,19 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UserStats": {
+        "dataType": "refObject",
+        "properties": {
+            "rating": {"dataType":"double","required":true},
+            "gamesPlayed": {"dataType":"nestedObjectLiteral","nestedProperties":{"asBlack":{"dataType":"double","required":true},"asWhite":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}},"required":true},
+            "results": {"dataType":"nestedObjectLiteral","nestedProperties":{"draws":{"dataType":"nestedObjectLiteral","nestedProperties":{"asBlack":{"dataType":"double","required":true},"asWhite":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}},"required":true},"losses":{"dataType":"nestedObjectLiteral","nestedProperties":{"asBlack":{"dataType":"double","required":true},"asWhite":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}},"required":true},"wins":{"dataType":"nestedObjectLiteral","nestedProperties":{"asBlack":{"dataType":"double","required":true},"asWhite":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}},"required":true}},"required":true},
+            "averages": {"dataType":"nestedObjectLiteral","nestedProperties":{"capturedPieces":{"dataType":"double","required":true},"gameLength":{"dataType":"string","required":true},"movesPerGame":{"dataType":"double","required":true}},"required":true},
+            "bestWinStreak": {"dataType":"double","required":true},
+            "currentStreak": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ChessColor": {
         "dataType": "refAlias",
         "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["WHITE"]},{"dataType":"enum","enums":["BLACK"]}],"validators":{}},
@@ -588,6 +601,36 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getLeaderboard',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/users/:username/stats',
+            ...(fetchMiddlewares<RequestHandler>(UserController)),
+            ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getStats)),
+
+            async function UserController_getStats(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    username: {"in":"path","name":"username","required":true,"dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new UserController();
+
+              await templateService.apiHandler({
+                methodName: 'getStats',
                 controller,
                 response,
                 next,

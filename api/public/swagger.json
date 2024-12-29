@@ -164,6 +164,151 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"UserStats": {
+				"properties": {
+					"rating": {
+						"type": "number",
+						"format": "double"
+					},
+					"gamesPlayed": {
+						"properties": {
+							"asBlack": {
+								"type": "number",
+								"format": "double"
+							},
+							"asWhite": {
+								"type": "number",
+								"format": "double"
+							},
+							"total": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"asBlack",
+							"asWhite",
+							"total"
+						],
+						"type": "object"
+					},
+					"results": {
+						"properties": {
+							"draws": {
+								"properties": {
+									"asBlack": {
+										"type": "number",
+										"format": "double"
+									},
+									"asWhite": {
+										"type": "number",
+										"format": "double"
+									},
+									"total": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"asBlack",
+									"asWhite",
+									"total"
+								],
+								"type": "object"
+							},
+							"losses": {
+								"properties": {
+									"asBlack": {
+										"type": "number",
+										"format": "double"
+									},
+									"asWhite": {
+										"type": "number",
+										"format": "double"
+									},
+									"total": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"asBlack",
+									"asWhite",
+									"total"
+								],
+								"type": "object"
+							},
+							"wins": {
+								"properties": {
+									"asBlack": {
+										"type": "number",
+										"format": "double"
+									},
+									"asWhite": {
+										"type": "number",
+										"format": "double"
+									},
+									"total": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"asBlack",
+									"asWhite",
+									"total"
+								],
+								"type": "object"
+							}
+						},
+						"required": [
+							"draws",
+							"losses",
+							"wins"
+						],
+						"type": "object"
+					},
+					"averages": {
+						"properties": {
+							"capturedPieces": {
+								"type": "number",
+								"format": "double"
+							},
+							"gameLength": {
+								"type": "string"
+							},
+							"movesPerGame": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"capturedPieces",
+							"gameLength",
+							"movesPerGame"
+						],
+						"type": "object"
+					},
+					"bestWinStreak": {
+						"type": "number",
+						"format": "double"
+					},
+					"currentStreak": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"rating",
+					"gamesPlayed",
+					"results",
+					"averages",
+					"bestWinStreak",
+					"currentStreak"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ChessColor": {
 				"type": "string",
 				"enum": [
@@ -850,6 +995,37 @@
 						"schema": {
 							"format": "double",
 							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/users/{username}/stats": {
+			"get": {
+				"operationId": "GetStats",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UserStats"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Users"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "username",
+						"required": true,
+						"schema": {
+							"type": "string"
 						}
 					}
 				]

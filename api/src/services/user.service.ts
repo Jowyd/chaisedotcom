@@ -11,6 +11,8 @@ import bcrypt from "bcrypt";
 import { Op } from "sequelize";
 import { Game } from "../models/game.model";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
+import { UserStats } from "../dto/stats.dto";
+import  Move  from "../models/move.model";
 
 export class UserService {
   public async getAllUsers(): Promise<UserOutputDTO[]> {
@@ -196,6 +198,116 @@ export class UserService {
       players,
       total: count,
     };
+  }
+
+  public async getStats(username: string): Promise<UserStats> {
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return notFound("User");
+    }
+
+    const games = await Game.findAll({
+      where: {
+        [Op.or]: [
+          { user_id: user.id },
+          { opponentName: username }
+        ]
+      },
+      include: [
+        {
+          model: Move,
+          as: 'moves'
+        }
+      ]
+    });
+
+    const stats: UserStats = {
+      rating: 1500,
+      gamesPlayed: {
+        total: games.length,
+        asWhite: 0,
+        asBlack: 0
+      },
+      results: {
+        wins: { total: 0, asWhite: 0, asBlack: 0 },
+        losses: { total: 0, asWhite: 0, asBlack: 0 },
+        draws: { total: 0, asWhite: 0, asBlack: 0 }
+      },
+      averages: {
+        movesPerGame: 0,
+        gameLength: '00:00',
+        capturedPieces: 0
+      },
+      bestWinStreak: 0,
+      currentStreak: 0
+    };
+
+    let totalMoves = 0;
+    let totalCaptures = 0;
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let lastGameWon = false;
+
+    games.forEach(game => {
+      const isPlayer = game.user_id === user.id;
+      const playerColor = isPlayer ? (game.opponentColor === 'WHITE' ? 'BLACK' : 'WHITE') : game.opponentColor;
+      
+      if (playerColor === 'WHITE') {
+        stats.gamesPlayed.asWhite++;
+      } else {
+        stats.gamesPlayed.asBlack++;
+      }
+
+      if (game.result !== null) {
+        const gameResult = game.result * (isPlayer ? 1 : -1);
+        if (gameResult > 0) {
+          stats.results.wins.total++;
+          if (playerColor === 'WHITE') {
+            stats.results.wins.asWhite++;
+          } else {
+            stats.results.wins.asBlack++;
+          }
+          currentStreak = lastGameWon ? currentStreak + 1 : 1;
+          lastGameWon = true;
+        } else if (gameResult < 0) {
+          stats.results.losses.total++;
+          if (playerColor === 'WHITE') {
+            stats.results.losses.asWhite++;
+          } else {
+            stats.results.losses.asBlack++;
+          }
+          currentStreak = 0;
+          lastGameWon = false;
+        } else {
+          stats.results.draws.total++;
+          if (playerColor === 'WHITE') {
+            stats.results.draws.asWhite++;
+          } else {
+            stats.results.draws.asBlack++;
+          }
+          currentStreak = 0;
+          lastGameWon = false;
+        }
+
+        bestStreak = Math.max(bestStreak, currentStreak);
+      }
+
+      if (game.moves) {
+        totalMoves += game.moves.length;
+        totalCaptures += game.moves.filter(move => move.type === 'capture').length;
+      }
+    });
+
+    if (stats.gamesPlayed.total > 0) {
+      stats.averages.movesPerGame = Math.round(totalMoves / stats.gamesPlayed.total);
+      stats.averages.capturedPieces = Math.round(totalCaptures / stats.gamesPlayed.total);
+      stats.averages.gameLength = '15:30'; // Temps moyen fixe pour le moment
+    }
+
+    stats.bestWinStreak = bestStreak;
+    stats.currentStreak = currentStreak;
+
+    return stats;
   }
 }
 
