@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Game, GameStatus } from "../models/game.model";
+import { Game } from "../models/game.model";
 import Move from "../models/move.model";
 import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
@@ -13,6 +13,7 @@ import { UserToken } from "../dto/auth.dto";
 import { GameService } from "../../../front/src/services/GameService";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
+import { GameStatus } from "../enums/gameStatus.enum";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -702,6 +703,12 @@ export class MoveService {
       (error as any).status = "404";
       throw error;
     }
+    
+    if(game.status == GameStatus.CHECKMATE_WHITE || game.status == GameStatus.CHECKMATE_BLACK){
+      const error = new Error("Game is over");
+      (error as any).status = "403";
+      throw error;
+    }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
     const currentPlayer = await this.getNextPlayer(game_id);
@@ -740,9 +747,9 @@ export class MoveService {
 
       if (isCheckmate) {
         if (currentPlayer == "WHITE") {
-          game.status == GameStatus.CHECKMATE_WHITE;
+          game.status = GameStatus.CHECKMATE_WHITE;
         } else {
-          game.status == GameStatus.CHECKMATE_BLACK;
+          game.status = GameStatus.CHECKMATE_BLACK;
         }
         if (currentPlayer == "BLACK" && game.opponentColor == "BLACK") {
           game.result = gameService.LOSER_POINTS;

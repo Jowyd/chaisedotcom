@@ -1,4 +1,4 @@
-import { Game, GameStatus } from "../models/game.model";
+import { Game } from "../models/game.model";
 import { User } from "../models/user.model";
 import { Op } from "sequelize";
 import Move from "../models/move.model";
@@ -13,6 +13,7 @@ import moveService from "./move.service";
 import { UserToken } from "../dto/auth.dto";
 import { ChessColor } from "../types";
 import { notFound } from "../error/NotFoundError";
+import { GameStatus } from "../enums/gameStatus.enum";
 
 class GameService {
   WINNER_POINTS = 5;

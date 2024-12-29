@@ -13,13 +13,11 @@ import { Game } from "../models/game.model";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 
 export class UserService {
-  // Récupère tous les utilisateurs
   public async getAllUsers(): Promise<UserOutputDTO[]> {
     let userList = await User.findAll();
     return UserMapper.toOutputDtoList(userList);
   }
 
-  // Récupère un utilisateur par ID
   public async getUserById(id: number): Promise<UserOutputDTO> {
     let user = await User.findByPk(id);
     if (user) {
@@ -29,7 +27,6 @@ export class UserService {
     }
   }
 
-  // Crée un nouvel utilisateur
   public async createUser(
     username: string,
     password: string
@@ -39,7 +36,6 @@ export class UserService {
     );
   }
 
-  // Supprime un utilisateur par ID
   public async deleteUser(id: number): Promise<void> {
     const user = await User.findByPk(id);
     if (user) {
@@ -49,7 +45,6 @@ export class UserService {
     }
   }
 
-  // Met à jour un utilisateur
   public async updateUser(
     id: number,
     username?: string,
@@ -66,21 +61,22 @@ export class UserService {
     }
   }
 
-  // Récupère le profil d'un utilisateur
   public async getProfile(username: string): Promise<UserProfile> {
     const user = await User.findOne({
       where: { username },
       attributes: [
         "username",
         "created_at",
-        "publicProfile",
-        "showGameHistory",
+        "public_profile",
+        "show_game_history",
       ],
     });
 
     if (!user) {
       return notFound("User");
     }
+
+    console.log(user);
 
     return {
       username: user.username,
@@ -90,7 +86,6 @@ export class UserService {
     };
   }
 
-  // Met à jour le nom d'utilisateur
   public async updateUsername(
     userId: number,
     newUsername: string
@@ -100,7 +95,6 @@ export class UserService {
       return notFound("User");
     }
 
-    // Vérifier si le nouveau nom d'utilisateur est déjà pris
     const existingUser = await User.findOne({
       where: { username: newUsername },
     });
@@ -112,7 +106,6 @@ export class UserService {
     await user.save();
   }
 
-  // Met à jour le mot de passe
   public async updatePassword(
     userId: number,
     passwords: PasswordUpdate
@@ -122,7 +115,6 @@ export class UserService {
       return notFound("User");
     }
 
-    // Vérifier l'ancien mot de passe
     const isValidPassword = await user.validatePassword(
       passwords.currentPassword
     );
@@ -130,13 +122,11 @@ export class UserService {
       throw new Error("Current password is incorrect");
     }
 
-    // Hasher et sauvegarder le nouveau mot de passe
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(passwords.newPassword, salt);
     await user.save();
   }
 
-  // Met à jour les paramètres de confidentialité
   public async updatePrivacySettings(
     userId: number,
     settings: PrivacySettings
@@ -195,7 +185,7 @@ export class UserService {
           rating: games.reduce(
             (sum: number, game: Game) => sum + (game.result || 0),
             1500
-          ), // Rating de base: 1500
+          ),
           gamesPlayed: totalGames,
           winRate: totalGames ? (wins / totalGames) * 100 : 0,
         };
