@@ -98,12 +98,7 @@ const goToCurrentPosition = () => {
 };
 
 function canGameOverDialog(newGameStatus: GameStatus): boolean {
-  console.log('here', gameState.value?.status, newGameStatus);
-  return (
-    !gameState.value?.status &&
-    gameState.value?.status != newGameStatus &&
-    !stillPlaying(newGameStatus)
-  );
+  return !stillPlaying(newGameStatus) && !isReplaying.value && !showGameOverDialog.value;
 }
 
 const autoRotate = ref(false);

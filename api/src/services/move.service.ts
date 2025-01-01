@@ -118,10 +118,27 @@ export class MoveService {
     return currentBoard;
   }
 
-  async validateMove(board: ChessBoard, move: MakeMoveDTO): Promise<Boolean> {
+  async validateMove(board: ChessBoard, move: MakeMoveDTO): Promise<boolean> {
     const piece = board[move.from];
     if (!piece) return false;
 
+    // Simulate the move
+    const tempBoard = { ...board };
+    tempBoard[move.to] = tempBoard[move.from];
+    tempBoard[move.from] = null;
+
+    // Determine the color of the moving piece
+    const movingColor = piece.color;
+
+    // Check if the move results in the king being in check
+    const isCheck = this.isKingInCheck(tempBoard, movingColor);
+
+    // If the move puts the king in check, it's invalid
+    if (isCheck) {
+      return false;
+    }
+
+    // Validate the move based on piece type
     return this.switchCaseTypePiece(piece.type, move, board, piece.color);
   }
 
@@ -188,7 +205,7 @@ export class MoveService {
     }
 
     if (Math.abs(toCol - fromCol) === 1 && toRow === fromRow + direction) {
-      return targetPiece !== null && targetPiece.color !== color;
+      return !!targetPiece && targetPiece.color !== color;
     }
 
     return false;
@@ -703,8 +720,11 @@ export class MoveService {
       (error as any).status = "404";
       throw error;
     }
-    
-    if(game.status == GameStatus.CHECKMATE_WHITE || game.status == GameStatus.CHECKMATE_BLACK){
+
+    if (
+      game.status == GameStatus.CHECKMATE_WHITE ||
+      game.status == GameStatus.CHECKMATE_BLACK
+    ) {
       const error = new Error("Game is over");
       (error as any).status = "403";
       throw error;
