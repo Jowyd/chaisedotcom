@@ -7,6 +7,8 @@ import GameHistoryList from '@/components/profile/GameHistoryList.vue';
 import PlayerStats from '@/components/profile/PlayerStats.vue';
 import { authService } from '@/services/AuthService';
 import { userService, type UserProfile } from '@/services/UserService';
+import type { ErrorMessages } from '@/types';
+import router from '@/router';
 
 const route = useRoute();
 const toast = useToast();
@@ -47,12 +49,14 @@ const loadProfile = async () => {
     userProfile.value = profile;
   } catch (error) {
     console.error('Error loading profile:', error);
+    const errorMessage = (error as ErrorMessages).response.data.message;
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Failed to load profile',
+      detail: errorMessage ?? 'Failed to load profile',
       life: 3000,
     });
+    router.push('/dashboard');
   }
 };
 

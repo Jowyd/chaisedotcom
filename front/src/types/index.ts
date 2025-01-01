@@ -50,3 +50,12 @@ export interface GameHistoryFilters {
   page: number;
   itemsPerPage: number;
 }
+
+export interface ErrorMessages {
+  response: {
+    data: {
+      message: string;
+      status: number;
+    };
+  };
+}

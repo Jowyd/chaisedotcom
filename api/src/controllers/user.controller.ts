@@ -11,6 +11,7 @@ import {
   Security,
   Request,
   Query,
+  Queries,
 } from "tsoa";
 import { userService } from "../services/user.service";
 import * as express from "express";
@@ -25,6 +26,7 @@ import {
 import { AuthRequest } from "../dto/auth.dto";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 import { UserStats } from "../dto/stats.dto";
+import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
 
 @Route("users")
 @Tags("Users")
@@ -111,12 +113,24 @@ export class UserController extends Controller {
     @Query() page?: number,
     @Query() itemsPerPage?: number
   ): Promise<LeaderboardResponse> {
-    const { players, total } = await userService.getLeaderboard(timeRange, page, itemsPerPage);
+    const { players, total } = await userService.getLeaderboard(
+      timeRange,
+      page,
+      itemsPerPage
+    );
     return { players, total };
   }
 
   @Get("{username}/stats")
   public async getStats(@Path() username: string): Promise<UserStats> {
     return await userService.getStats(username);
+  }
+
+  @Get("{username}/games")
+  public async getUserGames(
+    @Path() username: string,
+    @Queries() filters?: GameHistoryFiltersDTO
+  ): Promise<GameHistoryDTO[]> {
+    return await userService.getHistory(username, filters);
   }
 }

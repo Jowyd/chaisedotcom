@@ -278,9 +278,9 @@ export const GameService = {
     }
   },
 
-  async getGameHistory(filters?: GameHistoryFilters): Promise<GameHistoryItem[]> {
+  async getGameHistory(username: string, filters?: GameHistoryFilters): Promise<GameHistoryItem[]> {
     try {
-      let url = `${API_URL}games/history`;
+      let url = `${API_URL}users/${username}/games`;
       const params = new URLSearchParams();
 
       if (filters) {

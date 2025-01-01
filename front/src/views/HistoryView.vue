@@ -27,7 +27,8 @@ const loadGames = async () => {
       dateRange: dateRange.value,
       result: selectedResult.value,
     };
-    games.value = await GameService.getGameHistory(filters);
+    const username = authService.getUser()?.username || '';
+    games.value = await GameService.getGameHistory(username, filters);
   } catch (error) {
     console.error('Error loading games:', error);
     toast.add({

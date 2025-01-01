@@ -29,7 +29,7 @@ const loadGames = async () => {
       page: currentPage.value,
       itemsPerPage: itemsPerPage.value,
     };
-    games.value = await GameService.getGameHistory(filters);
+    games.value = await GameService.getGameHistory(props.username, filters);
   } catch (error) {
     console.error('Error loading games:', error);
   }

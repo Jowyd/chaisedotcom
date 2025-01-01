@@ -23,7 +23,6 @@ class UserService {
       const response = await httpHelper.get(`${API_URL}users/profile/${username}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
       throw error;
     }
   }
