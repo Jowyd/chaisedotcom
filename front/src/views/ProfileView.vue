@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
@@ -12,8 +12,8 @@ import router from '@/router';
 
 const route = useRoute();
 const toast = useToast();
-const username = route.params.username as string;
-const isOwnProfile = computed(() => authService.getUser()?.username === username);
+const username = ref(route.params.username as string);
+const isOwnProfile = computed(() => authService.getUser()?.username === username.value);
 
 const loading = ref(false);
 const userProfile = ref<UserProfile | undefined>();
@@ -45,7 +45,7 @@ const userStats = ref({
 
 const loadProfile = async () => {
   try {
-    const profile = await userService.getProfile(username);
+    const profile = await userService.getProfile(username.value);
     userProfile.value = profile;
   } catch (error) {
     console.error('Error loading profile:', error);
@@ -62,7 +62,7 @@ const loadProfile = async () => {
 
 const loadUserStats = async () => {
   try {
-    const stats = await userService.getUserStats(username);
+    const stats = await userService.getUserStats(username.value);
     userStats.value = stats;
   } catch (error) {
     console.error('Error loading user stats:', error);
@@ -96,6 +96,16 @@ onMounted(() => {
   loadProfile();
   loadUserStats();
 });
+
+watch(
+  () => route.params.username,
+  async (newUsername) => {
+    username.value = newUsername as string;
+    await loadProfile();
+    await loadUserStats();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

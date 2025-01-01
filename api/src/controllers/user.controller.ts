@@ -30,7 +30,7 @@ import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
 
 @Route("users")
 @Tags("Users")
-// @Security("jwt")
+@Security("jwt")
 export class UserController extends Controller {
   // Récupère tous les utilisateurs
 
@@ -129,8 +129,11 @@ export class UserController extends Controller {
   @Get("{username}/games")
   public async getUserGames(
     @Path() username: string,
+    @Request() req: AuthRequest,
     @Queries() filters?: GameHistoryFiltersDTO
   ): Promise<GameHistoryDTO[]> {
-    return await userService.getHistory(username, filters);
+    const authUser = req.user;
+    console.log("authUser", authUser);
+    return await userService.getHistory(username, authUser, filters);
   }
 }

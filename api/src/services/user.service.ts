@@ -16,6 +16,7 @@ import Move from "../models/move.model";
 import { stat } from "fs";
 import { GameStatus } from "../enums/gameStatus.enum";
 import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
+import { UserToken } from "../dto/auth.dto";
 
 export class UserService {
   public async getAllUsers(): Promise<UserOutputDTO[]> {
@@ -323,6 +324,7 @@ export class UserService {
 
   async getHistory(
     username: string,
+    authUser: UserToken,
     filters?: GameHistoryFiltersDTO
   ): Promise<GameHistoryDTO[]> {
     const user = await User.findOne({ where: { username } });
@@ -335,6 +337,16 @@ export class UserService {
     };
     const page = filters?.page || 0;
     const itemsPerPage = filters?.itemsPerPage || 50;
+
+    if (user.username !== authUser.username) {
+      if (!user.public_profile) {
+        return notFound("User");
+      }
+      if (!user.show_game_history) {
+        return [];
+      }
+      whereClause.isPublic = true;
+    }
 
     if (filters) {
       if (filters.startDate && filters.endDate) {

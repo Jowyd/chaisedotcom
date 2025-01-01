@@ -301,8 +301,7 @@ class GameService {
     let game = await this.getGameUserMoves(gameId, user.id);
 
     const currentPlayerColor = await moveService.getCurrentPlayer(gameId);
-    if (currentPlayerColor == "BLACK") game.status = GameStatus.SURRENDER_BLACK;
-    else game.status = GameStatus.SURRENDER_WHITE;
+    game.status = GameStatus.SURRENDER;
     if (game.opponentColor === color) {
       game.result = this.WINNER_POINTS;
     } else {

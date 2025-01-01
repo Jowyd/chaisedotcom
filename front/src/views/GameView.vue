@@ -22,7 +22,6 @@ const filteredMoves = computed(() => {
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
-// const drawOffer = ref<{ offeredBy: 'white' | 'black' } | null>(null);
 const confirm = useConfirm();
 
 const handleResign = () => {

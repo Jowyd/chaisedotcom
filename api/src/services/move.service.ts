@@ -721,10 +721,7 @@ export class MoveService {
       throw error;
     }
 
-    if (
-      game.status == GameStatus.CHECKMATE_WHITE ||
-      game.status == GameStatus.CHECKMATE_BLACK
-    ) {
+    if (game.status == GameStatus.CHECKMATE) {
       const error = new Error("Game is over");
       (error as any).status = "403";
       throw error;
@@ -766,11 +763,7 @@ export class MoveService {
       const isPromotion = this.isPromotion(newBoard);
 
       if (isCheckmate) {
-        if (currentPlayer == "WHITE") {
-          game.status = GameStatus.CHECKMATE_WHITE;
-        } else {
-          game.status = GameStatus.CHECKMATE_BLACK;
-        }
+        game.status = GameStatus.CHECKMATE;
         if (currentPlayer == "BLACK" && game.opponentColor == "BLACK") {
           game.result = gameService.LOSER_POINTS;
         } else {
