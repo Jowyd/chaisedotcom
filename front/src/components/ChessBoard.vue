@@ -139,7 +139,6 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
     (!selectedPiece.value && piece?.color != gameState.value?.turn) ||
     (!selectedPiece.value && !piece)
   ) {
-    console.log('la');
     return;
   }
 

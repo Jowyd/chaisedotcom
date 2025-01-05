@@ -132,8 +132,6 @@ export class UserService {
       throw new Error("Current password is incorrect");
     }
 
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(passwords.newPassword, salt);
     await user.save();
   }
 
