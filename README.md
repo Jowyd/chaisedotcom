@@ -6,9 +6,9 @@ WEB
 
 ## Installation guide
 - Front-end
- - `npm install`
+  - `npm install`
 - Back-end
- - `npm install`
+  - `npm install`
 
 ## Déploiement
 - Front-end
