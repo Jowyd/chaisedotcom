@@ -34,7 +34,7 @@ function getPlayerUsername() {
 
 const gameResult = computed(() => {
   if (props.gameState && !stillPlaying(props.gameState.status)) {
-    const winner = props.gameState.turn === 'WHITE' ? 'Black' : 'White';
+    const winner = props.gameState.moves[props.gameState.moves.length - 1].color;
     return {
       title: 'Game Over',
       winner,
@@ -89,7 +89,6 @@ const gameResult = computed(() => {
 
       <!-- Actions -->
       <div class="flex gap-2 mt-4">
-        <Button label="New Game" icon="pi pi-plus" @click="$router.push('/dashboard')" />
         <Button label="Replay" icon="pi pi-replay" severity="secondary" @click="$emit('replay')" />
         <Button
           label="Back to Home"

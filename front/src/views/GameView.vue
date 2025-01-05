@@ -123,6 +123,8 @@ const updateGameState = (newState: GameState) => {
   if (currentMoveIndex.value === -1) {
     currentMoveIndex.value = newState.moves.length;
   }
+  capturedPieces.value.white = newState.whitePlayer?.capturedPieces || [];
+  capturedPieces.value.black = newState.blackPlayer?.capturedPieces || [];
 };
 
 watch(

@@ -6,8 +6,9 @@ import {
   type Move,
   type GameState,
   type CapturedPieces,
+  fullNameToSymbol,
 } from '@/services/GameService';
-import type { ChessColor, ChessPiece, Position, PromotionData } from '@/types';
+import type { ChessColor, ChessPiece, ChessPieceNoSymbol, Position, PromotionData } from '@/types';
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
@@ -200,7 +201,8 @@ const updateBoardFromGameState = (state: GameState) => {
   };
 
   const fenBoard = state.fen.split(' ')[0];
-  capturedPieces.value = GameService.getCapturedPieces(fenBoard);
+  capturedPieces.value.black = state.blackPlayer?.capturedPieces || [];
+  capturedPieces.value.white = state.whitePlayer?.capturedPieces || [];
   const rows = fenBoard.split('/');
 
   rows.forEach((row, rowIndex) => {
@@ -252,7 +254,7 @@ onMounted(() => {
   }
 });
 
-const calculateMaterialValue = (pieces: ChessPiece[]): number => {
+const calculateMaterialValue = (pieces: ChessPieceNoSymbol[]): number => {
   const values: { [key: string]: number } = {
     p: 1,
     n: 3,
@@ -312,11 +314,11 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
       </div>
       <div class="pieces-list">
         <span
-          v-for="(piece, index) in capturedPieces.black"
+          v-for="(piece, index) in capturedPieces.white"
           :key="`white-captured-${index}`"
           class="captured-piece"
         >
-          {{ piece.symbol }}
+          {{ fullNameToSymbol(piece.type) }}
         </span>
       </div>
     </div>
@@ -391,11 +393,11 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
       </div>
       <div class="pieces-list">
         <span
-          v-for="(piece, index) in capturedPieces.white"
+          v-for="(piece, index) in capturedPieces.black"
           :key="`black-captured-${index}`"
           class="captured-piece"
         >
-          {{ piece.symbol }}
+          {{ fullNameToSymbol(piece.type) }}
         </span>
       </div>
     </div>

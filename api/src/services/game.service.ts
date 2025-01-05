@@ -268,18 +268,30 @@ class GameService {
     return 0;
   }
 
-  async getGameUserMoves(gameId: number, user_id?: number): Promise<Game> {
+  async getGameUserMoves(
+    gameId: number,
+    user_id?: number,
+    moveIndex?: number
+  ): Promise<Game> {
     const game = await Game.findOne({
       where: {
         id: gameId,
       },
       include: [
-        { model: Move, as: "moves" },
+        {
+          model: Move,
+          as: "moves",
+          order: [["id", "ASC"]],
+          limit: moveIndex && moveIndex == 0 ? 1 : moveIndex,
+        },
         { model: User, as: "user" },
       ],
     });
     if (!game || (user_id && game.user_id !== user_id)) {
       return notFound("Game: " + gameId);
+    }
+    if (moveIndex === 0) {
+      game.moves = [];
     }
     return game;
   }
@@ -312,17 +324,23 @@ class GameService {
     return await moveService.getState(gameId, user);
   }
 
-  getPlayersInformations(game: Game, user: UserToken): PlayersGameInformations {
+  async getPlayersInformations(
+    game: Game,
+    user: UserToken
+  ): Promise<PlayersGameInformations> {
     const whitePlayerName =
       game.opponentColor === "WHITE" ? game.opponentName : user.username;
     const blackPlayerName =
       game.opponentColor === "BLACK" ? game.opponentName : user.username;
+    const capturedPiece = await moveService.getCapturedPieces(game.moves);
     return {
       whitePlayer: {
         username: whitePlayerName,
+        capturedPieces: capturedPiece.white,
       },
       blackPlayer: {
         username: blackPlayerName,
+        capturedPieces: capturedPiece.black,
       },
     };
   }

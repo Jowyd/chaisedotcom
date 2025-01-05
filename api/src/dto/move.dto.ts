@@ -1,5 +1,6 @@
 import { ChessBoard, ChessPiece } from "../interfaces/chess.interface";
 import { ChessColor } from "../types";
+import { CapturedPieces } from "../../../front/src/services/GameService";
 
 export interface MoveDTO {
   id?: number;
@@ -20,6 +21,12 @@ export interface PlayersGameInformations {
 
 export interface PlayerGameInformations {
   username: string;
+  capturedPieces: CapturedPiece[];
+}
+
+export interface CapturedPiece {
+  type: string;
+  color: ChessColor;
 }
 
 export interface GameReturnDTO {

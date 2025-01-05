@@ -4,6 +4,7 @@ import Move from "../models/move.model";
 import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
 import {
+  CapturedPiece,
   MakeMoveDTO,
   MoveCreateDTO,
   SuggestionsDTORequest,
@@ -14,6 +15,7 @@ import { GameService } from "../../../front/src/services/GameService";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
+import { notFound } from "../error/NotFoundError";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -59,7 +61,10 @@ export class MoveService {
   async getInitialBoard(game: Game, user: UserToken): Promise<GameReturnDTO> {
     const fen = await this.getFenFromBoard(this.initialBoard, game.id);
 
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game.id.toString(),
@@ -714,7 +719,7 @@ export class MoveService {
   }
 
   async makeMove(game_id: number, move: MakeMoveDTO, user: UserToken) {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -797,11 +802,11 @@ export class MoveService {
       });
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
-
-      const playersInformations = gameService.getPlayersInformations(
+      const playersInformations = await gameService.getPlayersInformations(
         game,
         user
       );
+      console.log("playersInformations", playersInformations);
 
       const moveReturn: GameReturnDTO = {
         id: game_id.toString(),
@@ -829,7 +834,7 @@ export class MoveService {
   }
 
   async getState(game_id: number, user: UserToken): Promise<GameReturnDTO> {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -849,7 +854,10 @@ export class MoveService {
     });
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
@@ -890,7 +898,7 @@ export class MoveService {
   }
 
   async promotion(game_id: number, piece: ChessPiece, user: UserToken) {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -921,7 +929,10 @@ export class MoveService {
     lastMove.type = "promotion";
     await lastMove.save();
 
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
@@ -948,7 +959,7 @@ export class MoveService {
     index: number,
     user: UserToken
   ): Promise<GameReturnDTO> {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id, undefined, index);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -997,7 +1008,10 @@ export class MoveService {
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
 
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
@@ -1017,6 +1031,56 @@ export class MoveService {
     };
 
     return moveReturn;
+  }
+
+  async getCapturedPieces(moves: Move[]): Promise<{
+    white: CapturedPiece[];
+    black: CapturedPiece[];
+  }> {
+    let board = { ...this.initialBoard };
+    const capturedPieces = {
+      white: [] as CapturedPiece[],
+      black: [] as CapturedPiece[],
+    };
+    if (!moves || moves.length === 0) {
+      return capturedPieces;
+    }
+
+    for (const move of moves) {
+      if (move.type === "capture") {
+        const targetPiece = board[move.to];
+        if (targetPiece) {
+          if (targetPiece.color === "WHITE") {
+            capturedPieces.black.push({
+              type: targetPiece.type,
+              color: targetPiece.color,
+            });
+          } else {
+            capturedPieces.white.push({
+              type: targetPiece.type,
+              color: targetPiece.color,
+            });
+          }
+        }
+      }
+      // Update board state
+      board[move.to] = board[move.from];
+      board[move.from] = null;
+      if (move.type === "promotion") {
+        board[move.to] = {
+          type: move.piece as
+            | "PAWN"
+            | "ROOK"
+            | "KNIGHT"
+            | "BISHOP"
+            | "QUEEN"
+            | "KING",
+          color: move.turn as "WHITE" | "BLACK",
+        };
+      }
+    }
+
+    return capturedPieces;
   }
 }
 

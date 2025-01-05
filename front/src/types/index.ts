@@ -1,8 +1,3 @@
-export interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
-}
-
 export type ChessColor = 'WHITE' | 'BLACK';
 
 export enum GameStatus {
@@ -28,8 +23,8 @@ export interface PieceMove {
 }
 
 export interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
+  white: ChessPieceNoSymbol[];
+  black: ChessPieceNoSymbol[];
 }
 
 export interface GameHistoryItem {
@@ -68,6 +63,11 @@ export interface ChessPiece {
   symbol: string;
 }
 
+export interface ChessPieceNoSymbol {
+  type: string;
+  color: ChessColor;
+}
+
 export interface Position {
   row: number;
   col: number;
@@ -76,4 +76,13 @@ export interface Position {
 export interface PromotionData {
   color: ChessColor;
   isOpen: boolean;
+}
+
+export enum ChessSymbol {
+  KING = '♔',
+  QUEEN = '♕',
+  ROOK = '♖',
+  BISHOP = '♗',
+  KNIGHT = '♘',
+  PAWN = '♙',
 }

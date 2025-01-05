@@ -2,6 +2,7 @@ import httpHelper from '@/utils/httpHelper';
 import {
   GameStatus,
   type ChessColor,
+  type ChessPieceNoSymbol,
   type GameHistoryFilters,
   type GameHistoryItem,
 } from '@/types';
@@ -16,7 +17,18 @@ function typeToFullName(type: string): string | undefined {
     b: 'Bishop',
     q: 'Queen',
     k: 'King',
-  }[type];
+  }[type.toLowerCase()];
+}
+
+export function fullNameToSymbol(name: string): string | undefined {
+  return {
+    PAWN: '♟',
+    ROOK: '♜',
+    KNIGHT: '♞',
+    BISHOP: '♝',
+    QUEEN: '♛',
+    KING: '♚',
+  }[name.toUpperCase()];
 }
 
 const pieces: { [key: string]: string } = {
@@ -46,8 +58,8 @@ export interface Move {
 }
 
 export interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
+  white: ChessPieceNoSymbol[];
+  black: ChessPieceNoSymbol[];
 }
 
 export interface DrawOffer {
@@ -57,6 +69,7 @@ export interface DrawOffer {
 
 interface Player {
   username: string;
+  capturedPieces: ChessPieceNoSymbol[];
 }
 
 export interface GameState {
