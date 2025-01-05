@@ -1,24 +1,44 @@
-```bash
-docker run --name some-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=chaisedotcom -p 5432:5432 -d postgres:latest
+### vue-project
 
-psql -U postgres -d chaisedotcom
-```
+KEOVILAY Lyam
+MANGINI Raphaël
+WEB
 
-# TODO
-- Models:
-  - User
-  - Game
-  - Move
-- Routes:
-  - User
-    - Login
-    - Register
-    - Logout
-    - History
-  - Game:
-    - Create
-    - Play
-    - Get-moves
-  - Move:
-    - Get
-    - Create
+### ChaiseDotCom
+
+## Installation guide
+- Front-end
+ - `npm install`
+- Back-end
+ - `npm install`
+
+## Déploiement
+- Front-end
+  - `npm run build`
+  ou
+  - `npm run dev`
+- Back-end
+  - `npm run build`
+  ou
+  - `npm run dev`
+
+## Fonctionnalités
+
+# Connexion
+- Possibilité de se connecter
+- Possibilité de s'inscrire
+- Possibilité de modifier son profil
+
+# Partie d'échecs
+- Jouer contre un autre joueur sur le même ordinateur
+- Possibilité de revoir un coup
+- Possibilité de charger une partie
+- Possibilité de mettre sa partie en public ou privé
+- Rotation du board
+
+# Divers
+- Possibilité de voir son historique de partie
+- Possibilité de voir le classement des meilleurs joueurs
+- Possibilité de voir ses propres statistiques
+- Possibilité de voir l'historique de partie d'un autre joueur en public
+- Possibilité de voir les statistiques d'un autre joueur en public
