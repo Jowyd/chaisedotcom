@@ -6,7 +6,7 @@ import CreateGameDialog from '@/components/CreateGameDialog.vue';
 import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
 import { authService } from '@/services/AuthService';
-import type { ChessColor, UserStats } from '@/types';
+import type { ChessColor, GameHistoryFilters, UserStats } from '@/types';
 import type { GameHistoryItem } from '@/types';
 import { userService } from '@/services/UserService';
 
@@ -20,11 +20,15 @@ const stats = ref<UserStats>();
 onMounted(async () => {
   try {
     // Charger les parties récentes
-    recentGames.value = [];
+    const username = authService.getUser()?.username;
 
     // Charger les statistiques
-    const username = authService.getUser()?.username;
     if (username) {
+      const filter: GameHistoryFilters = {
+        itemsPerPage: 5,
+        page: 0,
+      };
+      recentGames.value = await GameService.getGameHistory(username, filter);
       const userStats = await userService.getUserStats(username);
       stats.value = userStats;
       console.log('User stats:', userStats);
@@ -128,7 +132,7 @@ const handleCreateGame = async (gameDetails: {
       </div>
 
       <!-- Recent Games -->
-      <div class="mt-4">
+      <div class="mt-4 flex flex-column">
         <h2 class="text-2xl font-bold mb-3">Recent Games</h2>
         <DataTable
           :value="recentGames"
@@ -140,7 +144,15 @@ const handleCreateGame = async (gameDetails: {
           <Column field="result" header="Result">
             <template #body="{ data }">
               <Tag :severity="data.result > 0 ? 'success' : data.result < 0 ? 'danger' : 'info'">
-                {{ data.result > 0 ? 'Won' : data.result < 0 ? 'Lost' : 'Draw' }}
+                {{
+                  data.result > 0
+                    ? 'Won'
+                    : data.result < 0
+                      ? 'Lost'
+                      : data.result === 0
+                        ? 'Draw'
+                        : '-'
+                }}
               </Tag>
             </template>
           </Column>
@@ -156,6 +168,12 @@ const handleCreateGame = async (gameDetails: {
             </template>
           </Column>
         </DataTable>
+        <Button
+          label="View All"
+          icon="pi pi-list"
+          class="mt-4 mx-auto"
+          @click="router.push('/history')"
+        />
       </div>
     </div>
 
