@@ -151,18 +151,11 @@ const formatResult = (result: number) => {
 };
 
 const onPageChange = (event: { page: number; rows: number }) => {
-  currentPage.value = event.page + 1; // Convert zero-based to one-based
+  currentPage.value = event.page + 1;
   itemsPerPage.value = event.rows;
   loadGames();
 };
 
-// TODO: Implement filtering by result if time permits
-// const results = [
-//   { label: 'All Results', value: null },
-//   { label: 'Victory', value: 'won' },
-//   { label: 'Defeat', value: 'lost' },
-//   { label: 'Draw', value: 'draw' },
-// ];
 </script>
 
 <template>
@@ -187,7 +180,6 @@ const onPageChange = (event: { page: number; rows: number }) => {
             class="w-12rem"
           /> -->
         </div>
-        <!-- Actions en masse pour la visibilité (visible uniquement si c'est notre profil) -->
         <div v-if="!publicView" class="flex align-items-center gap-3">
           <Dropdown
             v-model="bulkVisibility"

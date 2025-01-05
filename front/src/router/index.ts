@@ -86,7 +86,7 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !isAuthenticated) {
     next({ 
       path: '/login', 
-      query: { redirect: to.fullPath }  // Sauvegardez la route cible
+      query: { redirect: to.fullPath }
     });
   } else if ((to.path === '/login' || to.path === '/register') && isAuthenticated) {
     next('/dashboard');

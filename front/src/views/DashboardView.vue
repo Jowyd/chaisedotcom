@@ -19,10 +19,8 @@ const stats = ref<UserStats>();
 
 onMounted(async () => {
   try {
-    // Charger les parties récentes
     const username = authService.getUser()?.username;
 
-    // Charger les statistiques
     if (username) {
       const filter: GameHistoryFilters = {
         itemsPerPage: 5,
@@ -80,7 +78,6 @@ const handleCreateGame = async (gameDetails: {
     <DashboardSidebar />
 
     <div class="flex-1 p-4">
-      <!-- Welcome Section -->
       <div class="flex justify-content-between align-items-center mb-4">
         <div>
           <h1 class="text-4xl font-bold m-0 mb-2">
@@ -97,7 +94,6 @@ const handleCreateGame = async (gameDetails: {
         />
       </div>
 
-      <!-- Stats Cards -->
       <div class="grid">
         <div class="col-12 md:col-3">
           <div class="surface-card p-4 shadow-2 border-round">
@@ -131,7 +127,6 @@ const handleCreateGame = async (gameDetails: {
         </div>
       </div>
 
-      <!-- Recent Games -->
       <div class="mt-4 flex flex-column">
         <h2 class="text-2xl font-bold mb-3">Recent Games</h2>
         <DataTable

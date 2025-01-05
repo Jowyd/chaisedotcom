@@ -1,6 +1,6 @@
-import { User } from "../models/user.model"; // Modèle Sequelize
-import jwt from "jsonwebtoken"; // Pour générer le JWT
-import { Buffer } from "buffer"; // Pour décoder Base64
+import { User } from "../models/user.model";
+import jwt from "jsonwebtoken"; 
+import { Buffer } from "buffer";
 import { notFound } from "../error/NotFoundError";
 import { generateToken, generateRefreshToken } from "../utils/JwtToken";
 import { Op } from "sequelize";
@@ -12,7 +12,6 @@ import {
 } from "../dto/auth.dto";
 
 class AuthenticationService {
-  // Méthode pour authentifier un utilisateur
   public async authenticateUser(request: LoginRequest): Promise<LoginResponse> {
     const { username, password } = request;
 
@@ -75,7 +74,6 @@ class AuthenticationService {
   public async refreshToken(
     refreshToken: string
   ): Promise<{ accessToken: string }> {
-    // const token = this.getRefreshToken();
     const decoded = jwt.decode(refreshToken) as any;
     const userData = {
       id: decoded.id,

@@ -209,11 +209,10 @@ const handleReplay = () => {
 
 const movesList = ref<HTMLElement | null>(null);
 
-// Watch for changes in moves and scroll to the bottom
 watch(moves, async () => {
-  await nextTick(); // Wait for DOM updates
+  await nextTick();
   if (movesList.value) {
-    movesList.value.scrollTop = movesList.value.scrollHeight; // Scroll to bottom
+    movesList.value.scrollTop = movesList.value.scrollHeight;
   }
 });
 </script>
@@ -221,7 +220,6 @@ watch(moves, async () => {
 <template>
   <div class="game-view surface-ground">
     <div class="grid h-full">
-      <!-- Game Header -->
       <div class="col-12 surface-section shadow-1 p-3">
         <div class="flex justify-content-between align-items-center">
           <Button icon="pi pi-arrow-left" text @click="$router.back()" />
@@ -247,9 +245,7 @@ watch(moves, async () => {
 
       <div class="col-12 md:col-9 p-3 py-0 w-full flex">
         <div class="game-container surface-section border-round shadow-1 p-3">
-          <!-- Modifiez la section des infos des joueurs -->
           <div class="flex justify-content-between gap-3">
-            <!-- Black Player Info -->
             <div
               class="player-info-card surface-card p-3 border-round"
               :class="{
@@ -272,7 +268,6 @@ watch(moves, async () => {
               </div>
             </div>
 
-            <!-- White Player Info -->
             <div
               class="player-info-card surface-card p-3 border-round"
               :class="{
@@ -296,7 +291,6 @@ watch(moves, async () => {
             </div>
           </div>
 
-          <!-- Chess Board avec la prop playerColor et l'événement captured-pieces -->
           <ChessBoard
             v-if="gameState"
             :player-color="playerColor"
@@ -304,7 +298,6 @@ watch(moves, async () => {
             v-model:gameState="gameState"
           />
 
-          <!-- Game Controls -->
           <div v-if="!isReplaying" class="game-controls flex justify-content-center gap-3 mt-4">
             <Button
               icon="pi pi-flag"
@@ -326,7 +319,6 @@ watch(moves, async () => {
           <TabView>
             <TabPanel header="Moves" :value="0">
               <div class="moves-container">
-                <!-- Contrôles de navigation -->
                 <div
                   class="move-controls flex justify-content-center gap-2 p-2 surface-section border-bottom-1"
                 >
@@ -378,7 +370,6 @@ watch(moves, async () => {
                     }"
                   >
                     <span class="move-number text-600 font-medium mr-2"> {{ index + 1 }}. </span>
-                    <!-- Coup blanc -->
                     <div
                       class="move-item flex-1 cursor-pointer px-3 py-2 border-round-sm"
                       :class="{
@@ -396,7 +387,6 @@ watch(moves, async () => {
                       </div>
                     </div>
 
-                    <!-- Coup noir (s'il existe) -->
                     <div
                       v-if="moves[index * 2 + 1]"
                       class="move-item flex-1 cursor-pointer px-3 py-2 border-round-sm ml-2"
@@ -426,7 +416,6 @@ watch(moves, async () => {
         </div>
       </div>
 
-      <!-- Game Chat & Moves -->
     </div>
   </div>
   <GameOverDialog

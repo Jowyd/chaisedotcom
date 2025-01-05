@@ -19,30 +19,7 @@ class GameService {
   WINNER_POINTS = 5;
   DRAW_POINTS = 0;
   LOSER_POINTS = -3;
-
-  // private async getGameIntoGameReturnDTO(
-  //   game_id: number
-  // ): Promise<GameReturnDTO> {
-  //   const game = await this.getGameUserMoves(game_id);
-  //   const fen =
-  //   return {
-  //     id: game.id.toString(),
-  //     fen: ;
-  //     moves: {
-  //       from: string;
-  //       to: string;
-  //       piece: string;
-  //       color: string;
-  //     }[];
-  //     isCheck: boolean;
-  //     isCheckmate: boolean;
-  //     status: string;
-  //     promotion: string | null;
-  //     whitePlayer: PlayerGameInformations;
-  //     blackPlayer: PlayerGameInformations;
-  //   }
-  // }
-
+  
   async createGame(dto: CreateGameDTO, user: UserToken): Promise<Game> {
     if (dto.colorAssignment === "fixed" && !dto.playerColor) {
       throw new Error("playerColor is required when colorAssignment is fixed");

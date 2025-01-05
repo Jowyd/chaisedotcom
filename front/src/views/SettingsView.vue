@@ -8,13 +8,11 @@ import { authService } from '@/services/AuthService';
 const toast = useToast();
 const loading = ref(false);
 
-// Paramètres du profil
 const username = ref('');
 const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
 
-// Chargement des données utilisateur
 onMounted(() => {
   const user = authService.getUser();
   if (user) {
@@ -83,7 +81,6 @@ const updatePassword = async () => {
       newPassword: newPassword.value,
     });
 
-    // Réinitialiser les champs
     currentPassword.value = '';
     newPassword.value = '';
     confirmPassword.value = '';
@@ -114,7 +111,6 @@ const updatePassword = async () => {
 
     <div class="flex-1 p-4">
       <div class="grid">
-        <!-- Profile Settings -->
         <div class="col-12 lg:col-6">
           <div class="card">
             <h2 class="text-2xl font-bold mb-4">Profile Settings</h2>
@@ -188,7 +184,6 @@ const updatePassword = async () => {
           </div>
         </div>
 
-        <!-- Informations supplémentaires -->
         <div class="col-12 lg:col-6">
           <div class="card">
             <h2 class="text-2xl font-bold mb-4">Account Information</h2>

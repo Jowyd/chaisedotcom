@@ -11,13 +11,11 @@ const navigateToLogin = () => {
 <template>
   <div class="landing-page">
     <div class="grid grid-nogutter surface-section h-screen">
-      <!-- Header -->
       <div class="col-12 flex justify-content-between align-items-center px-5 py-3 surface-0">
         <div class="text-3xl font-bold">ChessOnline</div>
         <Button label="Login" @click="navigateToLogin" severity="secondary" text />
       </div>
 
-      <!-- Hero Section -->
       <div
         class="col-12 flex flex-column md:flex-row align-items-center justify-content-center gap-5 py-8"
       >
@@ -53,7 +51,6 @@ const navigateToLogin = () => {
         </div>
       </div>
 
-      <!-- Features -->
       <div class="col-12 px-4 py-8 surface-ground">
         <div class="grid">
           <div class="col-12 md:col-4 p-4">

@@ -41,7 +41,6 @@ Game.init(
       defaultValue: false,
     },
     result: {
-      // THIS IS THE NUMBER OF ELO POINTS WON OR LOST
       type: DataTypes.INTEGER,
       allowNull: true,
     },

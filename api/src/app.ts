@@ -2,7 +2,7 @@ import express, { Application, Request, Response } from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 
-import { RegisterRoutes } from "./routes/index"; // tsoa va générer ce fichier
+import { RegisterRoutes } from "./routes/index";
 import errorHandler from "./middlewares/errorHandler";
 import { config } from "./config/variables";
 import cors from "cors";

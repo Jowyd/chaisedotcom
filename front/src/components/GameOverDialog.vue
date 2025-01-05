@@ -62,7 +62,6 @@ const gameResult = computed(() => {
       <div class="text-4xl font-bold mb-2">{{ gameResult?.winner }} wins!</div>
       <div class="text-xl text-600">{{ gameResult?.message }}</div>
 
-      <!-- Stats -->
       <div class="game-stats w-full surface-ground p-4 border-round">
         <div class="grid">
           <div class="col-6 flex flex-column align-items-center">
@@ -80,7 +79,6 @@ const gameResult = computed(() => {
         </div>
       </div>
 
-      <!-- Moves summary -->
       <div class="moves-summary justify-content-center surface-ground p-4 border-round">
         <div class="text-xl font-medium mb-2">Game summary</div>
         <div class="surface-ground p-3 border-round">
@@ -90,7 +88,6 @@ const gameResult = computed(() => {
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="flex gap-2 mt-4">
         <Button label="Replay" icon="pi pi-replay" severity="secondary" @click="$emit('replay')" />
         <Button

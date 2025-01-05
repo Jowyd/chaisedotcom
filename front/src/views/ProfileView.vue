@@ -119,7 +119,6 @@ watch(
 
     <div class="flex-1 p-4">
       <div class="grid">
-        <!-- En-tête du profil -->
         <div class="col-12">
           <div class="card">
             <div class="flex align-items-center gap-4">
@@ -143,7 +142,6 @@ watch(
           </div>
         </div>
 
-        <!-- Paramètres de confidentialité (visible uniquement sur son propre profil) -->
         <div v-if="isOwnProfile" class="col-12">
           <div class="card">
             <h2 class="text-2xl font-bold mb-4">Privacy Settings</h2>

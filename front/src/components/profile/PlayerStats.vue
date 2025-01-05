@@ -25,7 +25,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
     <h2 class="text-2xl font-bold mb-4">Player Statistics</h2>
 
     <div class="grid">
-      <!-- Rating -->
       <div class="col-12 mb-4">
         <div class="text-center">
           <div class="text-4xl font-bold text-primary">{{ props.stats.rating }}</div>
@@ -33,10 +32,8 @@ const calculateWinRate = (color?: 'white' | 'black') => {
         </div>
       </div>
 
-      <!-- Stats généraux -->
       <div class="col-12">
         <div class="grid">
-          <!-- Games Played -->
           <div class="col-12 md:col-6 mb-3">
             <div class="text-center p-3 border-round bg-primary-50">
               <div class="text-2xl font-semibold">{{ props.stats.gamesPlayed.total }}</div>
@@ -44,7 +41,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
             </div>
           </div>
 
-          <!-- Win Rate -->
           <div class="col-12 md:col-6 mb-3">
             <div class="text-center p-3 border-round bg-primary-50">
               <div class="text-2xl font-semibold">{{ calculateWinRate() }}%</div>
@@ -52,7 +48,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
             </div>
           </div>
 
-          <!-- Best Streak -->
           <div class="col-12 md:col-6 mb-3">
             <div class="text-center p-3 border-round bg-primary-50">
               <div class="text-2xl font-semibold">{{ props.stats.bestWinStreak }}</div>
@@ -60,7 +55,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
             </div>
           </div>
 
-          <!-- Current Streak -->
           <div class="col-12 md:col-6 mb-3">
             <div class="text-center p-3 border-round bg-primary-50">
               <div class="text-2xl font-semibold">{{ props.stats.currentStreak }}</div>
@@ -70,11 +64,9 @@ const calculateWinRate = (color?: 'white' | 'black') => {
         </div>
       </div>
 
-      <!-- Detailed Stats -->
       <div class="col-12">
         <h3 class="text-xl font-semibold mb-3">Detailed Statistics</h3>
 
-        <!-- Color Distribution -->
         <div class="mb-4">
           <h4 class="text-lg mb-2">Games by Color</h4>
           <div class="grid">
@@ -93,7 +85,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
           </div>
         </div>
 
-        <!-- Results -->
         <div class="mb-4">
           <h4 class="text-lg mb-2">Results</h4>
           <div class="grid">
@@ -118,7 +109,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
           </div>
         </div>
 
-        <!-- Averages -->
         <div>
           <h4 class="text-lg mb-2">Averages</h4>
           <div class="grid">

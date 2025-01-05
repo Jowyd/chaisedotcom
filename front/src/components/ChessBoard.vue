@@ -342,11 +342,8 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
       </div>
     </div>
 
-    <!-- Échiquier existant -->
     <div class="chess-board">
-      <!-- Files labels (top) -->
 
-      <!-- Ranks labels (left) -->
       <div class="left">
         <div class="square"></div>
         <div
@@ -399,7 +396,6 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
           </div>
         </div>
       </div>
-      <!-- Chess board -->
     </div>
 
     <!-- Pièces capturées par les noirs -->
@@ -421,7 +417,6 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
       </div>
     </div>
 
-    <!-- Dialog de promotion -->
     <div v-if="promotionDialog.isOpen" class="promotion-dialog">
       <div class="promotion-dialog-content">
         <h3 class="promotion-title">Choose promotion piece</h3>

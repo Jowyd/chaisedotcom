@@ -48,12 +48,10 @@ function logout() {
 
 <template>
   <div class="sidebar surface-section flex flex-column">
-    <!-- Logo and Brand -->
     <div class="p-4 text-center border-bottom-1 surface-border">
       <div class="text-xl font-bold">ChaiseDotCom</div>
     </div>
 
-    <!-- User Profile -->
     <div class="p-4 flex flex-column align-items-center border-bottom-1 surface-border">
       <Avatar
         :image="`https://api.dicebear.com/7.x/avataaars/svg?seed=${authService?.getUser()?.username}`"
@@ -64,7 +62,6 @@ function logout() {
       <div class="text-lg font-semibold">{{ authService?.getUser()?.username }}</div>
     </div>
 
-    <!-- Navigation Menu -->
     <div class="flex-1 overflow-y-auto">
       <ul class="list-none p-3 m-0">
         <li v-for="item in menuItems" :key="item.label" class="mb-2">

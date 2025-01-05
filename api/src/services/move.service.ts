@@ -119,23 +119,18 @@ export class MoveService {
     const piece = board[move.from];
     if (!piece) return false;
 
-    // Simulate the move
     const tempBoard = { ...board };
     tempBoard[move.to] = tempBoard[move.from];
     tempBoard[move.from] = null;
 
-    // Determine the color of the moving piece
     const movingColor = piece.color;
 
-    // Check if the move results in the king being in check
     const isCheck = this.isKingInCheck(tempBoard, movingColor);
 
-    // If the move puts the king in check, it's invalid
     if (isCheck) {
       return false;
     }
 
-    // Validate the move based on piece type
     return this.switchCaseTypePiece(piece.type, move, board, piece.color);
   }
 
@@ -1070,7 +1065,6 @@ export class MoveService {
           }
         }
       }
-      // Update board state
       board[move.to] = board[move.from];
       board[move.from] = null;
       if (move.type === "promotion") {
