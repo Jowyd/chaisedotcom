@@ -1,22 +1,48 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import CreateGameDialog from '@/components/CreateGameDialog.vue';
 import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
 import { authService } from '@/services/AuthService';
-import type { ChessColor } from '@/types';
+import type { ChessColor, UserStats } from '@/types';
+import type { GameHistoryItem } from '@/types';
+import { userService } from '@/services/UserService';
 
 const router = useRouter();
 const toast = useToast();
 const showCreateGame = ref<boolean>(false);
+const recentGames = ref<GameHistoryItem[]>([]);
+const isLoading = ref<boolean>(true);
+const stats = ref<UserStats>();
 
-const recentGames = [
-  { opponent: 'Magnus C.', result: 'Won', rating: '+12', date: '2024-03-15' },
-  { opponent: 'Hikaru N.', result: 'Lost', rating: '-8', date: '2024-03-14' },
-  { opponent: 'Beth H.', result: 'Draw', rating: '+0', date: '2024-03-13' },
-];
+onMounted(async () => {
+  try {
+    // Charger les parties récentes
+    recentGames.value = [];
+
+    // Charger les statistiques
+    const username = authService.getUser()?.username;
+    if (username) {
+      const userStats = await userService.getUserStats(username);
+      stats.value = userStats;
+      console.log('User stats:', userStats);
+    } else {
+      throw new Error('Username is undefined');
+    }
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load dashboard data',
+      life: 3000,
+    });
+  } finally {
+    isLoading.value = false;
+  }
+});
 
 const handleCreateGame = async (gameDetails: {
   opponent: string;
@@ -67,63 +93,69 @@ const handleCreateGame = async (gameDetails: {
         />
       </div>
 
+      <!-- Stats Cards -->
       <div class="grid">
-        <!-- Chess Board -->
-        <!-- <div class="col-12 lg:col-8">
-          <Card>
-            <template #title>Current Game</template>
-            <template #content>
-              <ChessBoard />
-            </template>
-          </Card>
-        </div> -->
+        <div class="col-12 md:col-3">
+          <div class="surface-card p-4 shadow-2 border-round">
+            <div class="text-900 font-medium mb-2">Rating</div>
+            <div class="text-2xl font-bold">{{ stats?.rating }}</div>
+          </div>
+        </div>
+        <div class="col-12 md:col-3">
+          <div class="surface-card p-4 shadow-2 border-round">
+            <div class="text-900 font-medium mb-2">Games Played</div>
+            <div class="text-2xl font-bold">{{ stats?.gamesPlayed.total }}</div>
+          </div>
+        </div>
+        <div class="col-12 md:col-3">
+          <div class="surface-card p-4 shadow-2 border-round">
+            <div class="text-900 font-medium mb-2">Win Rate</div>
+            <div class="text-2xl font-bold">
+              {{
+                stats?.results?.wins?.total && stats?.gamesPlayed?.total
+                  ? ((stats.results.wins.total / stats.gamesPlayed.total) * 100).toFixed(3)
+                  : 0
+              }}%
+            </div>
+          </div>
+        </div>
+        <div class="col-12 md:col-3">
+          <div class="surface-card p-4 shadow-2 border-round">
+            <div class="text-900 font-medium mb-2">Current Streak</div>
+            <div class="text-2xl font-bold">{{ stats?.currentStreak }}</div>
+          </div>
+        </div>
+      </div>
 
-        <div class="col-12 md:col-6 lg:col-3">
-          <Card class="mb-4">
-            <template #title>Games Played</template>
-            <template #content>
-              <div class="text-3xl font-bold text-primary">142</div>
-              <div class="text-500">12 this week</div>
+      <!-- Recent Games -->
+      <div class="mt-4">
+        <h2 class="text-2xl font-bold mb-3">Recent Games</h2>
+        <DataTable
+          :value="recentGames"
+          :loading="isLoading"
+          class="p-datatable-sm"
+          responsiveLayout="scroll"
+        >
+          <Column field="opponentName" header="Opponent" />
+          <Column field="result" header="Result">
+            <template #body="{ data }">
+              <Tag :severity="data.result > 0 ? 'success' : data.result < 0 ? 'danger' : 'info'">
+                {{ data.result > 0 ? 'Won' : data.result < 0 ? 'Lost' : 'Draw' }}
+              </Tag>
             </template>
-          </Card>
-        </div>
-        <!-- Recent Games -->
-        <div class="col-12">
-          <Card>
-            <template #title>Recent Games</template>
-            <template #content>
-              <div class="flex flex-column gap-3">
-                <div
-                  v-for="game in recentGames"
-                  :key="game.opponent"
-                  class="flex align-items-center justify-content-between p-3 border-round surface-ground"
-                >
-                  <div class="flex align-items-center">
-                    <Avatar icon="pi pi-user" size="large" shape="circle" class="mr-3" />
-                    <div>
-                      <div class="font-medium">{{ game.opponent }}</div>
-                      <div class="text-500">{{ game.date }}</div>
-                    </div>
-                  </div>
-                  <div class="flex align-items-center gap-3">
-                    <span
-                      :class="{
-                        'text-green-500': game.result === 'Won',
-                        'text-red-500': game.result === 'Lost',
-                        'text-gray-500': game.result === 'Draw',
-                      }"
-                      >{{ game.result }}</span
-                    >
-                    <span class="font-medium">{{ game.rating }}</span>
-                  </div>
-                </div>
-              </div>
+          </Column>
+          <Column field="moves" header="Moves" />
+          <Column field="createdAt" header="Date">
+            <template #body="{ data }">
+              {{ new Date(data.createdAt).toLocaleDateString() }}
             </template>
-            <template #footer>
-              <Button label="View All" icon="pi pi-angle-right" @click="$router.push('/history')" />
+          </Column>
+          <Column>
+            <template #body="{ data }">
+              <Button icon="pi pi-eye" text rounded @click="router.push(`/game/${data.game_id}`)" />
             </template>
-          </Card>
-        </div>
+          </Column>
+        </DataTable>
       </div>
     </div>
 
