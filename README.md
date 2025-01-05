@@ -10,6 +10,10 @@ WEB
 - Back-end
   - `npm install`
 
+Copier le fichier `.env.example` et le renommer en `.env` dans le dossier `api` et remplir les champs.
+
+
+
 ## Déploiement
 - Front-end
   - `npm run build`
