@@ -1,10 +1,8 @@
-### vue-project
+# vue-project ChaiseDotCom
 
 KEOVILAY Lyam
 MANGINI Raphaël
 WEB
-
-### ChaiseDotCom
 
 ## Installation guide
 - Front-end
@@ -24,19 +22,19 @@ WEB
 
 ## Fonctionnalités
 
-# Connexion
+### Connexion
 - Possibilité de se connecter
 - Possibilité de s'inscrire
 - Possibilité de modifier son profil
 
-# Partie d'échecs
+### Partie d'échecs
 - Jouer contre un autre joueur sur le même ordinateur
 - Possibilité de revoir un coup
 - Possibilité de charger une partie
 - Possibilité de mettre sa partie en public ou privé
 - Rotation du board
 
-# Divers
+### Divers
 - Possibilité de voir son historique de partie
 - Possibilité de voir le classement des meilleurs joueurs
 - Possibilité de voir ses propres statistiques
