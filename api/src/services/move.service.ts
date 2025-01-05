@@ -794,7 +794,7 @@ export class MoveService {
         turn: currentPlayer,
       };
 
-      await this.createMove(moveCreate);
+      const newMove = await this.createMove(moveCreate);
 
       const allMoves = await Move.findAll({
         where: { game_id },
@@ -802,11 +802,11 @@ export class MoveService {
       });
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
+      game.moves.push(newMove);
       const playersInformations = await gameService.getPlayersInformations(
         game,
         user
       );
-      console.log("playersInformations", playersInformations);
 
       const moveReturn: GameReturnDTO = {
         id: game_id.toString(),
