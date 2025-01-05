@@ -34,9 +34,16 @@ const menuItems = ref([
   {
     label: 'Logout',
     icon: 'pi pi-power-off',
-    command: () => router.push('/login'),
+    command: logout,
   },
 ]);
+
+function logout() {
+  authService.logout();
+  console.log('Logged out');
+  router.push('/login');
+}
+
 </script>
 
 <template>
