@@ -29,7 +29,7 @@ const loadGames = async () => {
       page: currentPage.value,
       itemsPerPage: itemsPerPage.value,
     };
-    games.value = await GameService.getGameHistory(filters);
+    games.value = await GameService.getGameHistory(props.username, filters);
   } catch (error) {
     console.error('Error loading games:', error);
   }
@@ -117,7 +117,7 @@ const isGameEnded = (game: GameHistoryItem) => {
 };
 
 const getUserColor = (game: GameHistoryItem) => {
-  return game.opponentColor === 'black' ? 'white' : 'black';
+  return game.opponentColor === 'BLACK' ? 'white' : 'black';
 };
 
 const dateRange = ref();
@@ -200,9 +200,8 @@ onMounted(() => {
       tableStyle="min-width: 50rem"
       class="p-datatable-sm"
       :selection-mode="!publicView ? 'multiple' : undefined"
-      dataKey="id"
+      dataKey="game_id"
     >
-      <!-- Colonne de sélection (visible uniquement si c'est notre profil) -->
       <Column v-if="!publicView" selectionMode="multiple" style="width: 3rem" />
 
       <Column field="date" header="Date" :sortable="true">
@@ -226,7 +225,7 @@ onMounted(() => {
         <template #body="{ data }">
           <i
             class="pi pi-circle-fill"
-            :style="{ color: getUserColor(data) === 'white' ? 'white' : 'black' }"
+            :style="{ color: getUserColor(data) }"
             style="font-size: 0.5rem; text-shadow: 0 0 2px rgba(0, 0, 0, 0.5)"
           ></i>
         </template>

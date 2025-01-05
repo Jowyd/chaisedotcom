@@ -4,7 +4,7 @@ import {
   PasswordUpdate,
   PrivacySettings,
 } from "../dto/user.dto";
-import { notFound } from "../error/NotFoundError";
+import { notFound, unauthorized } from "../error/NotFoundError";
 import { UserMapper } from "../mapper/user.mapper";
 import { User } from "../models/user.model";
 import bcrypt from "bcrypt";
@@ -12,7 +12,11 @@ import { Op } from "sequelize";
 import { Game } from "../models/game.model";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 import { UserStats } from "../dto/stats.dto";
-import  Move  from "../models/move.model";
+import Move from "../models/move.model";
+import { stat } from "fs";
+import { GameStatus } from "../enums/gameStatus.enum";
+import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
+import { UserToken } from "../dto/auth.dto";
 
 export class UserService {
   public async getAllUsers(): Promise<UserOutputDTO[]> {
@@ -200,25 +204,28 @@ export class UserService {
     };
   }
 
-  public async getStats(username: string): Promise<UserStats> {
+  public async getStats(
+    username: string,
+    authUser: UserToken
+  ): Promise<UserStats> {
     const user = await User.findOne({ where: { username } });
+    if (user?.username !== authUser.username && !user?.public_profile) {
+      return unauthorized();
+    }
     if (!user) {
-      return notFound("User");
+      return notFound(`User: ${username}`);
     }
 
     const games = await Game.findAll({
       where: {
-        [Op.or]: [
-          { user_id: user.id },
-          { opponentName: username }
-        ]
+        [Op.or]: [{ user_id: user.id }, { opponentName: username }],
       },
       include: [
         {
           model: Move,
-          as: 'moves'
-        }
-      ]
+          as: "moves",
+        },
+      ],
     });
 
     const stats: UserStats = {
@@ -226,20 +233,20 @@ export class UserService {
       gamesPlayed: {
         total: games.length,
         asWhite: 0,
-        asBlack: 0
+        asBlack: 0,
       },
       results: {
         wins: { total: 0, asWhite: 0, asBlack: 0 },
         losses: { total: 0, asWhite: 0, asBlack: 0 },
-        draws: { total: 0, asWhite: 0, asBlack: 0 }
+        draws: { total: 0, asWhite: 0, asBlack: 0 },
       },
       averages: {
         movesPerGame: 0,
-        gameLength: '00:00',
-        capturedPieces: 0
+        gameLength: "00:00",
+        capturedPieces: 0,
       },
       bestWinStreak: 0,
-      currentStreak: 0
+      currentStreak: 0,
     };
 
     let totalMoves = 0;
@@ -248,11 +255,16 @@ export class UserService {
     let bestStreak = 0;
     let lastGameWon = false;
 
-    games.forEach(game => {
+    games.forEach((game) => {
+      stats.rating += game.result || 0;
       const isPlayer = game.user_id === user.id;
-      const playerColor = isPlayer ? (game.opponentColor === 'WHITE' ? 'BLACK' : 'WHITE') : game.opponentColor;
-      
-      if (playerColor === 'WHITE') {
+      const playerColor = isPlayer
+        ? game.opponentColor === "WHITE"
+          ? "BLACK"
+          : "WHITE"
+        : game.opponentColor;
+
+      if (playerColor === "WHITE") {
         stats.gamesPlayed.asWhite++;
       } else {
         stats.gamesPlayed.asBlack++;
@@ -262,7 +274,7 @@ export class UserService {
         const gameResult = game.result * (isPlayer ? 1 : -1);
         if (gameResult > 0) {
           stats.results.wins.total++;
-          if (playerColor === 'WHITE') {
+          if (playerColor === "WHITE") {
             stats.results.wins.asWhite++;
           } else {
             stats.results.wins.asBlack++;
@@ -271,7 +283,7 @@ export class UserService {
           lastGameWon = true;
         } else if (gameResult < 0) {
           stats.results.losses.total++;
-          if (playerColor === 'WHITE') {
+          if (playerColor === "WHITE") {
             stats.results.losses.asWhite++;
           } else {
             stats.results.losses.asBlack++;
@@ -280,7 +292,7 @@ export class UserService {
           lastGameWon = false;
         } else {
           stats.results.draws.total++;
-          if (playerColor === 'WHITE') {
+          if (playerColor === "WHITE") {
             stats.results.draws.asWhite++;
           } else {
             stats.results.draws.asBlack++;
@@ -294,20 +306,101 @@ export class UserService {
 
       if (game.moves) {
         totalMoves += game.moves.length;
-        totalCaptures += game.moves.filter(move => move.type === 'capture').length;
+        totalCaptures += game.moves.filter(
+          (move) => move.type === "capture"
+        ).length;
       }
     });
 
     if (stats.gamesPlayed.total > 0) {
-      stats.averages.movesPerGame = Math.round(totalMoves / stats.gamesPlayed.total);
-      stats.averages.capturedPieces = Math.round(totalCaptures / stats.gamesPlayed.total);
-      stats.averages.gameLength = '15:30'; // Temps moyen fixe pour le moment
+      stats.averages.movesPerGame = Math.round(
+        totalMoves / stats.gamesPlayed.total
+      );
+      stats.averages.capturedPieces = Math.round(
+        totalCaptures / stats.gamesPlayed.total
+      );
+      stats.averages.gameLength = "15:30"; // Temps moyen fixe pour le moment
     }
 
     stats.bestWinStreak = bestStreak;
     stats.currentStreak = currentStreak;
 
     return stats;
+  }
+
+  async getHistory(
+    username: string,
+    authUser: UserToken,
+    filters?: GameHistoryFiltersDTO
+  ): Promise<GameHistoryDTO[]> {
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return notFound("User");
+    }
+    const userId = user.id;
+    const whereClause: any = {
+      user_id: userId,
+    };
+    const page = filters?.page || 0;
+    const itemsPerPage = filters?.itemsPerPage || 50;
+
+    if (user.username !== authUser.username) {
+      if (!user.public_profile) {
+        return notFound("User");
+      }
+      if (!user.show_game_history) {
+        return [];
+      }
+      whereClause.isPublic = true;
+    }
+
+    if (filters) {
+      if (filters.startDate && filters.endDate) {
+        whereClause.created_at = {
+          [Op.between]: [
+            new Date(filters.startDate),
+            new Date(filters.endDate),
+          ],
+        };
+      }
+
+      if (filters.result) {
+        switch (filters.result) {
+          case "won":
+            whereClause.status = GameStatus.WON;
+            break;
+          case "lost":
+            whereClause.status = GameStatus.LOST;
+            break;
+          case "draw":
+            whereClause.status = GameStatus.DRAW;
+            break;
+        }
+      }
+
+      if (filters.isPublic !== undefined) {
+        whereClause.isPublic = filters.isPublic;
+      }
+    }
+
+    const games = await Game.findAll({
+      where: whereClause,
+      order: [["created_at", "DESC"]],
+      include: [{ model: Move, as: "moves" }],
+      limit: itemsPerPage,
+      offset: page,
+    });
+
+    return games.map((game) => ({
+      game_id: game.id,
+      opponentName: game.opponentName,
+      opponentColor: game.opponentColor,
+      isPublic: game.isPublic,
+      result: game.result,
+      status: game.status,
+      createdAt: game.created_at,
+      moves: game.moves?.length || 0,
+    }));
   }
 }
 

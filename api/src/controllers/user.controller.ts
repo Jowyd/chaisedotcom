@@ -11,6 +11,7 @@ import {
   Security,
   Request,
   Query,
+  Queries,
 } from "tsoa";
 import { userService } from "../services/user.service";
 import * as express from "express";
@@ -25,10 +26,11 @@ import {
 import { AuthRequest } from "../dto/auth.dto";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 import { UserStats } from "../dto/stats.dto";
+import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
 
 @Route("users")
 @Tags("Users")
-// @Security("jwt")
+@Security("jwt")
 export class UserController extends Controller {
   // Récupère tous les utilisateurs
 
@@ -79,7 +81,6 @@ export class UserController extends Controller {
   }
 
   @Patch("/me/username")
-  @Security("jwt")
   public async updateUsername(
     @Request() req: AuthRequest,
     @Body() body: { username: string }
@@ -88,7 +89,6 @@ export class UserController extends Controller {
   }
 
   @Patch("/me/password")
-  @Security("jwt")
   public async updatePassword(
     @Request() req: AuthRequest,
     @Body() body: PasswordUpdate
@@ -97,7 +97,6 @@ export class UserController extends Controller {
   }
 
   @Patch("/me/privacy")
-  @Security("jwt")
   public async updatePrivacySettings(
     @Request() req: AuthRequest,
     @Body() body: PrivacySettings
@@ -111,12 +110,30 @@ export class UserController extends Controller {
     @Query() page?: number,
     @Query() itemsPerPage?: number
   ): Promise<LeaderboardResponse> {
-    const { players, total } = await userService.getLeaderboard(timeRange, page, itemsPerPage);
+    const { players, total } = await userService.getLeaderboard(
+      timeRange,
+      page,
+      itemsPerPage
+    );
     return { players, total };
   }
 
   @Get("{username}/stats")
-  public async getStats(@Path() username: string): Promise<UserStats> {
-    return await userService.getStats(username);
+  public async getStats(
+    @Path() username: string,
+    @Request() req: AuthRequest
+  ): Promise<UserStats> {
+    const authUser = req.user;
+    return await userService.getStats(username, authUser);
+  }
+
+  @Get("{username}/games")
+  public async getUserGames(
+    @Path() username: string,
+    @Request() req: AuthRequest,
+    @Queries() filters?: GameHistoryFiltersDTO
+  ): Promise<GameHistoryDTO[]> {
+    const authUser = req.user;
+    return await userService.getHistory(username, authUser, filters);
   }
 }

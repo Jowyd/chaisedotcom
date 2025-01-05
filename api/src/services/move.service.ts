@@ -4,6 +4,7 @@ import Move from "../models/move.model";
 import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
 import {
+  CapturedPiece,
   MakeMoveDTO,
   MoveCreateDTO,
   SuggestionsDTORequest,
@@ -14,6 +15,7 @@ import { GameService } from "../../../front/src/services/GameService";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
+import { notFound } from "../error/NotFoundError";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -59,7 +61,10 @@ export class MoveService {
   async getInitialBoard(game: Game, user: UserToken): Promise<GameReturnDTO> {
     const fen = await this.getFenFromBoard(this.initialBoard, game.id);
 
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game.id.toString(),
@@ -118,10 +123,27 @@ export class MoveService {
     return currentBoard;
   }
 
-  async validateMove(board: ChessBoard, move: MakeMoveDTO): Promise<Boolean> {
+  async validateMove(board: ChessBoard, move: MakeMoveDTO): Promise<boolean> {
     const piece = board[move.from];
     if (!piece) return false;
 
+    // Simulate the move
+    const tempBoard = { ...board };
+    tempBoard[move.to] = tempBoard[move.from];
+    tempBoard[move.from] = null;
+
+    // Determine the color of the moving piece
+    const movingColor = piece.color;
+
+    // Check if the move results in the king being in check
+    const isCheck = this.isKingInCheck(tempBoard, movingColor);
+
+    // If the move puts the king in check, it's invalid
+    if (isCheck) {
+      return false;
+    }
+
+    // Validate the move based on piece type
     return this.switchCaseTypePiece(piece.type, move, board, piece.color);
   }
 
@@ -188,7 +210,7 @@ export class MoveService {
     }
 
     if (Math.abs(toCol - fromCol) === 1 && toRow === fromRow + direction) {
-      return targetPiece !== null && targetPiece.color !== color;
+      return !!targetPiece && targetPiece.color !== color;
     }
 
     return false;
@@ -697,14 +719,14 @@ export class MoveService {
   }
 
   async makeMove(game_id: number, move: MakeMoveDTO, user: UserToken) {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
       throw error;
     }
-    
-    if(game.status == GameStatus.CHECKMATE_WHITE || game.status == GameStatus.CHECKMATE_BLACK){
+
+    if (game.status == GameStatus.CHECKMATE) {
       const error = new Error("Game is over");
       (error as any).status = "403";
       throw error;
@@ -746,12 +768,8 @@ export class MoveService {
       const isPromotion = this.isPromotion(newBoard);
 
       if (isCheckmate) {
-        if (currentPlayer == "WHITE") {
-          game.status = GameStatus.CHECKMATE_WHITE;
-        } else {
-          game.status = GameStatus.CHECKMATE_BLACK;
-        }
-        if (currentPlayer == "BLACK" && game.opponentColor == "BLACK") {
+        game.status = GameStatus.CHECKMATE;
+        if (currentPlayer.toUpperCase() == game.opponentColor.toUpperCase()) {
           game.result = gameService.LOSER_POINTS;
         } else {
           game.result = gameService.WINNER_POINTS;
@@ -776,7 +794,7 @@ export class MoveService {
         turn: currentPlayer,
       };
 
-      await this.createMove(moveCreate);
+      const newMove = await this.createMove(moveCreate);
 
       const allMoves = await Move.findAll({
         where: { game_id },
@@ -784,8 +802,8 @@ export class MoveService {
       });
 
       const fen = await this.getFenFromBoard(newBoard, game_id);
-
-      const playersInformations = gameService.getPlayersInformations(
+      game.moves.push(newMove);
+      const playersInformations = await gameService.getPlayersInformations(
         game,
         user
       );
@@ -802,7 +820,7 @@ export class MoveService {
         isCheck: isCheck,
         isCheckmate: isCheckmate,
         status: game.status,
-        promotion: isPromotion ? piece.type : null,
+        promotion: isPromotion ? piece.color : null,
         whitePlayer: playersInformations.whitePlayer,
         blackPlayer: playersInformations.blackPlayer,
       };
@@ -816,7 +834,7 @@ export class MoveService {
   }
 
   async getState(game_id: number, user: UserToken): Promise<GameReturnDTO> {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -836,7 +854,10 @@ export class MoveService {
     });
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
@@ -877,7 +898,7 @@ export class MoveService {
   }
 
   async promotion(game_id: number, piece: ChessPiece, user: UserToken) {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -908,7 +929,10 @@ export class MoveService {
     lastMove.type = "promotion";
     await lastMove.save();
 
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
@@ -935,7 +959,7 @@ export class MoveService {
     index: number,
     user: UserToken
   ): Promise<GameReturnDTO> {
-    const game = await Game.findByPk(game_id);
+    const game = await gameService.getGameUserMoves(game_id, undefined, index);
     if (!game) {
       const error = new Error("Game not found");
       (error as any).status = "404";
@@ -984,7 +1008,10 @@ export class MoveService {
 
     const fen = await this.getFenFromBoard(currentBoard, game_id);
 
-    const playersInformations = gameService.getPlayersInformations(game, user);
+    const playersInformations = await gameService.getPlayersInformations(
+      game,
+      user
+    );
 
     const moveReturn: GameReturnDTO = {
       id: game_id.toString(),
@@ -1004,6 +1031,56 @@ export class MoveService {
     };
 
     return moveReturn;
+  }
+
+  async getCapturedPieces(moves: Move[]): Promise<{
+    white: CapturedPiece[];
+    black: CapturedPiece[];
+  }> {
+    let board = { ...this.initialBoard };
+    const capturedPieces = {
+      white: [] as CapturedPiece[],
+      black: [] as CapturedPiece[],
+    };
+    if (!moves || moves.length === 0) {
+      return capturedPieces;
+    }
+
+    for (const move of moves) {
+      if (move.type === "capture") {
+        const targetPiece = board[move.to];
+        if (targetPiece) {
+          if (targetPiece.color === "WHITE") {
+            capturedPieces.black.push({
+              type: targetPiece.type,
+              color: targetPiece.color,
+            });
+          } else {
+            capturedPieces.white.push({
+              type: targetPiece.type,
+              color: targetPiece.color,
+            });
+          }
+        }
+      }
+      // Update board state
+      board[move.to] = board[move.from];
+      board[move.from] = null;
+      if (move.type === "promotion") {
+        board[move.to] = {
+          type: move.piece as
+            | "PAWN"
+            | "ROOK"
+            | "KNIGHT"
+            | "BISHOP"
+            | "QUEEN"
+            | "KING",
+          color: move.turn as "WHITE" | "BLACK",
+        };
+      }
+    }
+
+    return capturedPieces;
   }
 }
 

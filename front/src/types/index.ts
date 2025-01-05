@@ -1,9 +1,4 @@
-export interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
-}
-
-export type ChessColor = 'white' | 'black';
+export type ChessColor = 'WHITE' | 'BLACK';
 
 export enum GameStatus {
   IN_PROGRESS = 'in_progress',
@@ -28,8 +23,8 @@ export interface PieceMove {
 }
 
 export interface CapturedPieces {
-  white: ChessPiece[];
-  black: ChessPiece[];
+  white: ChessPieceNoSymbol[];
+  black: ChessPieceNoSymbol[];
 }
 
 export interface GameHistoryItem {
@@ -49,4 +44,78 @@ export interface GameHistoryFilters {
   isPublic?: boolean;
   page: number;
   itemsPerPage: number;
+}
+
+export interface ErrorMessages {
+  response: {
+    data: {
+      message: string;
+      statusCode?: number;
+    };
+    status: number;
+  };
+  message?: string;
+}
+
+export interface ChessPiece {
+  type: string;
+  color: ChessColor;
+  symbol: string;
+}
+
+export interface ChessPieceNoSymbol {
+  type: string;
+  color: ChessColor;
+}
+
+export interface Position {
+  row: number;
+  col: number;
+}
+
+export interface PromotionData {
+  color: ChessColor;
+  isOpen: boolean;
+}
+
+export enum ChessSymbol {
+  KING = '♔',
+  QUEEN = '♕',
+  ROOK = '♖',
+  BISHOP = '♗',
+  KNIGHT = '♘',
+  PAWN = '♙',
+}
+
+export interface UserStats {
+  rating: number;
+  gamesPlayed: {
+    total: number;
+    asWhite: number;
+    asBlack: number;
+  };
+  results: {
+    wins: {
+      total: number;
+      asWhite: number;
+      asBlack: number;
+    };
+    losses: {
+      total: number;
+      asWhite: number;
+      asBlack: number;
+    };
+    draws: {
+      total: number;
+      asWhite: number;
+      asBlack: number;
+    };
+  };
+  averages: {
+    movesPerGame: number;
+    gameLength: string;
+    capturedPieces: number;
+  };
+  bestWinStreak: number;
+  currentStreak: number;
 }

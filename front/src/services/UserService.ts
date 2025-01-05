@@ -1,3 +1,4 @@
+import type { UserStats } from '@/types';
 import httpHelper from '@/utils/httpHelper';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
@@ -23,7 +24,6 @@ class UserService {
       const response = await httpHelper.get(`${API_URL}users/profile/${username}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
       throw error;
     }
   }
@@ -55,7 +55,7 @@ class UserService {
     }
   }
 
-  async getUserStats(username: string): Promise<any> {
+  async getUserStats(username: string): Promise<UserStats> {
     try {
       const response = await httpHelper.get(`${API_URL}users/${username}/stats`);
       return response.data;

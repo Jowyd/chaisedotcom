@@ -49,7 +49,7 @@ const menuItems = ref([
     <!-- User Profile -->
     <div class="p-4 flex flex-column align-items-center border-bottom-1 surface-border">
       <Avatar
-        image="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
+        :image="`https://api.dicebear.com/7.x/avataaars/svg?seed=${authService?.getUser()?.username}`"
         size="large"
         shape="circle"
         class="mb-2"

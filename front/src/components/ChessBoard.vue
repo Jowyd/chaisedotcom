@@ -6,24 +6,9 @@ import {
   type Move,
   type GameState,
   type CapturedPieces,
+  fullNameToSymbol,
 } from '@/services/GameService';
-
-interface ChessPiece {
-  type: string;
-  color: 'white' | 'black';
-  symbol: string;
-}
-
-interface Position {
-  row: number;
-  col: number;
-}
-
-interface PromotionData {
-  color: 'white' | 'black';
-  isOpen: boolean;
-}
-
+import type { ChessColor, ChessPiece, ChessPieceNoSymbol, Position, PromotionData } from '@/types';
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
@@ -38,7 +23,7 @@ const capturedPieces = ref<CapturedPieces>({
 });
 
 const promotionDialog = ref<PromotionData>({
-  color: 'white',
+  color: 'WHITE',
   isOpen: false,
 });
 
@@ -63,7 +48,7 @@ const promotionPieces: { [key: string]: PromotionPiece[] } = {
 };
 
 const props = defineProps<{
-  playerColor?: 'white' | 'black';
+  playerColor?: ChessColor;
 }>();
 
 const gameState = defineModel<GameState>('gameState', { required: true });
@@ -76,7 +61,7 @@ watch(gameState, (newValue) => {
 
 const boardView = computed(() => {
   const currentBoard = board.value;
-  if (!currentBoard || props.playerColor !== 'black') {
+  if (!currentBoard || props.playerColor !== 'BLACK') {
     return currentBoard;
   }
 
@@ -84,7 +69,7 @@ const boardView = computed(() => {
 });
 
 const adjustCoordinates = (row: number, col: number): { row: number; col: number } => {
-  if (props.playerColor === 'black') {
+  if (props.playerColor === 'BLACK') {
     return {
       row: 7 - row,
       col: 7 - col,
@@ -123,18 +108,18 @@ const initializeBoard = () => {
 
   const backRankBlack = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
   backRankBlack.forEach((piece, i) => {
-    newBoard[0][i] = { type: piece, color: 'black', symbol: pieces[piece] };
+    newBoard[0][i] = { type: piece, color: 'BLACK', symbol: pieces[piece] };
   });
   for (let i = 0; i < 8; i++) {
-    newBoard[1][i] = { type: 'p', color: 'black', symbol: pieces['p'] };
+    newBoard[1][i] = { type: 'p', color: 'BLACK', symbol: pieces['p'] };
   }
 
   const backRankWhite = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
   backRankWhite.forEach((piece, i) => {
-    newBoard[7][i] = { type: piece, color: 'white', symbol: pieces[piece] };
+    newBoard[7][i] = { type: piece, color: 'WHITE', symbol: pieces[piece] };
   });
   for (let i = 0; i < 8; i++) {
-    newBoard[6][i] = { type: 'p', color: 'white', symbol: pieces['p'] };
+    newBoard[6][i] = { type: 'p', color: 'WHITE', symbol: pieces['p'] };
   }
 
   board.value = newBoard;
@@ -148,11 +133,14 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
   const { row, col } = adjustCoordinates(displayRow, displayCol);
   const piece = board.value[row][col];
 
+  console.log(piece?.color, gameState.value?.turn, selectedPiece.value);
   if (
     (!selectedPiece.value && piece?.color != gameState.value?.turn) ||
     (!selectedPiece.value && !piece)
-  )
+  ) {
+    console.log('la');
     return;
+  }
 
   if (selectedPiece.value && selectedPiece.value.row === row && selectedPiece.value.col === col) {
     selectedPiece.value = null;
@@ -213,7 +201,8 @@ const updateBoardFromGameState = (state: GameState) => {
   };
 
   const fenBoard = state.fen.split(' ')[0];
-  capturedPieces.value = GameService.getCapturedPieces(fenBoard);
+  capturedPieces.value.black = state.blackPlayer?.capturedPieces || [];
+  capturedPieces.value.white = state.whitePlayer?.capturedPieces || [];
   const rows = fenBoard.split('/');
 
   rows.forEach((row, rowIndex) => {
@@ -227,7 +216,7 @@ const updateBoardFromGameState = (state: GameState) => {
         const pieceType = char.toLowerCase();
         newBoard[rowIndex][colIndex] = {
           type: pieceType,
-          color: isWhite ? 'white' : 'black',
+          color: isWhite ? 'WHITE' : 'BLACK',
           symbol: pieces[pieceType],
         };
         colIndex++;
@@ -265,7 +254,7 @@ onMounted(() => {
   }
 });
 
-const calculateMaterialValue = (pieces: ChessPiece[]): number => {
+const calculateMaterialValue = (pieces: ChessPieceNoSymbol[]): number => {
   const values: { [key: string]: number } = {
     p: 1,
     n: 3,
@@ -325,11 +314,11 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
       </div>
       <div class="pieces-list">
         <span
-          v-for="(piece, index) in capturedPieces.black"
+          v-for="(piece, index) in capturedPieces.white"
           :key="`white-captured-${index}`"
           class="captured-piece"
         >
-          {{ piece.symbol }}
+          {{ fullNameToSymbol(piece.type) }}
         </span>
       </div>
     </div>
@@ -368,23 +357,25 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
               class="square"
               :class="[
                 getSquareColor(
-                  playerColor === 'black' ? 7 - rowIndex : rowIndex,
-                  playerColor === 'black' ? 7 - colIndex : colIndex,
+                  playerColor === 'BLACK' ? 7 - rowIndex : rowIndex,
+                  playerColor === 'BLACK' ? 7 - colIndex : colIndex,
                 ),
                 {
                   selected:
-                    selectedPiece?.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
-                    selectedPiece?.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
+                    selectedPiece?.row === (playerColor === 'BLACK' ? 7 - rowIndex : rowIndex) &&
+                    selectedPiece?.col === (playerColor === 'BLACK' ? 7 - colIndex : colIndex),
                   'valid-move': validMoves.some(
                     (move) =>
-                      move.row === (playerColor === 'black' ? 7 - rowIndex : rowIndex) &&
-                      move.col === (playerColor === 'black' ? 7 - colIndex : colIndex),
+                      move.row === (playerColor === 'BLACK' ? 7 - rowIndex : rowIndex) &&
+                      move.col === (playerColor === 'BLACK' ? 7 - colIndex : colIndex),
                   ),
                 },
               ]"
               @click="handleSquareClick(rowIndex, colIndex)"
             >
-              <span v-if="square" class="piece" :class="square.color">{{ square.symbol }}</span>
+              <span v-if="square" class="piece" :class="square.color.toLowerCase()">{{
+                square.symbol
+              }}</span>
             </div>
           </div>
         </div>
@@ -402,11 +393,11 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
       </div>
       <div class="pieces-list">
         <span
-          v-for="(piece, index) in capturedPieces.white"
+          v-for="(piece, index) in capturedPieces.black"
           :key="`black-captured-${index}`"
           class="captured-piece"
         >
-          {{ piece.symbol }}
+          {{ fullNameToSymbol(piece.type) }}
         </span>
       </div>
     </div>
@@ -422,7 +413,7 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
             class="promotion-piece"
             @click="handlePromotion(piece)"
           >
-            <span :class="promotionDialog.color">{{ piece.symbol }}</span>
+            <span :class="promotionDialog.color.toLowerCase()">{{ piece.symbol }}</span>
           </button>
         </div>
       </div>

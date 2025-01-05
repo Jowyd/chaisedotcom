@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
-import Calendar from 'primevue/calendar';
-import Dropdown from 'primevue/dropdown';
 import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
 import { authService } from '@/services/AuthService';
@@ -13,12 +11,6 @@ const loading = ref(true);
 const dateRange = ref();
 const selectedResult = ref();
 const games = ref<GameHistoryItem[]>([]);
-const results = [
-  { label: 'All Results', value: null },
-  { label: 'Victory', value: 'won' },
-  { label: 'Defeat', value: 'lost' },
-  { label: 'Draw', value: 'draw' },
-];
 
 const loadGames = async () => {
   loading.value = true;
@@ -26,8 +18,11 @@ const loadGames = async () => {
     const filters: GameHistoryFilters = {
       dateRange: dateRange.value,
       result: selectedResult.value,
+      itemsPerPage: 10,
+      page: 0,
     };
-    games.value = await GameService.getGameHistory(filters);
+    const username = authService.getUser()?.username || '';
+    games.value = await GameService.getGameHistory(username, filters);
   } catch (error) {
     console.error('Error loading games:', error);
     toast.add({

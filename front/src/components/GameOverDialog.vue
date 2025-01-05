@@ -15,8 +15,8 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{
   'update:visible': [value: boolean];
-  'replay': [];
-  'close': [];
+  replay: [];
+  close: [];
 }>();
 
 const dialogVisible = computed({
@@ -24,19 +24,21 @@ const dialogVisible = computed({
   set: (value) => emit('update:visible', value),
 });
 
-const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
+function getPlayerUsername() {
+  if (props.gameState.turn === 'BLACK') {
+    return props.gameState.blackPlayer?.username;
+  } else {
+    return props.gameState.whitePlayer?.username;
+  }
+}
 
 const gameResult = computed(() => {
   if (props.gameState && !stillPlaying(props.gameState.status)) {
-    const winner = props.gameState.turn === 'white' ? 'Black' : 'White';
+    const winner = props.gameState.moves[props.gameState.moves.length - 1].color;
     return {
       title: 'Game Over',
       winner,
-      message: `${winner} wins by ${props.gameState.status}`,
+      message: `${getPlayerUsername()} (${winner}) wins by ${props.gameState.status}`,
       closeable: true,
     };
   }
@@ -87,18 +89,15 @@ const gameResult = computed(() => {
 
       <!-- Actions -->
       <div class="flex gap-2 mt-4">
-        <Button label="New Game" icon="pi pi-plus" @click="$router.push('/new-game')" />
-        <Button
-          label="Replay"
-          icon="pi pi-replay"
-          severity="secondary"
-          @click="$emit('replay')"
-        />
+        <Button label="Replay" icon="pi pi-replay" severity="secondary" @click="$emit('replay')" />
         <Button
           label="Back to Home"
           icon="pi pi-home"
           text
-          @click="$emit('close'); $router.push('/dashboard')"
+          @click="
+            $emit('close');
+            $router.push('/dashboard');
+          "
         />
       </div>
     </div>

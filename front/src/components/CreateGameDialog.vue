@@ -4,7 +4,7 @@ import { ref, computed } from 'vue';
 interface GameCreationDetails {
   opponent: string;
   colorAssignment: 'random' | 'fixed';
-  playerColor?: 'white' | 'black';
+  playerColor?: 'WHITE' | 'BLACK';
   isPublic: boolean;
 }
 
@@ -24,7 +24,7 @@ const dialogVisible = computed({
 
 const opponent = ref('');
 const colorAssignment = ref<'random' | 'fixed'>('random');
-const playerColor = ref<'white' | 'black'>('white');
+const playerColor = ref<'WHITE' | 'BLACK'>('WHITE');
 const isPublic = ref(true);
 
 const createGame = () => {
@@ -45,7 +45,7 @@ const createGame = () => {
 const resetForm = () => {
   opponent.value = '';
   colorAssignment.value = 'random';
-  playerColor.value = 'white';
+  playerColor.value = 'WHITE';
   isPublic.value = true;
 };
 
@@ -88,12 +88,12 @@ const closeDialog = () => {
         <label class="font-medium">{{ opponent }}'s Color</label>
         <div class="flex gap-4">
           <div class="flex align-items-center gap-2">
-            <RadioButton v-model="playerColor" value="white" inputId="white" />
-            <label for="white">White</label>
+            <RadioButton v-model="playerColor" value="WHITE" inputId="WHITE" />
+            <label for="WHITE">White</label>
           </div>
           <div class="flex align-items-center gap-2">
-            <RadioButton v-model="playerColor" value="black" inputId="black" />
-            <label for="black">Black</label>
+            <RadioButton v-model="playerColor" value="BLACK" inputId="BLACK" />
+            <label for="BLACK">Black</label>
           </div>
         </div>
       </div>

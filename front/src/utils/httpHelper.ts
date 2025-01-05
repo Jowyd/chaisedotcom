@@ -35,11 +35,8 @@ httpHelper.interceptors.response.use(
       try {
         const newAccessToken = await authService.refreshAccessToken();
 
-        originalRequest.headers = {
-          ...originalRequest.headers,
-          Authorization: `Bearer ${newAccessToken}`,
-          'X-Retry-After-Refresh': 'true',
-        };
+        originalRequest.headers.set('Authorization', `Bearer ${newAccessToken}`);
+        originalRequest.headers.set('X-Retry-After-Refresh', 'true');
 
         return httpHelper(originalRequest);
       } catch (refreshError) {

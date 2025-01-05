@@ -16,7 +16,15 @@ const password = ref('');
 const loading = ref(false);
 
 const handleLogin = async () => {
-  if (!username.value || !password.value) return;
+  if (!username.value || !password.value) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Please fill in all fields',
+      life: 3000,
+    });
+    return;
+  }
 
   loading.value = true;
   try {
@@ -24,22 +32,21 @@ const handleLogin = async () => {
       username: username.value,
       password: password.value,
     });
-    
+
     toast.add({
       severity: 'success',
       summary: 'Success',
-      detail: 'Login successful',
+      detail: 'Logged in successfully',
       life: 3000,
     });
-
-    const redirectPath = route.query.redirect as string || '/dashboard';
+    const redirectPath = (route.query.redirect as string) || '/dashboard';
     router.push(redirectPath);
   } catch (error) {
-    console.error(error);
+    console.error('Error logging in:', error);
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Login failed. Please check your credentials.',
+      detail: 'Failed to log in',
       life: 3000,
     });
   } finally {

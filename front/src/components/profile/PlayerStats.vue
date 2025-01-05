@@ -1,36 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import type { UserStats } from '@/types';
 
-const props = defineProps<{
+interface PlayerStatsProps {
   username: string;
-  stats: {
-    rating: number;
-    gamesPlayed: {
-      total: number;
-      asWhite: number;
-      asBlack: number;
-    };
-    results: {
-      wins: { total: number; asWhite: number; asBlack: number };
-      losses: { total: number; asWhite: number; asBlack: number };
-      draws: { total: number; asWhite: number; asBlack: number };
-    };
-    averages: {
-      movesPerGame: number;
-      gameLength: string;
-      capturedPieces: number;
-    };
-    bestWinStreak: number;
-    currentStreak: number;
-  };
-}>();
+  stats: UserStats;
+}
+
+const props = defineProps<PlayerStatsProps>();
 
 const calculateWinRate = (color?: 'white' | 'black') => {
   if (!color) {
     return ((props.stats.results.wins.total / props.stats.gamesPlayed.total) * 100).toFixed(1);
   }
-  const gamesAsColor = color === 'white' ? props.stats.gamesPlayed.asWhite : props.stats.gamesPlayed.asBlack;
-  const winsAsColor = color === 'white' ? props.stats.results.wins.asWhite : props.stats.results.wins.asBlack;
+  const gamesAsColor =
+    color === 'white' ? props.stats.gamesPlayed.asWhite : props.stats.gamesPlayed.asBlack;
+  const winsAsColor =
+    color === 'white' ? props.stats.results.wins.asWhite : props.stats.results.wins.asBlack;
   return ((winsAsColor / gamesAsColor) * 100).toFixed(1);
 };
 </script>
@@ -38,7 +23,7 @@ const calculateWinRate = (color?: 'white' | 'black') => {
 <template>
   <div class="card">
     <h2 class="text-2xl font-bold mb-4">Player Statistics</h2>
-    
+
     <div class="grid">
       <!-- Rating -->
       <div class="col-12 mb-4">
@@ -88,7 +73,7 @@ const calculateWinRate = (color?: 'white' | 'black') => {
       <!-- Detailed Stats -->
       <div class="col-12">
         <h3 class="text-xl font-semibold mb-3">Detailed Statistics</h3>
-        
+
         <!-- Color Distribution -->
         <div class="mb-4">
           <h4 class="text-lg mb-2">Games by Color</h4>
@@ -143,12 +128,6 @@ const calculateWinRate = (color?: 'white' | 'black') => {
                 <span class="font-semibold">{{ props.stats.averages.movesPerGame }}</span>
               </div>
             </div>
-            <div class="col-12 mb-2">
-              <div class="flex align-items-center justify-content-between">
-                <span>Game Length</span>
-                <span class="font-semibold">{{ props.stats.averages.gameLength }}</span>
-              </div>
-            </div>
             <div class="col-12">
               <div class="flex align-items-center justify-content-between">
                 <span>Captured Pieces</span>
@@ -167,8 +146,9 @@ const calculateWinRate = (color?: 'white' | 'black') => {
   background: var(--surface-card);
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 1px -1px rgba(0,0,0,0.2),
-              0 1px 1px 0 rgba(0,0,0,0.14),
-              0 1px 3px 0 rgba(0,0,0,0.12);
+  box-shadow:
+    0 2px 1px -1px rgba(0, 0, 0, 0.2),
+    0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    0 1px 3px 0 rgba(0, 0, 0, 0.12);
 }
 </style>

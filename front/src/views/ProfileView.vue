@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
@@ -7,11 +7,12 @@ import GameHistoryList from '@/components/profile/GameHistoryList.vue';
 import PlayerStats from '@/components/profile/PlayerStats.vue';
 import { authService } from '@/services/AuthService';
 import { userService, type UserProfile } from '@/services/UserService';
+import router from '@/router';
 
 const route = useRoute();
 const toast = useToast();
-const username = route.params.username as string;
-const isOwnProfile = computed(() => authService.getUser()?.username === username);
+const username = ref(route.params.username as string);
+const isOwnProfile = computed(() => authService.getUser()?.username === username.value);
 
 const loading = ref(false);
 const userProfile = ref<UserProfile | undefined>();
@@ -43,25 +44,33 @@ const userStats = ref({
 
 const loadProfile = async () => {
   try {
-    const profile = await userService.getProfile(username);
+    const profile = await userService.getProfile(username.value);
     userProfile.value = profile;
   } catch (error) {
-    console.error('Error loading profile:', error);
+    console.info('Error loading user profile:', error);
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: 'Failed to load profile',
+      detail: 'Failed to load user profile',
       life: 3000,
     });
+    router.push('/dashboard');
   }
 };
 
 const loadUserStats = async () => {
   try {
-    const stats = await userService.getUserStats(username);
+    const stats = await userService.getUserStats(username.value);
     userStats.value = stats;
   } catch (error) {
-    console.error('Error loading user stats:', error);
+    console.info('Error loading user stats:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load user statistics',
+      life: 3000,
+    });
+    router.push('/dashboard');
   }
 };
 
@@ -76,7 +85,7 @@ const updatePrivacySettings = async () => {
       life: 3000,
     });
   } catch (error) {
-    console.error('Error updating privacy settings:', error);
+    console.info('Error updating privacy settings:', error);
     toast.add({
       severity: 'error',
       summary: 'Error',
@@ -92,6 +101,16 @@ onMounted(() => {
   loadProfile();
   loadUserStats();
 });
+
+watch(
+  () => route.params.username,
+  async (newUsername) => {
+    username.value = newUsername as string;
+    await loadProfile();
+    await loadUserStats();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

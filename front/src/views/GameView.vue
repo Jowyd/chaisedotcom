@@ -7,13 +7,15 @@ import GameOverDialog from '@/components/GameOverDialog.vue';
 import { useConfirm } from 'primevue/useconfirm';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Dialog from 'primevue/dialog';
-import { type CapturedPieces, type PieceMove } from '@/types';
+import { type CapturedPieces, type ChessColor, type PieceMove } from '@/types';
 import router from '@/router';
 import Checkbox from 'primevue/checkbox';
 import { type GameStatus } from '@/types';
+import { useToast } from 'primevue';
 
 const moves = ref<PieceMove[]>([]);
 const isReplaying = ref(false);
+const toast = useToast();
 
 const filteredMoves = computed(() => {
   return moves.value.filter((_, index) => index % 2 === 0);
@@ -22,13 +24,16 @@ const filteredMoves = computed(() => {
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
 
-// const drawOffer = ref<{ offeredBy: 'white' | 'black' } | null>(null);
 const confirm = useConfirm();
 
 const handleResign = () => {
   const currentColor = gameState.value?.turn;
   if (!currentColor) {
-    throw new Error('Invalid game state');
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Invalid game state',
+    });
   }
   confirm.require({
     message: `Are you sure you want to resign as ${currentColor}?`,
@@ -36,10 +41,15 @@ const handleResign = () => {
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
-        const newGameState = await GameService.resign(gameId.value, currentColor);
+        const newGameState = await GameService.resign(gameId.value, currentColor!);
         updateGameState(newGameState);
       } catch (error) {
-        console.error('Error resigning game:', error);
+        console.info(error);
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to resign',
+        });
       }
     },
   });
@@ -56,10 +66,10 @@ onMounted(() => {
     });
 });
 
-const playerColor = ref<'white' | 'black'>('white');
+const playerColor = ref<ChessColor>('WHITE');
 
 const togglePlayerColor = () => {
-  playerColor.value = playerColor.value === 'white' ? 'black' : 'white';
+  playerColor.value = playerColor.value === 'WHITE' ? 'BLACK' : 'WHITE';
 };
 
 const capturedPieces = ref<CapturedPieces>({
@@ -98,12 +108,7 @@ const goToCurrentPosition = () => {
 };
 
 function canGameOverDialog(newGameStatus: GameStatus): boolean {
-  console.log('here', gameState.value?.status, newGameStatus);
-  return (
-    !gameState.value?.status &&
-    gameState.value?.status != newGameStatus &&
-    !stillPlaying(newGameStatus)
-  );
+  return !stillPlaying(newGameStatus) && !isReplaying.value && !showGameOverDialog.value;
 }
 
 const autoRotate = ref(false);
@@ -118,6 +123,8 @@ const updateGameState = (newState: GameState) => {
   if (currentMoveIndex.value === -1) {
     currentMoveIndex.value = newState.moves.length;
   }
+  capturedPieces.value.white = newState.whitePlayer?.capturedPieces || [];
+  capturedPieces.value.black = newState.blackPlayer?.capturedPieces || [];
 };
 
 watch(
@@ -145,7 +152,7 @@ watch(
   () => autoRotate.value,
   (autoRotateNew) => {
     if (autoRotateNew) {
-      playerColor.value = gameState.value?.turn || 'white';
+      playerColor.value = gameState.value?.turn || 'WHITE';
     }
   },
 );
@@ -165,7 +172,7 @@ const getPieceSymbol = (piece: string): string => {
 const showGameOverDialog = ref(false);
 
 const showDrawConfirmDialog = ref(false);
-const drawOfferingPlayer = ref<'white' | 'black' | null>(null);
+const drawOfferingPlayer = ref<ChessColor | null>(null);
 
 const handleDrawOffer = () => {
   if (!gameState.value) {
@@ -177,16 +184,22 @@ const handleDrawOffer = () => {
 };
 
 const handleDrawResponse = async (accept: boolean) => {
-  if (accept) {
-    try {
+  try {
+    if (accept) {
       const newGameState = await GameService.acceptDraw(gameId.value);
       updateGameState(newGameState);
-    } catch (error) {
-      console.error('Error accepting draw:', error);
     }
+  } catch (error) {
+    console.info('Error handling draw response:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to handle draw response',
+    });
+  } finally {
+    showDrawConfirmDialog.value = false;
+    drawOfferingPlayer.value = null;
   }
-  showDrawConfirmDialog.value = false;
-  drawOfferingPlayer.value = null;
 };
 
 const handleReplay = () => {
@@ -240,8 +253,8 @@ watch(moves, async () => {
             <div
               class="player-info-card surface-card p-3 border-round"
               :class="{
-                'active-player': gameState?.turn === 'black',
-                'order-1': playerColor === 'black',
+                'active-player': gameState?.turn === 'BLACK',
+                'order-1': playerColor === 'BLACK',
               }"
             >
               <div class="flex justify-content-between align-items-center">
@@ -263,8 +276,8 @@ watch(moves, async () => {
             <div
               class="player-info-card surface-card p-3 border-round"
               :class="{
-                'active-player': gameState?.turn === 'white',
-                'order-0': playerColor === 'black',
+                'active-player': gameState?.turn === 'WHITE',
+                'order-0': playerColor === 'BLACK',
               }"
             >
               <div class="flex justify-content-between align-items-center">
@@ -297,14 +310,14 @@ watch(moves, async () => {
               icon="pi pi-flag"
               severity="danger"
               text
-              :label="`${gameState?.turn === 'white' ? 'White' : 'Black'} resigns`"
+              :label="`${gameState?.turn === 'WHITE' ? 'White' : 'Black'} resigns`"
               @click="handleResign"
             />
             <Button
               icon="pi pi-handshake"
               severity="secondary"
               text
-              :label="`${gameState?.turn === 'white' ? 'White' : 'Black'} offers draw`"
+              :label="`${gameState?.turn === 'WHITE' ? 'White' : 'Black'} offers draw`"
               @click="handleDrawOffer"
             />
           </div>
@@ -437,7 +450,7 @@ watch(moves, async () => {
       <i class="pi pi-handshake text-6xl text-primary"></i>
       <div class="text-2xl font-bold">{{ drawOfferingPlayer?.toUpperCase() }} offers a draw</div>
       <div class="text-xl text-600">
-        <strong>{{ drawOfferingPlayer === 'white' ? 'Black' : 'White' }}</strong
+        <strong>{{ drawOfferingPlayer === 'WHITE' ? 'Black' : 'White' }}</strong
         >, do you accept?
       </div>
     </div>
