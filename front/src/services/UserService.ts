@@ -1,7 +1,8 @@
 import type { UserStats } from '@/types';
 import httpHelper from '@/utils/httpHelper';
+import config from '@/config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
+const API_URL = config.API_URL;
 
 export interface UserProfile {
   username: string;

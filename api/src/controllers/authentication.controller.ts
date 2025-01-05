@@ -22,7 +22,10 @@ export class AuthController extends Controller {
     return await authService.registerUser(request);
   }
   @Post("/refresh")
-  public async refresh(): Promise<{ accessToken: string }> {
-    return await authService.refreshToken();
+  public async refresh(
+    @Body() body: { refreshToken: string }
+  ): Promise<{ accessToken: string }> {
+    console.log(body);
+    return await authService.refreshToken(body.refreshToken);
   }
 }

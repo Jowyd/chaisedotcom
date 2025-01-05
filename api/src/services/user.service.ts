@@ -15,7 +15,11 @@ import { UserStats } from "../dto/stats.dto";
 import Move from "../models/move.model";
 import { stat } from "fs";
 import { GameStatus } from "../enums/gameStatus.enum";
-import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
+import {
+  GameHistoryDTO,
+  GameHistoryFiltersDTO,
+  GameHistoryListDTO,
+} from "../dto/game.dto";
 import { UserToken } from "../dto/auth.dto";
 
 export class UserService {
@@ -332,7 +336,7 @@ export class UserService {
     username: string,
     authUser: UserToken,
     filters?: GameHistoryFiltersDTO
-  ): Promise<GameHistoryDTO[]> {
+  ): Promise<GameHistoryListDTO> {
     const user = await User.findOne({ where: { username } });
     if (!user) {
       return notFound("User");
@@ -349,7 +353,7 @@ export class UserService {
         return notFound("User");
       }
       if (!user.show_game_history) {
-        return [];
+        return { games: [], total: 0 };
       }
       whereClause.isPublic = true;
     }
@@ -391,7 +395,8 @@ export class UserService {
       offset: page,
     });
 
-    return games.map((game) => ({
+    const total = await Game.count({ where: whereClause });
+    const gameHistory: GameHistoryDTO[] = games.map((game) => ({
       game_id: game.id,
       opponentName: game.opponentName,
       opponentColor: game.opponentColor,
@@ -401,6 +406,7 @@ export class UserService {
       createdAt: game.created_at,
       moves: game.moves?.length || 0,
     }));
+    return { games: gameHistory, total };
   }
 }
 

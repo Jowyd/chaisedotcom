@@ -66,10 +66,11 @@ export class GameController extends Controller {
   @Post("/{game_id}/suggestions")
   public async getSuggestions(
     @Path() game_id: number,
-    @Body() body: SuggestionsDTORequest
+    @Body() body: SuggestionsDTORequest,
+    @Request() req: AuthRequest
   ): Promise<String[]> {
-    console.log("game_id", game_id, "from", body.from);
-    return await moveService.getSuggestions(game_id, body.from);
+    const user = req.user;
+    return await moveService.getSuggestions(game_id, body.from, user);
   }
 
   @Post("/{game_id}/move")
@@ -78,12 +79,10 @@ export class GameController extends Controller {
     @Body() move: MakeMoveDTO,
     @Request() req: AuthRequest
   ): Promise<GameReturnDTO> {
-    console.log(move);
     if (!game_id || !move.from || !move.to) {
       this.setStatus(400);
       throw new Error("Missing required fields");
     }
-    console.log("game_id", game_id, "move", move);
     const user = req.user;
     return await moveService.makeMove(game_id, move, user);
   }

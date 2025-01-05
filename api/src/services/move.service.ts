@@ -15,7 +15,7 @@ import { GameService } from "../../../front/src/services/GameService";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
-import { notFound } from "../error/NotFoundError";
+import { notFound, unauthorized } from "../error/NotFoundError";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -725,6 +725,9 @@ export class MoveService {
       (error as any).status = "404";
       throw error;
     }
+    if (game.user_id != user.id) {
+      unauthorized();
+    }
 
     if (game.status == GameStatus.CHECKMATE) {
       const error = new Error("Game is over");
@@ -836,9 +839,10 @@ export class MoveService {
   async getState(game_id: number, user: UserToken): Promise<GameReturnDTO> {
     const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
-      const error = new Error("Game not found");
-      (error as any).status = "404";
-      throw error;
+      notFound(`Game with id ${game_id} not found`);
+    }
+    if (!game.isPublic && game.user_id != user.id) {
+      unauthorized();
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
@@ -879,7 +883,18 @@ export class MoveService {
     return moveReturn;
   }
 
-  async getSuggestions(game_id: number, from: string): Promise<String[]> {
+  async getSuggestions(
+    game_id: number,
+    from: string,
+    user: UserToken
+  ): Promise<String[]> {
+    const game = await gameService.getGameUserMoves(game_id);
+    if (!game) {
+      notFound(`Game with id ${game_id} not found`);
+    }
+    if (game.user_id != user.id) {
+      unauthorized();
+    }
     const currentBoard = await this.currentMoveOfGame(game_id);
     const currentPlayer = await this.getNextPlayer(game_id);
     const piece = currentBoard[from];

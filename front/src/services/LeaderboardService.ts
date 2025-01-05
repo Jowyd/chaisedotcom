@@ -1,6 +1,7 @@
+import config from '@/config';
 import httpHelper from '@/utils/httpHelper';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
+const API_URL = config.API_URL;
 
 export interface LeaderboardPlayer {
   username: string;
@@ -44,4 +45,4 @@ class LeaderboardService {
   }
 }
 
-export const leaderboardService = new LeaderboardService(); 
+export const leaderboardService = new LeaderboardService();

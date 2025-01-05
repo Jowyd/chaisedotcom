@@ -11,6 +11,11 @@ export interface GameHistoryDTO {
   moves?: number;
 }
 
+export interface GameHistoryListDTO {
+  games: GameHistoryDTO[];
+  total: number;
+}
+
 export interface GameHistoryFiltersDTO {
   startDate?: string;
   endDate?: string;

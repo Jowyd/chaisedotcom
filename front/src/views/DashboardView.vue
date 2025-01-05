@@ -7,13 +7,13 @@ import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
 import { authService } from '@/services/AuthService';
 import type { ChessColor, GameHistoryFilters, UserStats } from '@/types';
-import type { GameHistoryItem } from '@/types';
+import type { GameHistoryListItem } from '@/types';
 import { userService } from '@/services/UserService';
 
 const router = useRouter();
 const toast = useToast();
 const showCreateGame = ref<boolean>(false);
-const recentGames = ref<GameHistoryItem[]>([]);
+const recentGames = ref<GameHistoryListItem>({ games: [], total: 0 });
 const isLoading = ref<boolean>(true);
 const stats = ref<UserStats>();
 
@@ -135,10 +135,11 @@ const handleCreateGame = async (gameDetails: {
       <div class="mt-4 flex flex-column">
         <h2 class="text-2xl font-bold mb-3">Recent Games</h2>
         <DataTable
-          :value="recentGames"
+          :value="recentGames.games"
           :loading="isLoading"
           class="p-datatable-sm"
           responsiveLayout="scroll"
+          :total-records="recentGames.total"
         >
           <Column field="opponentName" header="Opponent" />
           <Column field="result" header="Result">

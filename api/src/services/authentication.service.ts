@@ -72,9 +72,11 @@ class AuthenticationService {
     return token;
   }
 
-  public async refreshToken(): Promise<{ accessToken: string }> {
-    const token = this.getRefreshToken();
-    const decoded = jwt.decode(token) as any;
+  public async refreshToken(
+    refreshToken: string
+  ): Promise<{ accessToken: string }> {
+    // const token = this.getRefreshToken();
+    const decoded = jwt.decode(refreshToken) as any;
     const userData = {
       id: decoded.id,
       username: decoded.username,

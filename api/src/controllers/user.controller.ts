@@ -132,7 +132,7 @@ export class UserController extends Controller {
     @Path() username: string,
     @Request() req: AuthRequest,
     @Queries() filters?: GameHistoryFiltersDTO
-  ): Promise<GameHistoryDTO[]> {
+  ): Promise<{ games: GameHistoryDTO[], total: number }> {
     const authUser = req.user;
     return await userService.getHistory(username, authUser, filters);
   }

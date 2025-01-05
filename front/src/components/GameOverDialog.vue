@@ -25,7 +25,7 @@ const dialogVisible = computed({
 });
 
 function getPlayerUsername() {
-  if (props.gameState.turn === 'BLACK') {
+  if (props.gameState.turn === 'WHITE') {
     return props.gameState.blackPlayer?.username;
   } else {
     return props.gameState.whitePlayer?.username;
@@ -34,7 +34,10 @@ function getPlayerUsername() {
 
 const gameResult = computed(() => {
   if (props.gameState && !stillPlaying(props.gameState.status)) {
-    const winner = props.gameState.moves[props.gameState.moves.length - 1].color;
+    let winner = 'BLACK';
+    if (props.gameState.moves.length > 0) {
+      winner = props.gameState.moves[props.gameState.moves.length - 1].color;
+    }
     return {
       title: 'Game Over',
       winner,

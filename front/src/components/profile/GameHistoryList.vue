@@ -14,7 +14,7 @@ const props = defineProps<{
 const router = useRouter();
 const toast = useToast();
 const games = ref<GameHistoryItem[]>([]);
-const currentPage = ref(0);
+const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalGames = ref(0);
 
@@ -26,12 +26,20 @@ const loadGames = async () => {
     const filters: GameHistoryFilters = {
       dateRange: dateRange.value,
       result: selectedResult.value,
-      page: currentPage.value,
+      page: currentPage.value - 1,
       itemsPerPage: itemsPerPage.value,
     };
-    games.value = await GameService.getGameHistory(props.username, filters);
+    const response = await GameService.getGameHistory(props.username, filters);
+    games.value = response.games;
+    totalGames.value = response.total;
   } catch (error) {
     console.error('Error loading games:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load games',
+      life: 3000,
+    });
   }
 };
 
@@ -135,6 +143,19 @@ onMounted(() => {
   loadGames();
 });
 
+const formatResult = (result: number) => {
+  if (!result) {
+    return '-';
+  }
+  return result;
+};
+
+const onPageChange = (event: { page: number; rows: number }) => {
+  currentPage.value = event.page + 1; // Convert zero-based to one-based
+  itemsPerPage.value = event.rows;
+  loadGames();
+};
+
 // TODO: Implement filtering by result if time permits
 // const results = [
 //   { label: 'All Results', value: null },
@@ -193,10 +214,11 @@ onMounted(() => {
       :value="games"
       :loading="loading"
       paginator
-      :rows="itemsPerPage"
+      :lazy="true"
       :totalRecords="totalGames"
+      @page="onPageChange"
+      :rows="itemsPerPage"
       :rowsPerPageOptions="[10, 20, 50]"
-      v-model:first="currentPage"
       tableStyle="min-width: 50rem"
       class="p-datatable-sm"
       :selection-mode="!publicView ? 'multiple' : undefined"
@@ -232,7 +254,7 @@ onMounted(() => {
       </Column>
       <Column field="result" header="Result" :sortable="true">
         <template #body="{ data }">
-          <span :class="getResultClass(data)">{{ data.result }}</span>
+          <span :class="getResultClass(data)">{{ formatResult(data.result) }}</span>
         </template>
       </Column>
       <Column field="rating_change" header="Rating" :sortable="true">

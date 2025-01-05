@@ -38,6 +38,11 @@ export interface GameHistoryItem {
   moves?: number;
 }
 
+export interface GameHistoryListItem {
+  games: GameHistoryItem[];
+  total: number;
+}
+
 export interface GameHistoryFilters {
   dateRange?: [Date, Date];
   result?: 'won' | 'lost' | 'draw' | null;

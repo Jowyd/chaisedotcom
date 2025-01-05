@@ -4,10 +4,12 @@ import {
   type ChessColor,
   type ChessPieceNoSymbol,
   type GameHistoryFilters,
-  type GameHistoryItem,
+  type GameHistoryListItem,
 } from '@/types';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
+import config from '@/config';
 import { type ChessPiece } from '@/types';
+
+const API_URL = config.API_URL;
 
 function typeToFullName(type: string): string | undefined {
   return {
@@ -218,40 +220,32 @@ export const GameService = {
     }
   },
 
-  async getGameHistory(username: string, filters?: GameHistoryFilters): Promise<GameHistoryItem[]> {
-    try {
-      let url = `${API_URL}users/${username}/games`;
-      const params = new URLSearchParams();
+  async getGameHistory(
+    username: string,
+    filters?: GameHistoryFilters,
+  ): Promise<GameHistoryListItem> {
+    const params = new URLSearchParams();
 
-      if (filters) {
-        if (filters.dateRange && filters.dateRange.length === 2) {
-          params.append('startDate', filters.dateRange[0].toISOString());
-          params.append('endDate', filters.dateRange[1].toISOString());
-        }
-        if (filters.result) {
-          params.append('result', filters.result);
-        }
-        if (filters.isPublic !== undefined) {
-          params.append('isPublic', filters.isPublic.toString());
-        }
-        if (filters.page) {
-          params.append('page', filters.page.toString());
-        }
-        if (filters.itemsPerPage) {
-          params.append('itemsPerPage', filters.itemsPerPage.toString());
-        }
-      }
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const response = await httpHelper.get(url);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching game history:', error);
-      throw error;
+    if (filters?.page !== undefined) {
+      params.append('page', filters.page.toString());
     }
+    if (filters?.itemsPerPage) {
+      params.append('itemsPerPage', filters.itemsPerPage.toString());
+    }
+    if (filters?.dateRange) {
+      if (filters.dateRange[0]) {
+        params.append('startDate', filters.dateRange[0].toISOString());
+      }
+      if (filters.dateRange[1]) {
+        params.append('endDate', filters.dateRange[1].toISOString());
+      }
+    }
+    if (filters?.result) {
+      params.append('result', filters.result);
+    }
+
+    const response = await httpHelper.get(`${API_URL}users/${username}/games?${params.toString()}`);
+    return response.data;
   },
 
   async updateGameVisibility(gameId: number, isPublic: boolean): Promise<void> {

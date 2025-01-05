@@ -9,9 +9,11 @@ import {
   fullNameToSymbol,
 } from '@/services/GameService';
 import type { ChessColor, ChessPiece, ChessPieceNoSymbol, Position, PromotionData } from '@/types';
+import { useToast } from 'primevue/usetoast';
+import router from '@/router';
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
-
+const toast = useToast();
 const board = ref<(ChessPiece | null)[][]>([]);
 const selectedPiece = ref<Position | null>(null);
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -133,7 +135,6 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
   const { row, col } = adjustCoordinates(displayRow, displayCol);
   const piece = board.value[row][col];
 
-  console.log(piece?.color, gameState.value?.turn, selectedPiece.value);
   if (
     (!selectedPiece.value && piece?.color != gameState.value?.turn) ||
     (!selectedPiece.value && !piece)
@@ -180,6 +181,12 @@ const handleSquareClick = async (displayRow: number, displayCol: number) => {
     return;
   } catch (error) {
     console.error('Error making move:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to make move',
+      life: 3000,
+    });
   }
 
   selectedPiece.value = null;
@@ -243,6 +250,13 @@ const loadGame = async () => {
     updateBoardFromGameState(state);
   } catch (error) {
     console.error('Error loading game:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load game',
+      life: 3000,
+    });
+    router.push('/dashboard');
   }
 };
 
@@ -298,6 +312,12 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
     promotionDialog.value.isOpen = false;
   } catch (error) {
     console.error('Error making promotion move:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to make promotion move',
+      life: 3000,
+    });
   }
 };
 </script>
