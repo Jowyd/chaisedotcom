@@ -4,13 +4,13 @@ import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
 import { authService } from '@/services/AuthService';
-import type { GameHistoryFilters, GameHistoryItem } from '@/types';
+import type { GameHistoryFilters, GameHistoryListItem } from '@/types';
 import GameHistoryList from '@/components/profile/GameHistoryList.vue';
 const toast = useToast();
 const loading = ref(true);
 const dateRange = ref();
 const selectedResult = ref();
-const games = ref<GameHistoryItem[]>([]);
+const games = ref<GameHistoryListItem>({ games: [], total: 0 });
 
 const loadGames = async () => {
   loading.value = true;

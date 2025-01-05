@@ -96,7 +96,7 @@ interface CreateGameDTO {
 export const GameService = {
   async getGame(gameId: string): Promise<GameState> {
     try {
-      const response = await httpHelper.get(`${API_URL}games/${gameId}`);
+      const response = await httpHelper.get<GameState>(`${API_URL}games/${gameId}`);
       const game = response.data;
       const color = fenToColor(game.fen);
       return { ...mockGameState, ...game, turn: color };
@@ -108,7 +108,7 @@ export const GameService = {
 
   async getSuggestions(gameId: string, from: string): Promise<string[]> {
     try {
-      const response = await httpHelper.post(`${API_URL}games/${gameId}/suggestions`, {
+      const response = await httpHelper.post<string[]>(`${API_URL}games/${gameId}/suggestions`, {
         from,
       });
       return response.data;
@@ -120,7 +120,7 @@ export const GameService = {
 
   async makeMove(gameId: string, move: Move): Promise<GameState> {
     try {
-      const respose = await httpHelper.post(`${API_URL}games/${gameId}/move`, move);
+      const respose = await httpHelper.post<GameState>(`${API_URL}games/${gameId}/move`, move);
       const newGameState = respose.data;
       const color: ChessColor = fenToColor(newGameState.fen);
 
@@ -140,7 +140,10 @@ export const GameService = {
         type: typeToFullName(piece.type)!.toUpperCase(),
         color: piece.color.toUpperCase(),
       };
-      const response = await httpHelper.post(`${API_URL}games/${gameId}/promotion`, newPiece);
+      const response = await httpHelper.post<GameState>(
+        `${API_URL}games/${gameId}/promotion`,
+        newPiece,
+      );
       const newGameState = response.data;
       const color = fenToColor(newGameState.fen);
 
@@ -158,7 +161,9 @@ export const GameService = {
 
   async resign(gameId: string, color: ChessColor): Promise<GameState> {
     try {
-      const response = await httpHelper.post(`${API_URL}games/${gameId}/resign`, { color });
+      const response = await httpHelper.post<GameState>(`${API_URL}games/${gameId}/resign`, {
+        color,
+      });
       return response.data;
     } catch (error) {
       console.error(error);
@@ -180,7 +185,9 @@ export const GameService = {
 
   async goToMove(gameId: string, index: number): Promise<GameState> {
     try {
-      const response = await httpHelper.post(`${API_URL}games/${gameId}/goto`, { index });
+      const response = await httpHelper.post<GameState>(`${API_URL}games/${gameId}/goto`, {
+        index,
+      });
       const newGameState = response.data;
       const color = fenToColor(newGameState.fen);
 
@@ -197,7 +204,7 @@ export const GameService = {
 
   async acceptDraw(gameId: string): Promise<GameState> {
     try {
-      const response = await httpHelper.post(`${API_URL}games/${gameId}/draw`, {});
+      const response = await httpHelper.post<GameState>(`${API_URL}games/${gameId}/draw`, {});
       return response.data;
     } catch (error) {
       console.error(error);
@@ -207,12 +214,12 @@ export const GameService = {
 
   async createGame(gameDetails: CreateGameDTO): Promise<GameState> {
     try {
-      const response = await httpHelper.post(`${API_URL}games`, gameDetails);
+      const response = await httpHelper.post<GameState>(`${API_URL}games`, gameDetails);
       const newGame = response.data;
       return {
         ...mockGameState,
         ...newGame,
-        id: newGame.game_id.toString(),
+        id: newGame.id.toString(),
       };
     } catch (error) {
       console.error('Error creating game:', error);
@@ -244,7 +251,9 @@ export const GameService = {
       params.append('result', filters.result);
     }
 
-    const response = await httpHelper.get(`${API_URL}users/${username}/games?${params.toString()}`);
+    const response = await httpHelper.get<GameHistoryListItem>(
+      `${API_URL}users/${username}/games?${params.toString()}`,
+    );
     return response.data;
   },
 

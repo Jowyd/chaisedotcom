@@ -1,6 +1,4 @@
-import { ChessBoard, ChessPiece } from "../interfaces/chess.interface";
 import { ChessColor } from "../types";
-import { CapturedPieces } from "../../../front/src/services/GameService";
 
 export interface MoveDTO {
   id?: number;

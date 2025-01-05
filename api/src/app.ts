@@ -7,7 +7,7 @@ import errorHandler from "./middlewares/errorHandler";
 import { config } from "./config/variables";
 import cors from "cors";
 
-const PORT = config.PORT || 8000;
+const PORT = 3000;
 
 const app: Application = express();
 

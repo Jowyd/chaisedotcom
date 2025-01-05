@@ -1,17 +1,9 @@
-import { Op } from "sequelize";
 import { Game } from "../models/game.model";
 import Move from "../models/move.model";
-import { ChessMove } from "../interfaces/chess.interface";
 import { ChessPiece, ChessBoard } from "../interfaces/chess.interface";
-import {
-  CapturedPiece,
-  MakeMoveDTO,
-  MoveCreateDTO,
-  SuggestionsDTORequest,
-} from "../dto/move.dto";
-import { GameReturnDTO, PlayersGameInformations } from "../dto/move.dto";
+import { CapturedPiece, MakeMoveDTO, MoveCreateDTO } from "../dto/move.dto";
+import { GameReturnDTO } from "../dto/move.dto";
 import { UserToken } from "../dto/auth.dto";
-import { GameService } from "../../../front/src/services/GameService";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
