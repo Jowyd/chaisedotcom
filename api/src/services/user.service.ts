@@ -132,6 +132,7 @@ export class UserService {
       throw new Error("Current password is incorrect");
     }
 
+    user.password = passwords.newPassword;
     await user.save();
   }
 
