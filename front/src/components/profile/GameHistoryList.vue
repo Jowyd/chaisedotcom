@@ -117,7 +117,7 @@ const isGameEnded = (game: GameHistoryItem) => {
 };
 
 const getUserColor = (game: GameHistoryItem) => {
-  return game.opponentColor.toLowerCase() === 'black' ? 'white' : 'black';
+  return game.opponentColor === 'BLACK' ? 'white' : 'black';
 };
 
 const dateRange = ref();

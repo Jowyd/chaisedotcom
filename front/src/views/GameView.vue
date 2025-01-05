@@ -7,7 +7,7 @@ import GameOverDialog from '@/components/GameOverDialog.vue';
 import { useConfirm } from 'primevue/useconfirm';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Dialog from 'primevue/dialog';
-import { type CapturedPieces, type PieceMove } from '@/types';
+import { type CapturedPieces, type ChessColor, type PieceMove } from '@/types';
 import router from '@/router';
 import Checkbox from 'primevue/checkbox';
 import { type GameStatus } from '@/types';
@@ -66,10 +66,10 @@ onMounted(() => {
     });
 });
 
-const playerColor = ref<'white' | 'black'>('white');
+const playerColor = ref<ChessColor>('WHITE');
 
 const togglePlayerColor = () => {
-  playerColor.value = playerColor.value === 'white' ? 'black' : 'white';
+  playerColor.value = playerColor.value === 'WHITE' ? 'BLACK' : 'WHITE';
 };
 
 const capturedPieces = ref<CapturedPieces>({
@@ -150,7 +150,7 @@ watch(
   () => autoRotate.value,
   (autoRotateNew) => {
     if (autoRotateNew) {
-      playerColor.value = gameState.value?.turn || 'white';
+      playerColor.value = gameState.value?.turn || 'WHITE';
     }
   },
 );
@@ -170,7 +170,7 @@ const getPieceSymbol = (piece: string): string => {
 const showGameOverDialog = ref(false);
 
 const showDrawConfirmDialog = ref(false);
-const drawOfferingPlayer = ref<'white' | 'black' | null>(null);
+const drawOfferingPlayer = ref<ChessColor | null>(null);
 
 const handleDrawOffer = () => {
   if (!gameState.value) {
@@ -251,8 +251,8 @@ watch(moves, async () => {
             <div
               class="player-info-card surface-card p-3 border-round"
               :class="{
-                'active-player': gameState?.turn === 'black',
-                'order-1': playerColor === 'black',
+                'active-player': gameState?.turn === 'BLACK',
+                'order-1': playerColor === 'BLACK',
               }"
             >
               <div class="flex justify-content-between align-items-center">
@@ -274,8 +274,8 @@ watch(moves, async () => {
             <div
               class="player-info-card surface-card p-3 border-round"
               :class="{
-                'active-player': gameState?.turn === 'white',
-                'order-0': playerColor === 'black',
+                'active-player': gameState?.turn === 'WHITE',
+                'order-0': playerColor === 'BLACK',
               }"
             >
               <div class="flex justify-content-between align-items-center">
@@ -308,14 +308,14 @@ watch(moves, async () => {
               icon="pi pi-flag"
               severity="danger"
               text
-              :label="`${gameState?.turn === 'white' ? 'White' : 'Black'} resigns`"
+              :label="`${gameState?.turn === 'WHITE' ? 'White' : 'Black'} resigns`"
               @click="handleResign"
             />
             <Button
               icon="pi pi-handshake"
               severity="secondary"
               text
-              :label="`${gameState?.turn === 'white' ? 'White' : 'Black'} offers draw`"
+              :label="`${gameState?.turn === 'WHITE' ? 'White' : 'Black'} offers draw`"
               @click="handleDrawOffer"
             />
           </div>
@@ -448,7 +448,7 @@ watch(moves, async () => {
       <i class="pi pi-handshake text-6xl text-primary"></i>
       <div class="text-2xl font-bold">{{ drawOfferingPlayer?.toUpperCase() }} offers a draw</div>
       <div class="text-xl text-600">
-        <strong>{{ drawOfferingPlayer === 'white' ? 'Black' : 'White' }}</strong
+        <strong>{{ drawOfferingPlayer === 'WHITE' ? 'Black' : 'White' }}</strong
         >, do you accept?
       </div>
     </div>

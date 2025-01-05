@@ -6,6 +6,7 @@ import CreateGameDialog from '@/components/CreateGameDialog.vue';
 import { GameService } from '@/services/GameService';
 import { useToast } from 'primevue/usetoast';
 import { authService } from '@/services/AuthService';
+import type { ChessColor } from '@/types';
 
 const router = useRouter();
 const toast = useToast();
@@ -20,7 +21,7 @@ const recentGames = [
 const handleCreateGame = async (gameDetails: {
   opponent: string;
   colorAssignment: 'random' | 'fixed';
-  playerColor?: 'white' | 'black';
+  playerColor?: ChessColor;
   isPublic: boolean;
 }) => {
   try {

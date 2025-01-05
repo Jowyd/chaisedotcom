@@ -3,7 +3,7 @@ export interface CapturedPieces {
   black: ChessPiece[];
 }
 
-export type ChessColor = 'white' | 'black';
+export type ChessColor = 'WHITE' | 'BLACK';
 
 export enum GameStatus {
   IN_PROGRESS = 'in_progress',
@@ -60,4 +60,20 @@ export interface ErrorMessages {
     status: number;
   };
   message?: string;
+}
+
+export interface ChessPiece {
+  type: string;
+  color: ChessColor;
+  symbol: string;
+}
+
+export interface Position {
+  row: number;
+  col: number;
+}
+
+export interface PromotionData {
+  color: ChessColor;
+  isOpen: boolean;
 }

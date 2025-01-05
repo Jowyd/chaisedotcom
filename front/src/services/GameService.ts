@@ -1,12 +1,12 @@
 import httpHelper from '@/utils/httpHelper';
-import { GameStatus, type GameHistoryFilters, type GameHistoryItem } from '@/types';
+import {
+  GameStatus,
+  type ChessColor,
+  type GameHistoryFilters,
+  type GameHistoryItem,
+} from '@/types';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/';
-
-interface ChessPiece {
-  type: string;
-  color: 'white' | 'black';
-  symbol: string;
-}
+import { type ChessPiece } from '@/types';
 
 function typeToFullName(type: string): string | undefined {
   return {
@@ -34,7 +34,7 @@ let mockGameState: GameState = {
   moves: [],
   isCheck: false,
   isCheckmate: false,
-  turn: 'white',
+  turn: 'WHITE',
   status: GameStatus.IN_PROGRESS,
 };
 
@@ -51,7 +51,7 @@ export interface CapturedPieces {
 }
 
 export interface DrawOffer {
-  offeredBy: 'white' | 'black';
+  offeredBy: ChessColor;
   accepted?: boolean;
 }
 
@@ -65,9 +65,9 @@ export interface GameState {
   moves: Move[];
   isCheck: boolean;
   isCheckmate: boolean;
-  turn: 'white' | 'black';
+  turn: ChessColor;
   status: GameStatus;
-  promotion?: 'white' | 'black' | null;
+  promotion?: ChessColor | null;
   blackPlayer?: Player;
   whitePlayer?: Player;
 }
@@ -76,13 +76,13 @@ export function stillPlaying(status: GameStatus): boolean {
   return status === GameStatus.IN_PROGRESS || status === GameStatus.CHECK;
 }
 
-function fenToColor(fen: string): string {
-  return fen.split(' ')[1];
+function fenToColor(fen: string): ChessColor {
+  return fen.split(' ')[1].toLowerCase() == 'w' ? 'WHITE' : 'BLACK';
 }
 function getPiecefromFen(char: string): ChessPiece {
   return {
     type: char.toLowerCase(),
-    color: char === char.toLowerCase() ? 'black' : 'white',
+    color: char === char.toLowerCase() ? 'BLACK' : 'WHITE',
     symbol: pieces[char.toLowerCase()],
   };
 }
@@ -108,8 +108,8 @@ function extractCapturedPiece(currentFen: string): CapturedPieces {
   const capturedPieces = findMissingPieces(initialPieces, currentPieces);
 
   return {
-    white: capturedPieces.filter((piece) => piece.color === 'white'),
-    black: capturedPieces.filter((piece) => piece.color === 'black'),
+    white: capturedPieces.filter((piece) => piece.color === 'WHITE'),
+    black: capturedPieces.filter((piece) => piece.color === 'BLACK'),
   };
 }
 
@@ -142,7 +142,7 @@ function findMissingPieces(initialPieces: string[], currentPieces: string[]): Ch
 interface CreateGameDTO {
   opponent: string;
   colorAssignment: 'random' | 'fixed';
-  playerColor?: 'white' | 'black';
+  playerColor?: ChessColor;
   isPublic: boolean;
 }
 
@@ -151,8 +151,7 @@ export const GameService = {
     try {
       const response = await httpHelper.get(`${API_URL}games/${gameId}`);
       const game = response.data;
-      const color = fenToColor(game.fen) == 'w' ? 'white' : 'black';
-      console.log(game);
+      const color = fenToColor(game.fen);
       return { ...mockGameState, ...game, turn: color };
     } catch (error) {
       console.error(error);
@@ -180,7 +179,7 @@ export const GameService = {
     try {
       const respose = await httpHelper.post(`${API_URL}games/${gameId}/move`, move);
       const newGameState = respose.data;
-      const color = fenToColor(newGameState.fen) == 'w' ? 'white' : 'black';
+      const color: ChessColor = fenToColor(newGameState.fen);
 
       return {
         ...mockGameState,
@@ -200,7 +199,7 @@ export const GameService = {
       };
       const response = await httpHelper.post(`${API_URL}games/${gameId}/promotion`, newPiece);
       const newGameState = response.data;
-      const color = fenToColor(newGameState.fen) == 'w' ? 'white' : 'black';
+      const color = fenToColor(newGameState.fen);
 
       console.log(newGameState);
       return {
@@ -214,7 +213,7 @@ export const GameService = {
     }
   },
 
-  async resign(gameId: string, color: 'white' | 'black'): Promise<GameState> {
+  async resign(gameId: string, color: ChessColor): Promise<GameState> {
     try {
       const response = await httpHelper.post(`${API_URL}games/${gameId}/resign`, { color });
       return response.data;
@@ -231,7 +230,7 @@ export const GameService = {
       moves: [],
       isCheck: false,
       isCheckmate: false,
-      turn: 'white',
+      turn: 'WHITE',
       status: GameStatus.IN_PROGRESS,
     };
   },
@@ -240,7 +239,7 @@ export const GameService = {
     try {
       const response = await httpHelper.post(`${API_URL}games/${gameId}/goto`, { index });
       const newGameState = response.data;
-      const color = fenToColor(newGameState.fen) == 'w' ? 'white' : 'black';
+      const color = fenToColor(newGameState.fen);
 
       return {
         ...mockGameState,
