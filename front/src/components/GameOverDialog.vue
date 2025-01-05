@@ -81,7 +81,7 @@ const gameResult = computed(() => {
 
       <!-- Actions -->
       <div class="flex gap-2 mt-4">
-        <Button label="New Game" icon="pi pi-plus" @click="$router.push('/new-game')" />
+        <Button label="New Game" icon="pi pi-plus" @click="$router.push('/dashboard')" />
         <Button label="Replay" icon="pi pi-replay" severity="secondary" @click="$emit('replay')" />
         <Button
           label="Back to Home"

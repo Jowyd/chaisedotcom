@@ -764,7 +764,7 @@ export class MoveService {
 
       if (isCheckmate) {
         game.status = GameStatus.CHECKMATE;
-        if (currentPlayer == "BLACK" && game.opponentColor == "BLACK") {
+        if (currentPlayer.toUpperCase() == game.opponentColor.toUpperCase()) {
           game.result = gameService.LOSER_POINTS;
         } else {
           game.result = gameService.WINNER_POINTS;
