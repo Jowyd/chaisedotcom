@@ -815,7 +815,7 @@ export class MoveService {
         isCheck: isCheck,
         isCheckmate: isCheckmate,
         status: game.status,
-        promotion: isPromotion ? piece.type : null,
+        promotion: isPromotion ? piece.color : null,
         whitePlayer: playersInformations.whitePlayer,
         blackPlayer: playersInformations.blackPlayer,
       };

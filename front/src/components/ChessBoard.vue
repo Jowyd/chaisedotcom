@@ -411,7 +411,7 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
             class="promotion-piece"
             @click="handlePromotion(piece)"
           >
-            <span :class="promotionDialog.color">{{ piece.symbol }}</span>
+            <span :class="promotionDialog.color.toLowerCase()">{{ piece.symbol }}</span>
           </button>
         </div>
       </div>

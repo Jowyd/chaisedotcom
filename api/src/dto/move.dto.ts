@@ -1,4 +1,5 @@
 import { ChessBoard, ChessPiece } from "../interfaces/chess.interface";
+import { ChessColor } from "../types";
 
 export interface MoveDTO {
   id?: number;
@@ -33,7 +34,7 @@ export interface GameReturnDTO {
   isCheck: boolean;
   isCheckmate: boolean;
   status: string;
-  promotion: string | null;
+  promotion: ChessColor | null;
   whitePlayer: PlayerGameInformations;
   blackPlayer: PlayerGameInformations;
 }
