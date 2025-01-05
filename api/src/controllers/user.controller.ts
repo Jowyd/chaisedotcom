@@ -81,7 +81,6 @@ export class UserController extends Controller {
   }
 
   @Patch("/me/username")
-  @Security("jwt")
   public async updateUsername(
     @Request() req: AuthRequest,
     @Body() body: { username: string }
@@ -90,7 +89,6 @@ export class UserController extends Controller {
   }
 
   @Patch("/me/password")
-  @Security("jwt")
   public async updatePassword(
     @Request() req: AuthRequest,
     @Body() body: PasswordUpdate
@@ -99,7 +97,6 @@ export class UserController extends Controller {
   }
 
   @Patch("/me/privacy")
-  @Security("jwt")
   public async updatePrivacySettings(
     @Request() req: AuthRequest,
     @Body() body: PrivacySettings
@@ -122,8 +119,12 @@ export class UserController extends Controller {
   }
 
   @Get("{username}/stats")
-  public async getStats(@Path() username: string): Promise<UserStats> {
-    return await userService.getStats(username);
+  public async getStats(
+    @Path() username: string,
+    @Request() req: AuthRequest
+  ): Promise<UserStats> {
+    const authUser = req.user;
+    return await userService.getStats(username, authUser);
   }
 
   @Get("{username}/games")
@@ -133,7 +134,6 @@ export class UserController extends Controller {
     @Queries() filters?: GameHistoryFiltersDTO
   ): Promise<GameHistoryDTO[]> {
     const authUser = req.user;
-    console.log("authUser", authUser);
     return await userService.getHistory(username, authUser, filters);
   }
 }

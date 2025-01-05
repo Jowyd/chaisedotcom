@@ -4,7 +4,7 @@ import {
   PasswordUpdate,
   PrivacySettings,
 } from "../dto/user.dto";
-import { notFound } from "../error/NotFoundError";
+import { notFound, unauthorized } from "../error/NotFoundError";
 import { UserMapper } from "../mapper/user.mapper";
 import { User } from "../models/user.model";
 import bcrypt from "bcrypt";
@@ -204,8 +204,14 @@ export class UserService {
     };
   }
 
-  public async getStats(username: string): Promise<UserStats> {
+  public async getStats(
+    username: string,
+    authUser: UserToken
+  ): Promise<UserStats> {
     const user = await User.findOne({ where: { username } });
+    if (user?.username !== authUser.username && !user?.public_profile) {
+      return unauthorized();
+    }
     if (!user) {
       return notFound(`User: ${username}`);
     }

@@ -55,7 +55,9 @@ export interface ErrorMessages {
   response: {
     data: {
       message: string;
-      status: number;
+      statusCode?: number;
     };
+    status: number;
   };
+  message?: string;
 }

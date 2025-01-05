@@ -60,16 +60,17 @@ const handleRegister = async () => {
       username: username.value,
       password: password.value,
     });
-    
+
     toast.add({
       severity: 'success',
       summary: 'Success',
       detail: 'Registration successful',
       life: 3000,
     });
-    
+
     router.push('/dashboard');
   } catch (error) {
+    console.info('Error registering:', error);
     toast.add({
       severity: 'error',
       summary: 'Error',
@@ -133,12 +134,7 @@ const navigateToLogin = () => {
         </div>
 
         <div class="flex align-items-center gap-2">
-          <Checkbox 
-            id="acceptTerms" 
-            v-model="acceptTerms" 
-            :binary="true"
-            :disabled="loading"
-          />
+          <Checkbox id="acceptTerms" v-model="acceptTerms" :binary="true" :disabled="loading" />
           <label for="acceptTerms" class="text-sm">
             I agree to the
             <a href="#" class="text-primary no-underline hover:underline">Terms of Service</a>
@@ -147,9 +143,9 @@ const navigateToLogin = () => {
           </label>
         </div>
 
-        <Button 
-          label="Create Account" 
-          severity="primary" 
+        <Button
+          label="Create Account"
+          severity="primary"
           class="w-full"
           :loading="loading"
           @click="handleRegister"

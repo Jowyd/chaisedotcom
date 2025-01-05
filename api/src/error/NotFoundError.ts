@@ -3,3 +3,9 @@ export function notFound(name: string): never {
   (error as any).status = 404;
   throw error;
 }
+
+export function unauthorized(): never {
+  const error = new Error("Unauthorized");
+  (error as any).status = 401;
+  throw error;
+}

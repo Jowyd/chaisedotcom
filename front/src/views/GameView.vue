@@ -11,9 +11,11 @@ import { type CapturedPieces, type PieceMove } from '@/types';
 import router from '@/router';
 import Checkbox from 'primevue/checkbox';
 import { type GameStatus } from '@/types';
+import { useToast } from 'primevue';
 
 const moves = ref<PieceMove[]>([]);
 const isReplaying = ref(false);
+const toast = useToast();
 
 const filteredMoves = computed(() => {
   return moves.value.filter((_, index) => index % 2 === 0);
@@ -27,7 +29,11 @@ const confirm = useConfirm();
 const handleResign = () => {
   const currentColor = gameState.value?.turn;
   if (!currentColor) {
-    throw new Error('Invalid game state');
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Invalid game state',
+    });
   }
   confirm.require({
     message: `Are you sure you want to resign as ${currentColor}?`,
@@ -35,10 +41,15 @@ const handleResign = () => {
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
-        const newGameState = await GameService.resign(gameId.value, currentColor);
+        const newGameState = await GameService.resign(gameId.value, currentColor!);
         updateGameState(newGameState);
       } catch (error) {
-        console.error('Error resigning game:', error);
+        console.info(error);
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to resign',
+        });
       }
     },
   });
@@ -171,16 +182,22 @@ const handleDrawOffer = () => {
 };
 
 const handleDrawResponse = async (accept: boolean) => {
-  if (accept) {
-    try {
+  try {
+    if (accept) {
       const newGameState = await GameService.acceptDraw(gameId.value);
       updateGameState(newGameState);
-    } catch (error) {
-      console.error('Error accepting draw:', error);
     }
+  } catch (error) {
+    console.info('Error handling draw response:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to handle draw response',
+    });
+  } finally {
+    showDrawConfirmDialog.value = false;
+    drawOfferingPlayer.value = null;
   }
-  showDrawConfirmDialog.value = false;
-  drawOfferingPlayer.value = null;
 };
 
 const handleReplay = () => {
