@@ -31,15 +31,6 @@ export function fullNameToSymbol(name: string): string | undefined {
   }[name.toUpperCase()];
 }
 
-const pieces: { [key: string]: string } = {
-  r: '♜',
-  n: '♞',
-  b: '♝',
-  q: '♛',
-  k: '♚',
-  p: '♟',
-};
-
 let mockGameState: GameState = {
   id: 'game-1',
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -92,65 +83,6 @@ export function stillPlaying(status: GameStatus): boolean {
 function fenToColor(fen: string): ChessColor {
   return fen.split(' ')[1].toLowerCase() == 'w' ? 'WHITE' : 'BLACK';
 }
-function getPiecefromFen(char: string): ChessPiece {
-  return {
-    type: char.toLowerCase(),
-    color: char === char.toLowerCase() ? 'BLACK' : 'WHITE',
-    symbol: pieces[char.toLowerCase()],
-  };
-}
-function extractCapturedPiece(currentFen: string): CapturedPieces {
-  const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-  const extractPieces = (fen: string) => {
-    const boardPart = fen.split(' ')[0];
-    const pieces: string[] = [];
-
-    boardPart.split('/').forEach((row) => {
-      row.split('').forEach((char) => {
-        if (isNaN(parseInt(char))) {
-          pieces.push(char);
-        }
-      });
-    });
-    return pieces;
-  };
-
-  const initialPieces = extractPieces(initialFen);
-  const currentPieces = extractPieces(currentFen);
-
-  const capturedPieces = findMissingPieces(initialPieces, currentPieces);
-
-  return {
-    white: capturedPieces.filter((piece) => piece.color === 'WHITE'),
-    black: capturedPieces.filter((piece) => piece.color === 'BLACK'),
-  };
-}
-
-function findMissingPieces(initialPieces: string[], currentPieces: string[]): ChessPiece[] {
-  const initialPieceCount = new Map<string, number>();
-  const currentPieceCount = new Map<string, number>();
-
-  initialPieces.forEach((piece) => {
-    initialPieceCount.set(piece, (initialPieceCount.get(piece) || 0) + 1);
-  });
-
-  currentPieces.forEach((piece) => {
-    currentPieceCount.set(piece, (currentPieceCount.get(piece) || 0) + 1);
-  });
-
-  const missingPieces: ChessPiece[] = [];
-
-  initialPieceCount.forEach((count, piece) => {
-    const currentCount = currentPieceCount.get(piece) || 0;
-    const missingCount = count - currentCount;
-
-    for (let i = 0; i < missingCount; i++) {
-      missingPieces.push(getPiecefromFen(piece));
-    }
-  });
-
-  return missingPieces;
-}
 
 interface CreateGameDTO {
   opponent: string;
@@ -172,10 +104,6 @@ export const GameService = {
     }
   },
 
-  getCapturedPieces(fen: string): CapturedPieces {
-    const capturedPieces = extractCapturedPiece(fen);
-    return capturedPieces;
-  },
   async getSuggestions(gameId: string, from: string): Promise<string[]> {
     try {
       const response = await httpHelper.post(`${API_URL}games/${gameId}/suggestions`, {
