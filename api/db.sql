@@ -1,44 +1,41 @@
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    public_profile BOOLEAN DEFAULT true,
-    show_game_history BOOLEAN DEFAULT true
-);
+CREATE TABLE `games` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `opponentName` varchar(50) NOT NULL,
+  `opponentColor` varchar(50) NOT NULL,
+  `isPublic` tinyint(1) NOT NULL DEFAULT 0,
+  `result` int(11) DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `games_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
--- Create games table
-CREATE TABLE IF NOT EXISTS games (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    opponentName VARCHAR(50) NOT NULL,
-    opponentColor VARCHAR(50) NOT NULL,
-    isPublic BOOLEAN NOT NULL DEFAULT FALSE,
-    result INT DEFAULT NULL,
-    status ENUM(
-        'in_progress',
-        'checkmate',
-        'stalemate',
-        'draw',
-        'surrender'
-    ) NOT NULL DEFAULT 'in_progress',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
 
--- Create moves table
-CREATE TABLE IF NOT EXISTS moves (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    game_id INT NOT NULL,
-    piece VARCHAR(10) NOT NULL,
-    `from` VARCHAR(5) NOT NULL,
-    `to` VARCHAR(5) NOT NULL,
-    `type` VARCHAR(255) DEFAULT 'normal',
-    isCheck BOOLEAN DEFAULT FALSE,
-    isCheckmate BOOLEAN DEFAULT FALSE,
-    turn VARCHAR(25) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (game_id) REFERENCES games (id) ON DELETE CASCADE
-);
+CREATE TABLE `moves` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `game_id` int(11) NOT NULL,
+  `piece` varchar(10) NOT NULL,
+  `from` varchar(5) NOT NULL,
+  `to` varchar(5) NOT NULL,
+  `type` varchar(255) DEFAULT 'normal',
+  `isCheck` tinyint(1) DEFAULT 0,
+  `isCheckmate` tinyint(1) DEFAULT 0,
+  `turn` varchar(25) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `game_id` (`game_id`),
+  CONSTRAINT `moves_ibfk_1` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=203 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `public_profile` tinyint(1) DEFAULT 1,
+  `show_game_history` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
