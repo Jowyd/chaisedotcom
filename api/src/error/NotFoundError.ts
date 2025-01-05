@@ -6,6 +6,6 @@ export function notFound(name: string): never {
 
 export function unauthorized(): never {
   const error = new Error("Unauthorized");
-  (error as any).status = 401;
+  (error as any).status = 413;
   throw error;
 }
