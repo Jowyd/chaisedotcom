@@ -36,7 +36,9 @@ class LeaderboardService {
         params.append('itemsPerPage', filters.itemsPerPage.toString());
       }
 
-      const response = await httpHelper.get(`${API_URL}users/leaderboard?${params.toString()}`);
+      const response = await httpHelper.get<LeaderboardResponse>(
+        `${API_URL}users/leaderboard?${params.toString()}`,
+      );
       return response.data;
     } catch (error) {
       console.error('Error fetching leaderboard:', error);

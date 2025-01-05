@@ -22,7 +22,7 @@ export interface PrivacySettings {
 class UserService {
   async getProfile(username: string): Promise<UserProfile> {
     try {
-      const response = await httpHelper.get(`${API_URL}users/profile/${username}`);
+      const response = await httpHelper.get<UserProfile>(`${API_URL}users/profile/${username}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -40,7 +40,7 @@ class UserService {
 
   async updatePassword(passwords: PasswordUpdate): Promise<void> {
     try {
-      await httpHelper.patch(`${API_URL}users/me/password`, passwords);
+      await httpHelper.patch<void>(`${API_URL}users/me/password`, passwords);
     } catch (error) {
       console.error('Error updating password:', error);
       throw error;
@@ -49,7 +49,7 @@ class UserService {
 
   async updatePrivacySettings(settings: PrivacySettings): Promise<void> {
     try {
-      await httpHelper.patch(`${API_URL}users/me/privacy`, settings);
+      await httpHelper.patch<void>(`${API_URL}users/me/privacy`, settings);
     } catch (error) {
       console.error('Error updating privacy settings:', error);
       throw error;
@@ -58,7 +58,7 @@ class UserService {
 
   async getUserStats(username: string): Promise<UserStats> {
     try {
-      const response = await httpHelper.get(`${API_URL}users/${username}/stats`);
+      const response = await httpHelper.get<UserStats>(`${API_URL}users/${username}/stats`);
       return response.data;
     } catch (error) {
       console.error('Error fetching user stats:', error);
