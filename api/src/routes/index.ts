@@ -115,6 +115,34 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["WHITE"]},{"dataType":"enum","enums":["BLACK"]}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "GameHistoryDTO": {
+        "dataType": "refObject",
+        "properties": {
+            "game_id": {"dataType":"double","required":true},
+            "opponentName": {"dataType":"string","required":true},
+            "opponentColor": {"ref":"ChessColor","required":true},
+            "isPublic": {"dataType":"boolean","required":true},
+            "result": {"dataType":"union","subSchemas":[{"dataType":"double"},{"dataType":"enum","enums":[null]}],"required":true},
+            "status": {"dataType":"string","required":true},
+            "createdAt": {"dataType":"datetime","required":true},
+            "moves": {"dataType":"double"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "GameHistoryFiltersDTO": {
+        "dataType": "refObject",
+        "properties": {
+            "startDate": {"dataType":"string"},
+            "endDate": {"dataType":"string"},
+            "result": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["won"]},{"dataType":"enum","enums":["lost"]},{"dataType":"enum","enums":["draw"]}]},
+            "isPublic": {"dataType":"boolean"},
+            "page": {"dataType":"double"},
+            "itemsPerPage": {"dataType":"double"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateGameDTO": {
         "dataType": "refObject",
         "properties": {
@@ -144,10 +172,20 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CapturedPiece": {
+        "dataType": "refObject",
+        "properties": {
+            "type": {"dataType":"string","required":true},
+            "color": {"ref":"ChessColor","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PlayerGameInformations": {
         "dataType": "refObject",
         "properties": {
             "username": {"dataType":"string","required":true},
+            "capturedPieces": {"dataType":"array","array":{"dataType":"refObject","ref":"CapturedPiece"},"required":true},
         },
         "additionalProperties": false,
     },
@@ -161,7 +199,7 @@ const models: TsoaRoute.Models = {
             "isCheck": {"dataType":"boolean","required":true},
             "isCheckmate": {"dataType":"boolean","required":true},
             "status": {"dataType":"string","required":true},
-            "promotion": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},
+            "promotion": {"dataType":"union","subSchemas":[{"ref":"ChessColor"},{"dataType":"enum","enums":[null]}],"required":true},
             "whitePlayer": {"ref":"PlayerGameInformations","required":true},
             "blackPlayer": {"ref":"PlayerGameInformations","required":true},
         },
@@ -182,34 +220,6 @@ const models: TsoaRoute.Models = {
         "properties": {
             "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["PAWN"]},{"dataType":"enum","enums":["ROOK"]},{"dataType":"enum","enums":["KNIGHT"]},{"dataType":"enum","enums":["BISHOP"]},{"dataType":"enum","enums":["QUEEN"]},{"dataType":"enum","enums":["KING"]}],"required":true},
             "color": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["WHITE"]},{"dataType":"enum","enums":["BLACK"]}],"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GameHistoryDTO": {
-        "dataType": "refObject",
-        "properties": {
-            "game_id": {"dataType":"double","required":true},
-            "opponentName": {"dataType":"string","required":true},
-            "opponentColor": {"ref":"ChessColor","required":true},
-            "isPublic": {"dataType":"boolean","required":true},
-            "result": {"dataType":"union","subSchemas":[{"dataType":"double"},{"dataType":"enum","enums":[null]}],"required":true},
-            "status": {"dataType":"string","required":true},
-            "createdAt": {"dataType":"datetime","required":true},
-            "moves": {"dataType":"double"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "GameHistoryFiltersDTO": {
-        "dataType": "refObject",
-        "properties": {
-            "startDate": {"dataType":"string"},
-            "endDate": {"dataType":"string"},
-            "result": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["won"]},{"dataType":"enum","enums":["lost"]},{"dataType":"enum","enums":["draw"]}]},
-            "isPublic": {"dataType":"boolean"},
-            "page": {"dataType":"double"},
-            "itemsPerPage": {"dataType":"double"},
         },
         "additionalProperties": false,
     },
@@ -275,6 +285,7 @@ export function RegisterRoutes(app: Router) {
 
     
         app.get('/users/info',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getUserInfo)),
 
@@ -305,6 +316,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/users',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getAllUsers)),
 
@@ -334,6 +346,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/users',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.createUser)),
 
@@ -364,6 +377,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.delete('/users/:id',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.deleteUser)),
 
@@ -394,6 +408,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.patch('/users/:id',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.updateUser)),
 
@@ -425,6 +440,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/users/me',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getMe)),
 
@@ -455,6 +471,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/users/profile/:username',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getProfile)),
 
@@ -581,6 +598,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/users/leaderboard',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getLeaderboard)),
 
@@ -613,12 +631,14 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/users/:username/stats',
+            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(UserController)),
             ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getStats)),
 
             async function UserController_getStats(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     username: {"in":"path","name":"username","required":true,"dataType":"string"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -631,6 +651,39 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getStats',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/users/:username/games',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(UserController)),
+            ...(fetchMiddlewares<RequestHandler>(UserController.prototype.getUserGames)),
+
+            async function UserController_getUserGames(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    username: {"in":"path","name":"username","required":true,"dataType":"string"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                    filters: {"in":"queries","name":"filters","ref":"GameHistoryFiltersDTO"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new UserController();
+
+              await templateService.apiHandler({
+                methodName: 'getUserGames',
                 controller,
                 response,
                 next,
@@ -714,6 +767,7 @@ export function RegisterRoutes(app: Router) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     game_id: {"in":"path","name":"game_id","required":true,"dataType":"double"},
                     body: {"in":"body","name":"body","required":true,"ref":"SuggestionsDTORequest"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -1192,6 +1246,7 @@ export function RegisterRoutes(app: Router) {
 
             async function AuthController_refresh(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"refreshToken":{"dataType":"string","required":true}}},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa

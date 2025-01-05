@@ -316,189 +316,6 @@
 					"BLACK"
 				]
 			},
-			"CreateGameDTO": {
-				"properties": {
-					"opponent": {
-						"type": "string"
-					},
-					"colorAssignment": {
-						"type": "string",
-						"enum": [
-							"random",
-							"fixed"
-						]
-					},
-					"playerColor": {
-						"$ref": "#/components/schemas/ChessColor"
-					},
-					"isPublic": {
-						"type": "boolean"
-					}
-				},
-				"required": [
-					"opponent",
-					"colorAssignment",
-					"isPublic"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ChessMove": {
-				"properties": {
-					"from": {
-						"type": "string"
-					},
-					"to": {
-						"type": "string"
-					},
-					"piece": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"from",
-					"to",
-					"piece"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"SuggestionsDTORequest": {
-				"properties": {
-					"from": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"from"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"PlayerGameInformations": {
-				"properties": {
-					"username": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"username"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"GameReturnDTO": {
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"fen": {
-						"type": "string"
-					},
-					"moves": {
-						"items": {
-							"properties": {
-								"color": {
-									"type": "string"
-								},
-								"piece": {
-									"type": "string"
-								},
-								"to": {
-									"type": "string"
-								},
-								"from": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"color",
-								"piece",
-								"to",
-								"from"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"isCheck": {
-						"type": "boolean"
-					},
-					"isCheckmate": {
-						"type": "boolean"
-					},
-					"status": {
-						"type": "string"
-					},
-					"promotion": {
-						"type": "string",
-						"nullable": true
-					},
-					"whitePlayer": {
-						"$ref": "#/components/schemas/PlayerGameInformations"
-					},
-					"blackPlayer": {
-						"$ref": "#/components/schemas/PlayerGameInformations"
-					}
-				},
-				"required": [
-					"id",
-					"fen",
-					"moves",
-					"isCheck",
-					"isCheckmate",
-					"status",
-					"promotion",
-					"whitePlayer",
-					"blackPlayer"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"MakeMoveDTO": {
-				"properties": {
-					"from": {
-						"type": "string"
-					},
-					"to": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"from",
-					"to"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ChessPiece": {
-				"properties": {
-					"type": {
-						"type": "string",
-						"enum": [
-							"PAWN",
-							"ROOK",
-							"KNIGHT",
-							"BISHOP",
-							"QUEEN",
-							"KING"
-						]
-					},
-					"color": {
-						"type": "string",
-						"enum": [
-							"WHITE",
-							"BLACK"
-						]
-					}
-				},
-				"required": [
-					"type",
-					"color"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"GameHistoryDTO": {
 				"properties": {
 					"game_id": {
@@ -571,6 +388,216 @@
 						"format": "double"
 					}
 				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateGameDTO": {
+				"properties": {
+					"opponent": {
+						"type": "string"
+					},
+					"colorAssignment": {
+						"type": "string",
+						"enum": [
+							"random",
+							"fixed"
+						]
+					},
+					"playerColor": {
+						"$ref": "#/components/schemas/ChessColor"
+					},
+					"isPublic": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"opponent",
+					"colorAssignment",
+					"isPublic"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ChessMove": {
+				"properties": {
+					"from": {
+						"type": "string"
+					},
+					"to": {
+						"type": "string"
+					},
+					"piece": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"from",
+					"to",
+					"piece"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SuggestionsDTORequest": {
+				"properties": {
+					"from": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"from"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CapturedPiece": {
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"color": {
+						"$ref": "#/components/schemas/ChessColor"
+					}
+				},
+				"required": [
+					"type",
+					"color"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PlayerGameInformations": {
+				"properties": {
+					"username": {
+						"type": "string"
+					},
+					"capturedPieces": {
+						"items": {
+							"$ref": "#/components/schemas/CapturedPiece"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"username",
+					"capturedPieces"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GameReturnDTO": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"fen": {
+						"type": "string"
+					},
+					"moves": {
+						"items": {
+							"properties": {
+								"color": {
+									"type": "string"
+								},
+								"piece": {
+									"type": "string"
+								},
+								"to": {
+									"type": "string"
+								},
+								"from": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"color",
+								"piece",
+								"to",
+								"from"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"isCheck": {
+						"type": "boolean"
+					},
+					"isCheckmate": {
+						"type": "boolean"
+					},
+					"status": {
+						"type": "string"
+					},
+					"promotion": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ChessColor"
+							}
+						],
+						"nullable": true
+					},
+					"whitePlayer": {
+						"$ref": "#/components/schemas/PlayerGameInformations"
+					},
+					"blackPlayer": {
+						"$ref": "#/components/schemas/PlayerGameInformations"
+					}
+				},
+				"required": [
+					"id",
+					"fen",
+					"moves",
+					"isCheck",
+					"isCheckmate",
+					"status",
+					"promotion",
+					"whitePlayer",
+					"blackPlayer"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MakeMoveDTO": {
+				"properties": {
+					"from": {
+						"type": "string"
+					},
+					"to": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"from",
+					"to"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ChessPiece": {
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"PAWN",
+							"ROOK",
+							"KNIGHT",
+							"BISHOP",
+							"QUEEN",
+							"KING"
+						]
+					},
+					"color": {
+						"type": "string",
+						"enum": [
+							"WHITE",
+							"BLACK"
+						]
+					}
+				},
+				"required": [
+					"type",
+					"color"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -679,7 +706,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -704,7 +735,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": []
 			},
 			"post": {
@@ -724,7 +759,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -749,7 +788,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -779,7 +822,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -821,7 +868,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -843,7 +894,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -969,7 +1024,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "query",
@@ -1018,7 +1077,11 @@
 				"tags": [
 					"Users"
 				],
-				"security": [],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -1026,6 +1089,112 @@
 						"required": true,
 						"schema": {
 							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/users/{username}/games": {
+			"get": {
+				"operationId": "GetUserGames",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"total": {
+											"type": "number",
+											"format": "double"
+										},
+										"games": {
+											"items": {
+												"$ref": "#/components/schemas/GameHistoryDTO"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"total",
+										"games"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Users"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "username",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "endDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "result",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"won",
+								"lost",
+								"draw"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "isPublic",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "itemsPerPage",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
 						}
 					}
 				]
@@ -1865,7 +2034,25 @@
 					}
 				},
 				"security": [],
-				"parameters": []
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"refreshToken": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"refreshToken"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
 			}
 		}
 	},
