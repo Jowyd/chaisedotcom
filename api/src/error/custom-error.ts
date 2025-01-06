@@ -109,3 +109,43 @@ export class BaseError extends Error {
       );
     }
   }
+
+  export class AuthenticationError extends BaseError {
+    constructor(message: string) {
+      super(message, 401, 'AUTHENTICATION_FAILED');
+    }
+  }
+  
+  export class InvalidCredentialsError extends AuthenticationError {
+    constructor() {
+      super('Invalid username or password');
+    }
+  }
+  
+  export class UserExistsError extends BaseError {
+    constructor(field: string) {
+      super(
+        `User with this ${field} already exists`,
+        409,
+        'USER_EXISTS'
+      );
+    }
+  }
+  
+  export class TokenError extends BaseError {
+    constructor(message: string) {
+      super(message, 401, 'TOKEN_ERROR');
+    }
+  }
+  
+  export class InvalidRefreshTokenError extends TokenError {
+    constructor() {
+      super('Invalid or expired refresh token');
+    }
+  }
+  
+  export class MissingTokenError extends TokenError {
+    constructor() {
+      super('Refresh token is missing or malformed');
+    }
+  }
