@@ -71,7 +71,10 @@ export class UserService {
     }
   }
 
-  public async getProfile(username: string): Promise<UserProfile> {
+  public async getProfile(
+    username: string,
+    authUser: UserToken
+  ): Promise<UserProfile> {
     const user = await User.findOne({
       where: { username },
       attributes: [
@@ -85,8 +88,9 @@ export class UserService {
     if (!user) {
       return notFound("User");
     }
-
-    console.log(user);
+    if (!user.public_profile && user.id !== authUser.id) {
+      return unauthorized();
+    }
 
     return {
       username: user.username,

@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import DashboardSidebar from '@/components/DashboardSidebar.vue';
-import { leaderboardService, type LeaderboardPlayer } from '@/services/LeaderboardService';
 import { useToast } from 'primevue/usetoast';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { ErrorService } from '@/services/ErrorService';
+import { leaderboardService, type LeaderboardPlayer } from '@/services/LeaderboardService';
+import DashboardSidebar from '@/components/DashboardSidebar.vue';
+import Dropdown from 'primevue/dropdown';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Avatar from 'primevue/avatar';
 
 const router = useRouter();
 const toast = useToast();
+const { loading, withErrorHandling } = useErrorHandler();
+
 const players = ref<LeaderboardPlayer[]>([]);
-const loading = ref(true);
 const timeRange = ref('all');
 const currentPage = ref(0);
 const itemsPerPage = ref(10);
@@ -20,29 +27,27 @@ const timeRanges = [
   { label: 'This Week', value: 'week' },
 ];
 
+onMounted(() => {
+  ErrorService.init(toast);
+  loadLeaderboard();
+});
+
 const loadLeaderboard = async () => {
-  loading.value = true;
-  try {
+  await withErrorHandling(async () => {
     const data = await leaderboardService.getLeaderboard({
       timeRange: timeRange.value as 'all' | 'month' | 'week',
       page: currentPage.value,
       itemsPerPage: itemsPerPage.value,
     });
-    players.value = data.players.map((player: any, index: number) => ({
+
+    players.value = data.players.map((player, index) => ({
       ...player,
       rank: currentPage.value * itemsPerPage.value + index + 1,
     }));
-  } catch (error) {
-    console.error('Error loading leaderboard:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load leaderboard',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
-  }
+
+    totalPlayers.value = data.total || data.players.length;
+    return true;
+  }, 'Loading leaderboard');
 };
 
 const navigateToProfile = (username: string) => {
@@ -78,10 +83,6 @@ const getRankIcon = (rank: number) => {
 watch([timeRange, currentPage, itemsPerPage], () => {
   loadLeaderboard();
 });
-
-onMounted(() => {
-  loadLeaderboard();
-});
 </script>
 
 <template>
@@ -98,6 +99,7 @@ onMounted(() => {
             optionLabel="label"
             optionValue="value"
             placeholder="Select Time Range"
+            :disabled="loading"
           />
         </div>
 
@@ -111,6 +113,7 @@ onMounted(() => {
           tableStyle="min-width: 50rem"
           class="p-datatable-sm"
           :total-records="totalPlayers"
+          :lazy="true"
         >
           <Column field="rank" header="Rank" style="width: 5rem">
             <template #body="{ data }">

@@ -27,6 +27,7 @@ import { AuthRequest } from "../dto/auth.dto";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 import { UserStats } from "../dto/stats.dto";
 import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
+import { notFound } from "../error/NotFoundError";
 
 @Route("users")
 @Tags("Users")
@@ -76,8 +77,12 @@ export class UserController extends Controller {
   }
 
   @Get("/profile/{username}")
-  public async getProfile(@Path() username: string): Promise<UserProfile> {
-    return await userService.getProfile(username);
+  public async getProfile(
+    @Path() username: string,
+    @Request() req: AuthRequest
+  ): Promise<UserProfile> {
+    const user = req.user;
+    return await userService.getProfile(username, user);
   }
 
   @Patch("/me/username")
@@ -132,7 +137,7 @@ export class UserController extends Controller {
     @Path() username: string,
     @Request() req: AuthRequest,
     @Queries() filters?: GameHistoryFiltersDTO
-  ): Promise<{ games: GameHistoryDTO[], total: number }> {
+  ): Promise<{ games: GameHistoryDTO[]; total: number }> {
     const authUser = req.user;
     return await userService.getHistory(username, authUser, filters);
   }

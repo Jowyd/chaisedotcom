@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
 import { useErrorHandler } from '@/composables/useErrorHandler';
 import { ErrorService } from '@/services/ErrorService';
 import { ValidationService } from '@/services/ValidationService';
@@ -12,12 +11,7 @@ import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 
 const router = useRouter();
-const toast = useToast();
 const { loading, withErrorHandling } = useErrorHandler();
-
-onMounted(() => {
-  ErrorService.init(toast);
-});
 
 const username = ref('');
 const password = ref('');

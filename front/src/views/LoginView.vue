@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
 import { useErrorHandler } from '@/composables/useErrorHandler';
 import { ErrorService } from '@/services/ErrorService';
 import { authService } from '@/services/AuthService';
@@ -11,12 +10,7 @@ import Button from 'primevue/button';
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
 const { loading, withErrorHandling } = useErrorHandler();
-
-onMounted(() => {
-  ErrorService.init(toast);
-});
 
 const username = ref('');
 const password = ref('');

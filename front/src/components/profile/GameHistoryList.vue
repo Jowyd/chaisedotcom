@@ -5,16 +5,11 @@ import type { GameHistoryFilters, GameHistoryItem } from '@/types';
 import { GameService } from '@/services/GameService';
 import { useErrorHandler } from '@/composables/useErrorHandler';
 import { ErrorService } from '@/services/ErrorService';
-import { useToast } from 'primevue/usetoast';
 
 const props = defineProps<{
   username: string;
   publicView: boolean;
 }>();
-const toast = useToast();
-onMounted(() => {
-  ErrorService.init(toast);
-});
 
 const router = useRouter();
 const games = ref<GameHistoryItem[]>([]);
