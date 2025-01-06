@@ -4,7 +4,7 @@ import {
   PasswordUpdate,
   PrivacySettings,
 } from "../dto/user.dto";
-import { notFound, unauthorized } from "../error/NotFoundError";
+import { notFound } from "../error/NotFoundError";
 import { UserMapper } from "../mapper/user.mapper";
 import { User } from "../models/user.model";
 import bcrypt from "bcrypt";
@@ -21,8 +21,19 @@ import {
   GameHistoryListDTO,
 } from "../dto/game.dto";
 import { UserToken } from "../dto/auth.dto";
-import { BaseError, UserNotFoundError, UsernameConflictError, InvalidPasswordError, PrivacyViolationError, UserCreationError, UserDeletionError, UserUpdateError, LeaderboardError, GameHistoryAccessError, InvalidDateRangeError} from "../error/custom-error";
-
+import {
+  BaseError,
+  UserNotFoundError,
+  UsernameConflictError,
+  InvalidPasswordError,
+  PrivacyViolationError,
+  UserCreationError,
+  UserDeletionError,
+  UserUpdateError,
+  LeaderboardError,
+  GameHistoryAccessError,
+  InvalidDateRangeError,
+} from "../error/custom-error";
 
 export class UserService {
   public async getAllUsers(): Promise<UserOutputDTO[]> {
@@ -30,11 +41,7 @@ export class UserService {
       let userList = await User.findAll();
       return UserMapper.toOutputDtoList(userList);
     } catch (error) {
-      throw new BaseError(
-        'Failed to fetch users',
-        500,
-        'USERS_FETCH_ERROR'
-      );
+      throw new BaseError("Failed to fetch users", 500, "USERS_FETCH_ERROR");
     }
   }
 
@@ -62,7 +69,9 @@ export class UserService {
       if (error instanceof BaseError) {
         throw error;
       }
-      throw new UserCreationError(error instanceof Error ? error.message : 'Unknown error');
+      throw new UserCreationError(
+        error instanceof Error ? error.message : "Unknown error"
+      );
     }
   }
 
@@ -110,7 +119,9 @@ export class UserService {
       if (error instanceof BaseError) {
         throw error;
       }
-      throw new UserUpdateError(error instanceof Error ? error.message : 'Unknown error');
+      throw new UserUpdateError(
+        error instanceof Error ? error.message : "Unknown error"
+      );
     }
   }
 
@@ -131,7 +142,7 @@ export class UserService {
     if (!user) {
       throw new UserNotFoundError(username);
     }
-    
+
     if (!user.public_profile && user.id !== authUser.id) {
       throw new PrivacyViolationError();
     }
@@ -173,7 +184,9 @@ export class UserService {
       throw new UserNotFoundError(userId);
     }
 
-    const isValidPassword = await user.validatePassword(passwords.currentPassword);
+    const isValidPassword = await user.validatePassword(
+      passwords.currentPassword
+    );
     if (!isValidPassword) {
       throw new InvalidPasswordError();
     }
@@ -209,7 +222,7 @@ export class UserService {
           throw new BaseError(
             'Invalid time range. Allowed values are: "week", "month", "all"',
             400,
-            'INVALID_TIME_RANGE'
+            "INVALID_TIME_RANGE"
           );
         }
 
@@ -225,9 +238,9 @@ export class UserService {
 
       if (page < 0 || itemsPerPage < 1) {
         throw new BaseError(
-          'Invalid pagination parameters',
+          "Invalid pagination parameters",
           400,
-          'INVALID_PAGINATION'
+          "INVALID_PAGINATION"
         );
       }
 
@@ -272,8 +285,10 @@ export class UserService {
       if (error instanceof BaseError) {
         throw error;
       }
-      
-      throw new LeaderboardError(error instanceof Error ? error.message : 'Unknown error');
+
+      throw new LeaderboardError(
+        error instanceof Error ? error.message : "Unknown error"
+      );
     }
   }
 
@@ -285,7 +300,7 @@ export class UserService {
     if (!user) {
       throw new UserNotFoundError(username);
     }
-    
+
     if (user?.username !== authUser.username && !user?.public_profile) {
       throw new PrivacyViolationError();
     }
@@ -430,7 +445,7 @@ export class UserService {
         if (filters.startDate && filters.endDate) {
           const start = new Date(filters.startDate);
           const end = new Date(filters.endDate);
-          
+
           if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
             throw new InvalidDateRangeError();
           }
@@ -445,7 +460,7 @@ export class UserService {
             throw new BaseError(
               'Invalid result filter. Allowed values are: "won", "lost", "draw"',
               400,
-              'INVALID_RESULT_FILTER'
+              "INVALID_RESULT_FILTER"
             );
           }
         }
@@ -458,9 +473,9 @@ export class UserService {
 
       if (page < 0 || itemsPerPage < 1) {
         throw new BaseError(
-          'Invalid pagination parameters',
+          "Invalid pagination parameters",
           400,
-          'INVALID_PAGINATION'
+          "INVALID_PAGINATION"
         );
       }
 
@@ -490,9 +505,9 @@ export class UserService {
         throw error;
       }
       throw new BaseError(
-        'Failed to fetch game history',
+        "Failed to fetch game history",
         500,
-        'GAME_HISTORY_ERROR'
+        "GAME_HISTORY_ERROR"
       );
     }
   }

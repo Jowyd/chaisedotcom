@@ -7,8 +7,16 @@ import { UserToken } from "../dto/auth.dto";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
-import { notFound, unauthorized } from "../error/NotFoundError";
-import { AccessDeniedError, CheckError, GameNotFoundError, GameOverError, InvalidMoveError, InvalidMoveIndexError, InvalidTurnError, PromotionError } from "../error/custom-error";
+import {
+  AccessDeniedError,
+  CheckError,
+  GameNotFoundError,
+  GameOverError,
+  InvalidMoveError,
+  InvalidMoveIndexError,
+  InvalidTurnError,
+  PromotionError,
+} from "../error/custom-error";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -895,7 +903,7 @@ export class MoveService {
     }
     const currentBoard = await this.currentMoveOfGame(game_id);
     if (!this.isPromotion(currentBoard)) {
-      throw new PromotionError('No pawn available for promotion');
+      throw new PromotionError("No pawn available for promotion");
     }
 
     const promotionBoard = this.makePromotion(currentBoard, piece.type);

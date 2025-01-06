@@ -1,263 +1,199 @@
 export class BaseError extends Error {
-    constructor(
-      public message: string,
-      public statusCode: number,
-      public code: string
-    ) {
-      super(message);
-      this.name = this.constructor.name;
-      Error.captureStackTrace(this, this.constructor);
-    }
+  constructor(
+    public message: string,
+    public statusCode: number,
+    public code: string
+  ) {
+    super(message);
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
   }
-  
-  export class UserNotFoundError extends BaseError {
-    constructor(identifier: string | number) {
-      super(
-        `User ${identifier} not found`,
-        404,
-        'USER_NOT_FOUND'
-      );
-    }
-  }
-  
-  export class UsernameConflictError extends BaseError {
-    constructor(username: string) {
-      super(
-        `Username "${username}" is already taken`,
-        409,
-        'USERNAME_CONFLICT'
-      );
-    }
-  }
-  
-  export class InvalidPasswordError extends BaseError {
-    constructor() {
-      super(
-        'Current password is incorrect',
-        401,
-        'INVALID_PASSWORD'
-      );
-    }
-  }
-  
-  export class PrivacyViolationError extends BaseError {
-    constructor() {
-      super(
-        'You do not have permission to view this profile',
-        403,
-        'PRIVACY_VIOLATION'
-      );
-    }
-  }
-  
-  export class GameHistoryAccessError extends BaseError {
-    constructor() {
-      super(
-        'Game history is not publicly available for this user',
-        403,
-        'GAME_HISTORY_PRIVATE'
-      );
-    }
-  }
-  
-  export class InvalidDateRangeError extends BaseError {
-    constructor() {
-      super(
-        'Invalid date range provided for game history',
-        400,
-        'INVALID_DATE_RANGE'
-      );
-    }
-  }
+}
 
-  export class UserCreationError extends BaseError {
-    constructor(reason: string) {
-      super(
-        `Failed to create user: ${reason}`,
-        400,
-        'USER_CREATION_FAILED'
-      );
-    }
+export class UserNotFoundError extends BaseError {
+  constructor(identifier: string | number) {
+    super(`User ${identifier} not found`, 404, "USER_NOT_FOUND");
   }
-  
-  export class UserUpdateError extends BaseError {
-    constructor(reason: string) {
-      super(
-        `Failed to update user: ${reason}`,
-        400,
-        'USER_UPDATE_FAILED'
-      );
-    }
-  }
-  
-  export class UserDeletionError extends BaseError {
-    constructor(id: number) {
-      super(
-        `Failed to delete user with ID ${id}`,
-        400,
-        'USER_DELETION_FAILED'
-      );
-    }
-  }
-  
-  export class LeaderboardError extends BaseError {
-    constructor(reason: string) {
-      super(
-        `Failed to fetch leaderboard: ${reason}`,
-        500,
-        'LEADERBOARD_ERROR'
-      );
-    }
-  }
+}
 
-  export class AuthenticationError extends BaseError {
-    constructor(message: string) {
-      super(message, 401, 'AUTHENTICATION_FAILED');
-    }
+export class UsernameConflictError extends BaseError {
+  constructor(username: string) {
+    super(`Username "${username}" is already taken`, 409, "USERNAME_CONFLICT");
   }
-  
-  export class InvalidCredentialsError extends AuthenticationError {
-    constructor() {
-      super('Invalid username or password');
-    }
-  }
-  
-  export class UserExistsError extends BaseError {
-    constructor(field: string) {
-      super(
-        `User with this ${field} already exists`,
-        409,
-        'USER_EXISTS'
-      );
-    }
-  }
-  
-  export class TokenError extends BaseError {
-    constructor(message: string) {
-      super(message, 401, 'TOKEN_ERROR');
-    }
-  }
-  
-  export class InvalidRefreshTokenError extends TokenError {
-    constructor() {
-      super('Invalid or expired refresh token');
-    }
-  }
-  
-  export class MissingTokenError extends TokenError {
-    constructor() {
-      super('Refresh token is missing or malformed');
-    }
-  }
+}
 
-  export class GameNotFoundError extends BaseError {
-    constructor(gameId: number | string) {
-      super(
-        `Game with id ${gameId} not found`,
-        404,
-        'GAME_NOT_FOUND'
-      );
-    }
+export class InvalidPasswordError extends BaseError {
+  constructor() {
+    super("Current password is incorrect", 401, "INVALID_PASSWORD");
   }
-  
-  export class GameOverError extends BaseError {
-    constructor() {
-      super(
-        'Game is already over',
-        403,
-        'GAME_OVER'
-      );
-    }
+}
+
+export class PrivacyViolationError extends BaseError {
+  constructor() {
+    super(
+      "You do not have permission to view this profile",
+      403,
+      "PRIVACY_VIOLATION"
+    );
   }
-  
-  export class InvalidTurnError extends BaseError {
-    constructor() {
-      super(
-        'Not your turn or invalid piece selection',
-        403,
-        'INVALID_TURN'
-      );
-    }
+}
+
+export class GameHistoryAccessError extends BaseError {
+  constructor() {
+    super(
+      "Game history is not publicly available for this user",
+      403,
+      "GAME_HISTORY_PRIVATE"
+    );
   }
-  
-  export class InvalidMoveError extends BaseError {
-    constructor(reason?: string) {
-      super(
-        reason || 'Invalid move',
-        403,
-        'INVALID_MOVE'
-      );
-    }
+}
+
+export class InvalidDateRangeError extends BaseError {
+  constructor() {
+    super(
+      "Invalid date range provided for game history",
+      400,
+      "INVALID_DATE_RANGE"
+    );
   }
-  
-  export class PromotionError extends BaseError {
-    constructor(message: string) {
-      super(
-        message,
-        403,
-        'PROMOTION_ERROR'
-      );
-    }
+}
+
+export class UserCreationError extends BaseError {
+  constructor(reason: string) {
+    super(`Failed to create user: ${reason}`, 400, "USER_CREATION_FAILED");
   }
-  
-  export class InvalidMoveIndexError extends BaseError {
-    constructor() {
-      super(
-        'Invalid move index',
-        400,
-        'INVALID_MOVE_INDEX'
-      );
-    }
+}
+
+export class UserUpdateError extends BaseError {
+  constructor(reason: string) {
+    super(`Failed to update user: ${reason}`, 400, "USER_UPDATE_FAILED");
   }
-  
-  export class AccessDeniedError extends BaseError {
-    constructor() {
-      super(
-        'You do not have permission to access this game',
-        403,
-        'ACCESS_DENIED'
-      );
-    }
+}
+
+export class UserDeletionError extends BaseError {
+  constructor(id: number) {
+    super(`Failed to delete user with ID ${id}`, 400, "USER_DELETION_FAILED");
   }
-  
-  export class CheckError extends BaseError {
-    constructor() {
-      super(
-        'Move would leave king in check',
-        403,
-        'CHECK_ERROR'
-      );
-    }
+}
+
+export class LeaderboardError extends BaseError {
+  constructor(reason: string) {
+    super(`Failed to fetch leaderboard: ${reason}`, 500, "LEADERBOARD_ERROR");
   }
+}
+
+export class AuthenticationError extends BaseError {
+  constructor(message: string) {
+    super(message, 401, "AUTHENTICATION_FAILED");
+  }
+}
+
+export class InvalidCredentialsError extends AuthenticationError {
+  constructor() {
+    super("Invalid username or password");
+  }
+}
+
+export class UserExistsError extends BaseError {
+  constructor(field: string) {
+    super(`User with this ${field} already exists`, 409, "USER_EXISTS");
+  }
+}
+
+export class TokenError extends BaseError {
+  constructor(message: string) {
+    super(message, 401, "TOKEN_ERROR");
+  }
+}
+
+export class InvalidRefreshTokenError extends TokenError {
+  constructor() {
+    super("Invalid or expired refresh token");
+  }
+}
+
+export class MissingTokenError extends TokenError {
+  constructor() {
+    super("Refresh token is missing or malformed");
+  }
+}
+
+export class GameNotFoundError extends BaseError {
+  constructor(gameId: number | string) {
+    super(`Game with id ${gameId} not found`, 404, "GAME_NOT_FOUND");
+  }
+}
+
+export class GameOverError extends BaseError {
+  constructor() {
+    super("Game is already over", 403, "GAME_OVER");
+  }
+}
+
+export class InvalidTurnError extends BaseError {
+  constructor() {
+    super("Not your turn or invalid piece selection", 403, "INVALID_TURN");
+  }
+}
+
+export class InvalidMoveError extends BaseError {
+  constructor(reason?: string) {
+    super(reason || "You cannot move that piece there", 403, "INVALID_MOVE");
+  }
+}
+
+export class PromotionError extends BaseError {
+  constructor(message: string) {
+    super(message, 403, "PROMOTION_ERROR");
+  }
+}
+
+export class InvalidMoveIndexError extends BaseError {
+  constructor() {
+    super("Invalid move index", 400, "INVALID_MOVE_INDEX");
+  }
+}
+
+export class AccessDeniedError extends BaseError {
+  constructor() {
+    super(
+      "You do not have permission to access this game",
+      403,
+      "ACCESS_DENIED"
+    );
+  }
+}
+
+export class CheckError extends BaseError {
+  constructor() {
+    super("Move would leave king in check", 403, "CHECK_ERROR");
+  }
+}
 
 export class InvalidGameConfigError extends BaseError {
   constructor(message: string) {
-    super(
-      message,
-      400,
-      'INVALID_GAME_CONFIG'
-    );
+    super(message, 400, "INVALID_GAME_CONFIG");
   }
 }
 
 export class InvalidColorAssignmentError extends InvalidGameConfigError {
   constructor() {
-    super('playerColor is required when colorAssignment is fixed');
+    super("playerColor is required when colorAssignment is fixed");
   }
 }
 
 export class InvalidPlayerColorError extends InvalidGameConfigError {
   constructor() {
-    super('playerColor must be WHITE or BLACK');
+    super("playerColor must be WHITE or BLACK");
   }
 }
 
 export class UnauthorizedGameAccessError extends BaseError {
   constructor() {
     super(
-      'Unauthorized to access or modify this game',
+      "Unauthorized to access or modify this game",
       403,
-      'UNAUTHORIZED_GAME_ACCESS'
+      "UNAUTHORIZED_GAME_ACCESS"
     );
   }
 }
@@ -267,37 +203,25 @@ export class InvalidHistoryFiltersError extends BaseError {
     super(
       `Invalid history filters: ${message}`,
       400,
-      'INVALID_HISTORY_FILTERS'
+      "INVALID_HISTORY_FILTERS"
     );
   }
 }
 
 export class InvalidBulkOperationError extends BaseError {
   constructor(message: string) {
-    super(
-      `Invalid bulk operation: ${message}`,
-      400,
-      'INVALID_BULK_OPERATION'
-    );
+    super(`Invalid bulk operation: ${message}`, 400, "INVALID_BULK_OPERATION");
   }
 }
 
 export class InvalidGameStateError extends BaseError {
   constructor(message: string) {
-    super(
-      message,
-      400,
-      'INVALID_GAME_STATE'
-    );
+    super(message, 400, "INVALID_GAME_STATE");
   }
 }
 
 export class InvalidResignationError extends BaseError {
   constructor() {
-    super(
-      'Invalid resignation attempt',
-      400,
-      'INVALID_RESIGNATION'
-    );
+    super("Invalid resignation attempt", 400, "INVALID_RESIGNATION");
   }
 }
