@@ -53,7 +53,7 @@ Copier le fichier `.env.example` et le renommer en `.env` dans le dossier `api` 
 - Possibilité de charger une partie
 - Possibilité de mettre sa partie en public ou privé
 - Rotation du board
-- Possitbilité de reprendre une partie en cours
+- Possibilité de reprendre une partie en cours
 - Possibilité de revoir les coups d'une partie
 
 ### Divers
