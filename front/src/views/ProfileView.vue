@@ -160,34 +160,6 @@ watch(
           </div>
         </div>
 
-        <div v-if="isOwnProfile" class="col-12">
-          <div class="card">
-            <h2 class="text-2xl font-bold mb-4">Privacy Settings</h2>
-            <div class="flex flex-column gap-3">
-              <div class="flex align-items-center justify-content-between">
-                <div>
-                  <h3 class="text-lg font-medium m-0">Public Profile</h3>
-                  <p class="text-600 m-0">Allow others to view your profile</p>
-                </div>
-                <InputSwitch v-model="privacySettings.publicProfile" />
-              </div>
-              <div class="flex align-items-center justify-content-between">
-                <div>
-                  <h3 class="text-lg font-medium m-0">Game History</h3>
-                  <p class="text-600 m-0">Allow others to view your game history</p>
-                </div>
-                <InputSwitch v-model="privacySettings.showGameHistory" />
-              </div>
-              <Button
-                label="Save Settings"
-                @click="updatePrivacySettings"
-                :loading="loading"
-                severity="primary"
-              />
-            </div>
-          </div>
-        </div>
-
         <!-- Player Stats and Game History -->
         <div class="col-12 lg:col-4" v-if="!loadingStats">
           <PlayerStats :username="username" :stats="userStats" />
