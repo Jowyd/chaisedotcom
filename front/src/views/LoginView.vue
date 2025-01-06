@@ -1,79 +1,127 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { authService } from '@/services/AuthService';
 import { useToast } from 'primevue/usetoast';
-import Password from 'primevue/password';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { ErrorService } from '@/services/ErrorService';
+import { authService } from '@/services/AuthService';
 import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
 import Button from 'primevue/button';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const { loading, withErrorHandling } = useErrorHandler();
+
+onMounted(() => {
+  ErrorService.init(toast);
+});
 
 const username = ref('');
 const password = ref('');
-const loading = ref(false);
 
-const handleLogin = async () => {
-  if (!username.value || !password.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Please fill in all fields',
-      life: 3000,
+const validateForm = (): boolean => {
+  const validationErrors = [];
+
+  if (!username.value.trim()) {
+    validationErrors.push({
+      field: 'username',
+      code: 'REQUIRED',
+      message: 'Username is required',
     });
-    return;
   }
 
-  loading.value = true;
-  try {
+  if (!password.value) {
+    validationErrors.push({
+      field: 'password',
+      code: 'REQUIRED',
+      message: 'Password is required',
+    });
+  }
+
+  if (validationErrors.length > 0) {
+    ErrorService.handleFormValidationErrors(validationErrors);
+    return false;
+  }
+
+  return true;
+};
+
+const handleLogin = async () => {
+  if (!validateForm()) return;
+
+  await withErrorHandling(async () => {
     await authService.login({
       username: username.value,
       password: password.value,
     });
 
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Logged in successfully',
-      life: 3000,
-    });
+    ErrorService.handleSuccess('Login successful');
     const redirectPath = (route.query.redirect as string) || '/dashboard';
     router.push(redirectPath);
-  } catch (error) {
-    console.error('Error logging in:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to log in',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
-  }
+    return true;
+  }, 'Login');
+};
+
+const navigateToRegister = () => {
+  router.push('/register');
 };
 </script>
 
 <template>
-  <div class="flex align-items-center justify-content-center min-h-screen">
-    <div class="surface-card p-4 shadow-2 border-round w-full lg:w-4">
-      <h2 class="text-center mb-4">Login</h2>
-      <div class="flex flex-column gap-3">
-        <InputText v-model="username" placeholder="Username" :disabled="loading" />
-        <Password
-          v-model="password"
-          placeholder="Password"
-          :feedback="false"
-          :disabled="loading"
-          @keyup.enter="handleLogin"
-          toggleMask
-        />
-        <Button label="Login" @click="handleLogin" :loading="loading" severity="primary" />
-        <div class="text-center">
-          <router-link to="/register" class="text-primary">Create account</router-link>
-        </div>
+  <div class="flex align-items-center justify-content-center min-h-screen surface-ground">
+    <div class="surface-card p-6 shadow-2 border-round-xl w-full md:w-6 lg:w-4">
+      <div class="text-center mb-5">
+        <div class="text-3xl font-bold mb-3">Welcome Back</div>
+        <span class="text-600 font-medium">Sign in to your account</span>
       </div>
+
+      <form @submit.prevent="handleLogin" class="flex flex-column gap-4">
+        <div class="flex flex-column gap-2">
+          <label for="username" class="font-medium">Username</label>
+          <InputText
+            id="username"
+            v-model="username"
+            placeholder="Enter your username"
+            class="w-full"
+            :disabled="loading"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="flex flex-column gap-2">
+          <label for="password" class="font-medium">Password</label>
+          <Password
+            id="password"
+            v-model="password"
+            placeholder="Enter your password"
+            :feedback="false"
+            toggleMask
+            class="w-full"
+            :disabled="loading"
+            autocomplete="current-password"
+          />
+        </div>
+
+        <Button
+          type="submit"
+          label="Sign In"
+          severity="primary"
+          class="w-full"
+          :loading="loading"
+        />
+
+        <div class="text-center">
+          <span class="text-600">Don't have an account? </span>
+          <a
+            @click="navigateToRegister"
+            class="text-primary font-medium no-underline hover:underline cursor-pointer"
+          >
+            Create one
+          </a>
+        </div>
+      </form>
     </div>
   </div>
 </template>

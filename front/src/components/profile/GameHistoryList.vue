@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
 import type { GameHistoryFilters, GameHistoryItem } from '@/types';
 import { GameService } from '@/services/GameService';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { ErrorService } from '@/services/ErrorService';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps<{
   username: string;
   publicView: boolean;
-  loading?: boolean;
+  // loading?: boolean;
 }>();
+const toast = useToast();
+onMounted(() => {
+  ErrorService.init(toast);
+});
 
 const router = useRouter();
-const toast = useToast();
 const games = ref<GameHistoryItem[]>([]);
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
@@ -20,26 +25,24 @@ const totalGames = ref(0);
 
 const selectedGames = ref<number[]>([]);
 const bulkVisibility = ref<'public' | 'private'>('public');
+const { loading, withErrorHandling } = useErrorHandler();
 
 const loadGames = async () => {
-  try {
-    const filters: GameHistoryFilters = {
-      dateRange: dateRange.value,
-      result: selectedResult.value,
-      page: currentPage.value - 1,
-      itemsPerPage: itemsPerPage.value,
-    };
-    const response = await GameService.getGameHistory(props.username, filters);
+  const filters: GameHistoryFilters = {
+    dateRange: dateRange.value,
+    result: selectedResult.value,
+    page: currentPage.value - 1,
+    itemsPerPage: itemsPerPage.value,
+  };
+
+  const response = await withErrorHandling(
+    () => GameService.getGameHistory(props.username, filters),
+    'Game History Loading',
+  );
+
+  if (response) {
     games.value = response.games;
     totalGames.value = response.total;
-  } catch (error) {
-    console.error('Error loading games:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load games',
-      life: 3000,
-    });
   }
 };
 
@@ -66,58 +69,39 @@ const navigateToGame = (gameId: string) => {
 };
 
 const toggleGameVisibility = async (gameId: number, isPublic: boolean) => {
-  try {
+  await withErrorHandling(async () => {
     await GameService.updateGameVisibility(gameId, isPublic);
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: `Game visibility updated to ${isPublic ? 'public' : 'private'}`,
-      life: 3000,
-    });
-  } catch (error) {
-    console.error('Error updating game visibility:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update game visibility',
-      life: 3000,
-    });
-  }
+    ErrorService.handleSuccess(`Game visibility updated to ${isPublic ? 'public' : 'private'}`);
+    return true;
+  }, 'Game Visibility Update');
 };
 
 const updateBulkVisibility = async () => {
   if (!selectedGames.value.length) {
-    toast.add({
-      severity: 'info',
-      summary: 'Info',
-      detail: 'Please select games to update',
-      life: 3000,
+    ErrorService.handleError({
+      code: 'INVALID_REQUEST',
+      message: 'Please select games to update',
+      response: {
+        data: {
+          status: 400,
+          message: 'Bad Request',
+        },
+        status: 400,
+      },
     });
     return;
   }
 
-  try {
+  await withErrorHandling(async () => {
     await GameService.updateBulkGameVisibility(
       selectedGames.value,
       bulkVisibility.value === 'public',
     );
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: `Updated visibility for ${selectedGames.value.length} games`,
-      life: 3000,
-    });
+    ErrorService.handleSuccess(`Updated visibility for ${selectedGames.value.length} games`);
     selectedGames.value = [];
     await loadGames();
-  } catch (error) {
-    console.error('Error updating game visibility:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update game visibility',
-      life: 3000,
-    });
-  }
+    return true;
+  }, 'Bulk Visibility Update');
 };
 
 const isGameEnded = (game: GameHistoryItem) => {

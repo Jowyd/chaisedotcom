@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { ErrorService } from '@/services/ErrorService';
+import { ValidationService } from '@/services/ValidationService';
 import { authService } from '@/services/AuthService';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -10,41 +13,27 @@ import Button from 'primevue/button';
 
 const router = useRouter();
 const toast = useToast();
+const { loading, withErrorHandling } = useErrorHandler();
+
+onMounted(() => {
+  ErrorService.init(toast);
+});
 
 const username = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const acceptTerms = ref(false);
-const loading = ref(false);
 
 const validateForm = (): boolean => {
-  if (!username.value || !password.value || !confirmPassword.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Please fill in all fields',
-      life: 3000,
-    });
-    return false;
-  }
+  const validationErrors = ValidationService.validateRegisterForm({
+    username: username.value,
+    password: password.value,
+    confirmPassword: confirmPassword.value,
+    acceptTerms: acceptTerms.value,
+  });
 
-  if (password.value !== confirmPassword.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Passwords do not match',
-      life: 3000,
-    });
-    return false;
-  }
-
-  if (!acceptTerms.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Please accept the terms and conditions',
-      life: 3000,
-    });
+  if (validationErrors.length > 0) {
+    ErrorService.handleFormValidationErrors(validationErrors);
     return false;
   }
 
@@ -54,32 +43,16 @@ const validateForm = (): boolean => {
 const handleRegister = async () => {
   if (!validateForm()) return;
 
-  loading.value = true;
-  try {
+  await withErrorHandling(async () => {
     await authService.register({
       username: username.value,
       password: password.value,
     });
 
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Registration successful',
-      life: 3000,
-    });
-
+    ErrorService.handleSuccess('Registration successful');
     router.push('/dashboard');
-  } catch (error) {
-    console.info('Error registering:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Registration failed. Please try again.',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
-  }
+    return true;
+  }, 'Registration');
 };
 
 const navigateToLogin = () => {
@@ -95,7 +68,7 @@ const navigateToLogin = () => {
         <span class="text-600 font-medium">Join our chess community</span>
       </div>
 
-      <div class="flex flex-column gap-4">
+      <form @submit.prevent="handleRegister" class="flex flex-column gap-4">
         <div class="flex flex-column gap-2">
           <label for="username" class="font-medium">Username</label>
           <InputText
@@ -129,7 +102,6 @@ const navigateToLogin = () => {
             toggleMask
             class="w-full"
             :disabled="loading"
-            @keyup.enter="handleRegister"
           />
         </div>
 
@@ -144,11 +116,11 @@ const navigateToLogin = () => {
         </div>
 
         <Button
+          type="submit"
           label="Create Account"
           severity="primary"
           class="w-full"
           :loading="loading"
-          @click="handleRegister"
         />
 
         <div class="text-center">
@@ -160,7 +132,7 @@ const navigateToLogin = () => {
             Sign in
           </a>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>

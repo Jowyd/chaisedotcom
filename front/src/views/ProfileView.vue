@@ -8,13 +8,15 @@ import PlayerStats from '@/components/profile/PlayerStats.vue';
 import { authService } from '@/services/AuthService';
 import { userService, type UserProfile } from '@/services/UserService';
 import router from '@/router';
+import { ErrorService } from '@/services/ErrorService';
+import { useErrorHandler } from '@/composables/useErrorHandler';
 
+const { loading, withErrorHandling } = useErrorHandler();
 const route = useRoute();
 const toast = useToast();
 const username = ref(route.params.username as string);
 const isOwnProfile = computed(() => authService.getUser()?.username === username.value);
 
-const loading = ref(false);
 const userProfile = ref<UserProfile | undefined>();
 const privacySettings = ref({
   publicProfile: true,
@@ -43,63 +45,41 @@ const userStats = ref({
 });
 
 const loadProfile = async () => {
-  try {
-    const profile = await userService.getProfile(username.value);
+  const profile = await withErrorHandling(
+    () => userService.getProfile(username.value),
+    'Profile Loading',
+  );
+
+  if (profile) {
     userProfile.value = profile;
-  } catch (error) {
-    console.info('Error loading user profile:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load user profile',
-      life: 3000,
-    });
+  } else {
     router.push('/dashboard');
   }
 };
 
 const loadUserStats = async () => {
-  try {
-    const stats = await userService.getUserStats(username.value);
+  const stats = await withErrorHandling(
+    () => userService.getUserStats(username.value),
+    'Stats Loading',
+  );
+
+  if (stats) {
     userStats.value = stats;
-  } catch (error) {
-    console.info('Error loading user stats:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load user statistics',
-      life: 3000,
-    });
-    router.push('/dashboard');
   }
 };
 
 const updatePrivacySettings = async () => {
-  loading.value = true;
-  try {
+  await withErrorHandling(async () => {
     await userService.updatePrivacySettings(privacySettings.value);
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Privacy settings updated successfully',
-      life: 3000,
-    });
-  } catch (error) {
-    console.info('Error updating privacy settings:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to update privacy settings',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
-  }
+    ErrorService.handleSuccess('Privacy settings updated successfully');
+    return true;
+  }, 'Privacy Settings Update');
 };
 
 onMounted(() => {
   loadProfile();
   loadUserStats();
+  ErrorService.init(toast);
 });
 
 watch(

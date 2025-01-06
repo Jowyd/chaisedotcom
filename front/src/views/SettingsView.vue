@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import DashboardSidebar from '@/components/DashboardSidebar.vue';
-import { useToast } from 'primevue/usetoast';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { ErrorService } from '@/services/ErrorService';
+import { ValidationService } from '@/services/ValidationService';
 import { userService } from '@/services/UserService';
 import { authService } from '@/services/AuthService';
+import DashboardSidebar from '@/components/DashboardSidebar.vue';
+import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
-const loading = ref(false);
+const { loading, withErrorHandling } = useErrorHandler();
 
 const username = ref('');
 const currentPassword = ref('');
@@ -14,68 +17,55 @@ const newPassword = ref('');
 const confirmPassword = ref('');
 
 onMounted(() => {
+  ErrorService.init(toast);
   const user = authService.getUser();
   if (user) {
     username.value = user.username;
   }
 });
 
-const updateProfile = async () => {
-  if (!username.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Username cannot be empty',
-      life: 3000,
-    });
-    return;
+const validateProfileUpdate = (): boolean => {
+  const validationErrors = ValidationService.validateProfileUpdate({
+    username: username.value,
+  });
+
+  if (validationErrors.length > 0) {
+    ErrorService.handleFormValidationErrors(validationErrors);
+    return false;
   }
 
-  loading.value = true;
-  try {
-    await userService.updateUsername(username.value);
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Username updated successfully',
-      life: 3000,
-    });
-  } catch (error: any) {
-    console.error('Error updating profile:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.response?.data?.message || 'Failed to update username',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
+  return true;
+};
+
+const validatePasswordUpdate = (): boolean => {
+  const validationErrors = ValidationService.validatePasswordUpdate({
+    currentPassword: currentPassword.value,
+    newPassword: newPassword.value,
+    confirmPassword: confirmPassword.value,
+  });
+
+  if (validationErrors.length > 0) {
+    ErrorService.handleFormValidationErrors(validationErrors);
+    return false;
   }
+
+  return true;
+};
+
+const updateProfile = async () => {
+  if (!validateProfileUpdate()) return;
+
+  await withErrorHandling(async () => {
+    await userService.updateUsername(username.value);
+    ErrorService.handleSuccess('Username updated successfully');
+    return true;
+  }, 'Profile Update');
 };
 
 const updatePassword = async () => {
-  if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'All password fields are required',
-      life: 3000,
-    });
-    return;
-  }
+  if (!validatePasswordUpdate()) return;
 
-  if (newPassword.value !== confirmPassword.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'New passwords do not match',
-      life: 3000,
-    });
-    return;
-  }
-
-  loading.value = true;
-  try {
+  await withErrorHandling(async () => {
     await userService.updatePassword({
       currentPassword: currentPassword.value,
       newPassword: newPassword.value,
@@ -85,23 +75,9 @@ const updatePassword = async () => {
     newPassword.value = '';
     confirmPassword.value = '';
 
-    toast.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Password updated successfully',
-      life: 3000,
-    });
-  } catch (error: any) {
-    console.error('Error updating password:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: error.response?.data?.message || 'Failed to update password',
-      life: 3000,
-    });
-  } finally {
-    loading.value = false;
-  }
+    ErrorService.handleSuccess('Password updated successfully');
+    return true;
+  }, 'Password Update');
 };
 </script>
 
@@ -114,30 +90,25 @@ const updatePassword = async () => {
         <div class="col-12 lg:col-6">
           <div class="card">
             <h2 class="text-2xl font-bold mb-4">Profile Settings</h2>
-            <div class="flex flex-column gap-3">
+            <form @submit.prevent="updateProfile" class="flex flex-column gap-3">
               <div class="flex flex-column gap-2">
                 <label for="username" class="font-medium">Username</label>
                 <div class="p-inputgroup">
-                  <InputText 
-                    id="username" 
-                    v-model="username" 
-                    :disabled="loading" 
+                  <InputText
+                    id="username"
+                    v-model="username"
+                    :disabled="loading"
                     placeholder="Enter your username"
                   />
-                  <Button 
-                    icon="pi pi-check" 
-                    severity="primary"
-                    :loading="loading"
-                    @click="updateProfile"
-                  />
+                  <Button type="submit" icon="pi pi-check" severity="primary" :loading="loading" />
                 </div>
               </div>
-            </div>
+            </form>
 
             <Divider />
 
             <h3 class="text-xl font-bold mb-4">Change Password</h3>
-            <div class="flex flex-column gap-3">
+            <form @submit.prevent="updatePassword" class="flex flex-column gap-3">
               <div class="flex flex-column gap-2">
                 <label for="currentPassword" class="font-medium">Current Password</label>
                 <Password
@@ -152,10 +123,10 @@ const updatePassword = async () => {
 
               <div class="flex flex-column gap-2">
                 <label for="newPassword" class="font-medium">New Password</label>
-                <Password 
-                  id="newPassword" 
-                  v-model="newPassword" 
-                  toggleMask 
+                <Password
+                  id="newPassword"
+                  v-model="newPassword"
+                  toggleMask
                   :disabled="loading"
                   placeholder="Enter your new password"
                 />
@@ -174,13 +145,13 @@ const updatePassword = async () => {
               </div>
 
               <Button
+                type="submit"
                 label="Change Password"
                 severity="primary"
                 :loading="loading"
-                @click="updatePassword"
                 class="align-self-end"
               />
-            </div>
+            </form>
           </div>
         </div>
 
@@ -188,7 +159,9 @@ const updatePassword = async () => {
           <div class="card">
             <h2 class="text-2xl font-bold mb-4">Account Information</h2>
             <div class="flex flex-column gap-3">
-              <div class="flex justify-content-between align-items-center p-3 surface-ground border-round">
+              <div
+                class="flex justify-content-between align-items-center p-3 surface-ground border-round"
+              >
                 <div>
                   <h3 class="text-lg font-medium m-0">Account Status</h3>
                   <p class="text-600 m-0">Your account is active</p>
@@ -196,7 +169,9 @@ const updatePassword = async () => {
                 <i class="pi pi-check-circle text-xl text-green-500"></i>
               </div>
 
-              <div class="flex justify-content-between align-items-center p-3 surface-ground border-round">
+              <div
+                class="flex justify-content-between align-items-center p-3 surface-ground border-round"
+              >
                 <div>
                   <h3 class="text-lg font-medium m-0">Last Login</h3>
                   <p class="text-600 m-0">{{ new Date().toLocaleDateString() }}</p>

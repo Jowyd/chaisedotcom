@@ -124,3 +124,17 @@ export interface UserStats {
   bestWinStreak: number;
   currentStreak: number;
 }
+
+export type ApiError = {
+  code: string;
+  message: string;
+  response: {
+    data: {
+      message: string;
+      status?: number;
+    };
+    status: number;
+  };
+};
+
+export type ErrorHandler = (error: Error | ApiError) => void;
