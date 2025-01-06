@@ -6,9 +6,7 @@ import { ValidationService } from '@/services/ValidationService';
 import { userService } from '@/services/UserService';
 import { authService } from '@/services/AuthService';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
-import { useToast } from 'primevue/usetoast';
 
-const toast = useToast();
 const { loading, withErrorHandling } = useErrorHandler();
 
 const username = ref('');
@@ -17,7 +15,6 @@ const newPassword = ref('');
 const confirmPassword = ref('');
 
 onMounted(() => {
-  ErrorService.init(toast);
   const user = authService.getUser();
   if (user) {
     username.value = user.username;

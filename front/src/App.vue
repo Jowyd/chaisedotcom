@@ -11,7 +11,6 @@ import { useToast } from 'primevue/usetoast';
 const toast = useToast();
 
 onMounted(() => {
-  // Initialize the toast service
   ErrorService.init(toast);
 });
 </script>

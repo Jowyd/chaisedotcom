@@ -21,25 +21,6 @@ const selectedGames = ref<number[]>([]);
 const bulkVisibility = ref<'public' | 'private'>('public');
 const { loading, withErrorHandling } = useErrorHandler();
 
-// const loadGames = async () => {
-//   const filters: GameHistoryFilters = {
-//     dateRange: dateRange.value,
-//     result: selectedResult.value,
-//     page: currentPage.value - 1,
-//     itemsPerPage: itemsPerPage.value,
-//   };
-
-//   const response = await withErrorHandling(
-//     () => GameService.getGameHistory(props.username, filters),
-//     'Game History Loading',
-//   );
-
-//   if (response) {
-//     games.value = response.games;
-//     totalGames.value = response.total;
-//   }
-// };
-
 const getResultClass = (game: GameHistoryItem) => {
   if (!game.result) {
     return 'bg-gray-100 text-gray-700 border-round-sm px-2 py-1';

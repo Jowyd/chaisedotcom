@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
 import { useErrorHandler } from '@/composables/useErrorHandler';
-import { ErrorService } from '@/services/ErrorService';
 import { leaderboardService, type LeaderboardPlayer } from '@/services/LeaderboardService';
 import DashboardSidebar from '@/components/DashboardSidebar.vue';
 import Dropdown from 'primevue/dropdown';
@@ -12,7 +10,6 @@ import Column from 'primevue/column';
 import Avatar from 'primevue/avatar';
 
 const router = useRouter();
-const toast = useToast();
 const { loading, withErrorHandling } = useErrorHandler();
 
 const players = ref<LeaderboardPlayer[]>([]);
@@ -28,7 +25,6 @@ const timeRanges = [
 ];
 
 onMounted(() => {
-  ErrorService.init(toast);
   loadLeaderboard();
 });
 
