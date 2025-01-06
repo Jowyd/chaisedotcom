@@ -10,7 +10,6 @@ import { useToast } from 'primevue/usetoast';
 const props = defineProps<{
   username: string;
   publicView: boolean;
-  // loading?: boolean;
 }>();
 const toast = useToast();
 onMounted(() => {
@@ -27,24 +26,24 @@ const selectedGames = ref<number[]>([]);
 const bulkVisibility = ref<'public' | 'private'>('public');
 const { loading, withErrorHandling } = useErrorHandler();
 
-const loadGames = async () => {
-  const filters: GameHistoryFilters = {
-    dateRange: dateRange.value,
-    result: selectedResult.value,
-    page: currentPage.value - 1,
-    itemsPerPage: itemsPerPage.value,
-  };
+// const loadGames = async () => {
+//   const filters: GameHistoryFilters = {
+//     dateRange: dateRange.value,
+//     result: selectedResult.value,
+//     page: currentPage.value - 1,
+//     itemsPerPage: itemsPerPage.value,
+//   };
 
-  const response = await withErrorHandling(
-    () => GameService.getGameHistory(props.username, filters),
-    'Game History Loading',
-  );
+//   const response = await withErrorHandling(
+//     () => GameService.getGameHistory(props.username, filters),
+//     'Game History Loading',
+//   );
 
-  if (response) {
-    games.value = response.games;
-    totalGames.value = response.total;
-  }
-};
+//   if (response) {
+//     games.value = response.games;
+//     totalGames.value = response.total;
+//   }
+// };
 
 const getResultClass = (game: GameHistoryItem) => {
   if (!game.result) {
@@ -115,9 +114,32 @@ const getUserColor = (game: GameHistoryItem) => {
 const dateRange = ref();
 const selectedResult = ref();
 
-watch([currentPage, itemsPerPage], () => {
-  loadGames();
-});
+const formatResult = (result: number) => {
+  if (!result) {
+    return '-';
+  }
+  return result;
+};
+
+const loadGames = async () => {
+  console.log('loadGames');
+  const filters: GameHistoryFilters = {
+    dateRange: dateRange.value,
+    result: selectedResult.value,
+    page: currentPage.value - 1,
+    itemsPerPage: itemsPerPage.value,
+  };
+
+  const response = await withErrorHandling(
+    () => GameService.getGameHistory(props.username, filters),
+    'Game History Loading',
+  );
+
+  if (response) {
+    games.value = response.games;
+    totalGames.value = response.total;
+  }
+};
 
 watch([dateRange, selectedResult, currentPage, itemsPerPage], () => {
   loadGames();
@@ -127,19 +149,10 @@ onMounted(() => {
   loadGames();
 });
 
-const formatResult = (result: number) => {
-  if (!result) {
-    return '-';
-  }
-  return result;
-};
-
 const onPageChange = (event: { page: number; rows: number }) => {
   currentPage.value = event.page + 1;
   itemsPerPage.value = event.rows;
-  loadGames();
 };
-
 </script>
 
 <template>
