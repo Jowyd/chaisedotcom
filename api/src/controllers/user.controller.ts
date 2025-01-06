@@ -27,7 +27,7 @@ import { AuthRequest } from "../dto/auth.dto";
 import { LeaderboardPlayer, LeaderboardResponse } from "../dto/leaderboard.dto";
 import { UserStats } from "../dto/stats.dto";
 import { GameHistoryDTO, GameHistoryFiltersDTO } from "../dto/game.dto";
-import { notFound } from "../error/NotFoundError";
+
 
 @Route("users")
 @Tags("Users")

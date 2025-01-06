@@ -21,37 +21,63 @@ import {
   GameHistoryListDTO,
 } from "../dto/game.dto";
 import { UserToken } from "../dto/auth.dto";
+import { BaseError, UserNotFoundError, UsernameConflictError, InvalidPasswordError, PrivacyViolationError, UserCreationError, UserDeletionError, UserUpdateError, LeaderboardError, GameHistoryAccessError, InvalidDateRangeError} from "../error/custom-error";
+
 
 export class UserService {
   public async getAllUsers(): Promise<UserOutputDTO[]> {
-    let userList = await User.findAll();
-    return UserMapper.toOutputDtoList(userList);
+    try {
+      let userList = await User.findAll();
+      return UserMapper.toOutputDtoList(userList);
+    } catch (error) {
+      throw new BaseError(
+        'Failed to fetch users',
+        500,
+        'USERS_FETCH_ERROR'
+      );
+    }
   }
 
   public async getUserById(id: number): Promise<UserOutputDTO> {
-    let user = await User.findByPk(id);
-    if (user) {
-      return UserMapper.toOutputDto(user);
-    } else {
-      notFound("User");
+    const user = await User.findByPk(id);
+    if (!user) {
+      throw new UserNotFoundError(id);
     }
+    return UserMapper.toOutputDto(user);
   }
 
   public async createUser(
     username: string,
     password: string
   ): Promise<UserOutputDTO> {
-    return UserMapper.toOutputDto(
-      await User.create({ username: username, password: password })
-    );
+    try {
+      const existingUser = await User.findOne({ where: { username } });
+      if (existingUser) {
+        throw new UsernameConflictError(username);
+      }
+
+      const user = await User.create({ username, password });
+      return UserMapper.toOutputDto(user);
+    } catch (error) {
+      if (error instanceof BaseError) {
+        throw error;
+      }
+      throw new UserCreationError(error instanceof Error ? error.message : 'Unknown error');
+    }
   }
 
   public async deleteUser(id: number): Promise<void> {
-    const user = await User.findByPk(id);
-    if (user) {
-      user.destroy();
-    } else {
-      notFound("User");
+    try {
+      const user = await User.findByPk(id);
+      if (!user) {
+        throw new UserNotFoundError(id);
+      }
+      await user.destroy();
+    } catch (error) {
+      if (error instanceof UserNotFoundError) {
+        throw error;
+      }
+      throw new UserDeletionError(id);
     }
   }
 
@@ -60,14 +86,31 @@ export class UserService {
     username?: string,
     password?: string
   ): Promise<UserOutputDTO> {
-    const user = await User.findByPk(id);
-    if (user) {
-      if (username) user.username = username;
-      if (password) user.password = password;
+    try {
+      const user = await User.findByPk(id);
+      if (!user) {
+        throw new UserNotFoundError(id);
+      }
+
+      if (username) {
+        const existingUser = await User.findOne({ where: { username } });
+        if (existingUser && existingUser.id !== id) {
+          throw new UsernameConflictError(username);
+        }
+        user.username = username;
+      }
+
+      if (password) {
+        user.password = password;
+      }
+
       await user.save();
       return UserMapper.toOutputDto(user);
-    } else {
-      notFound("User");
+    } catch (error) {
+      if (error instanceof BaseError) {
+        throw error;
+      }
+      throw new UserUpdateError(error instanceof Error ? error.message : 'Unknown error');
     }
   }
 
@@ -86,10 +129,11 @@ export class UserService {
     });
 
     if (!user) {
-      return notFound("User");
+      throw new UserNotFoundError(username);
     }
+    
     if (!user.public_profile && user.id !== authUser.id) {
-      return unauthorized();
+      throw new PrivacyViolationError();
     }
 
     return {
@@ -106,14 +150,14 @@ export class UserService {
   ): Promise<void> {
     const user = await User.findByPk(userId);
     if (!user) {
-      return notFound("User");
+      throw new UserNotFoundError(userId);
     }
 
     const existingUser = await User.findOne({
       where: { username: newUsername },
     });
     if (existingUser && existingUser.id !== userId) {
-      throw new Error("Username already taken");
+      throw new UsernameConflictError(newUsername);
     }
 
     user.username = newUsername;
@@ -126,14 +170,12 @@ export class UserService {
   ): Promise<void> {
     const user = await User.findByPk(userId);
     if (!user) {
-      return notFound("User");
+      throw new UserNotFoundError(userId);
     }
 
-    const isValidPassword = await user.validatePassword(
-      passwords.currentPassword
-    );
+    const isValidPassword = await user.validatePassword(passwords.currentPassword);
     if (!isValidPassword) {
-      throw new Error("Current password is incorrect");
+      throw new InvalidPasswordError();
     }
 
     user.password = passwords.newPassword;
@@ -159,56 +201,80 @@ export class UserService {
     page: number = 0,
     itemsPerPage: number = 10
   ): Promise<LeaderboardResponse> {
-    const whereClause: any = {};
+    try {
+      const whereClause: any = {};
 
-    if (timeRange && timeRange !== "all") {
-      const startDate =
-        timeRange === "month"
-          ? new Date(new Date().setMonth(new Date().getMonth() - 1))
-          : new Date(new Date().setDate(new Date().getDate() - 7));
+      if (timeRange && timeRange !== "all") {
+        if (!["week", "month"].includes(timeRange)) {
+          throw new BaseError(
+            'Invalid time range. Allowed values are: "week", "month", "all"',
+            400,
+            'INVALID_TIME_RANGE'
+          );
+        }
 
-      whereClause.created_at = {
-        [Op.gte]: startDate,
-      };
-    }
+        const startDate =
+          timeRange === "month"
+            ? new Date(new Date().setMonth(new Date().getMonth() - 1))
+            : new Date(new Date().setDate(new Date().getDate() - 7));
 
-    const { count, rows: users } = await User.findAndCountAll({
-      include: [
-        {
-          model: Game,
-          as: "games",
-          where: whereClause,
-          required: false,
-        },
-      ],
-      limit: itemsPerPage,
-      offset: page * itemsPerPage,
-    });
-
-    const players = users
-      .map((user) => {
-        const games = user.games || [];
-        const totalGames = games.length;
-        const wins = games.filter(
-          (game: Game) => game.result != null && game.result > 0
-        ).length;
-
-        return {
-          username: user.username,
-          rating: games.reduce(
-            (sum: number, game: Game) => sum + (game.result || 0),
-            1500
-          ),
-          gamesPlayed: totalGames,
-          winRate: totalGames ? (wins / totalGames) * 100 : 0,
+        whereClause.created_at = {
+          [Op.gte]: startDate,
         };
-      })
-      .sort((a, b) => b.rating - a.rating);
+      }
 
-    return {
-      players,
-      total: count,
-    };
+      if (page < 0 || itemsPerPage < 1) {
+        throw new BaseError(
+          'Invalid pagination parameters',
+          400,
+          'INVALID_PAGINATION'
+        );
+      }
+
+      const { count, rows: users } = await User.findAndCountAll({
+        include: [
+          {
+            model: Game,
+            as: "games",
+            where: whereClause,
+            required: false,
+          },
+        ],
+        limit: itemsPerPage,
+        offset: page * itemsPerPage,
+      });
+
+      const players = users
+        .map((user) => {
+          const games = user.games || [];
+          const totalGames = games.length;
+          const wins = games.filter(
+            (game: Game) => game.result != null && game.result > 0
+          ).length;
+
+          return {
+            username: user.username,
+            rating: games.reduce(
+              (sum: number, game: Game) => sum + (game.result || 0),
+              1500
+            ),
+            gamesPlayed: totalGames,
+            winRate: totalGames ? (wins / totalGames) * 100 : 0,
+          };
+        })
+        .sort((a, b) => b.rating - a.rating);
+
+      return {
+        players,
+        total: count,
+      };
+    } catch (error) {
+      if (error instanceof BaseError) {
+        throw error;
+      }
+      
+      throw new LeaderboardError(error instanceof Error ? error.message : 'Unknown error');
+    }
   }
 
   public async getStats(
@@ -216,11 +282,12 @@ export class UserService {
     authUser: UserToken
   ): Promise<UserStats> {
     const user = await User.findOne({ where: { username } });
-    if (user?.username !== authUser.username && !user?.public_profile) {
-      return unauthorized();
-    }
     if (!user) {
-      return notFound(`User: ${username}`);
+      throw new UserNotFoundError(username);
+    }
+    
+    if (user?.username !== authUser.username && !user?.public_profile) {
+      throw new PrivacyViolationError();
     }
 
     const games = await Game.findAll({
@@ -340,76 +407,94 @@ export class UserService {
     authUser: UserToken,
     filters?: GameHistoryFiltersDTO
   ): Promise<GameHistoryListDTO> {
-    const user = await User.findOne({ where: { username } });
-    if (!user) {
-      return notFound("User");
-    }
-    const userId = user.id;
-    const whereClause: any = {
-      user_id: userId,
-    };
-    const page = filters?.page || 0;
-    const itemsPerPage = filters?.itemsPerPage || 50;
-
-    if (user.username !== authUser.username) {
-      if (!user.public_profile) {
-        return notFound("User");
-      }
-      if (!user.show_game_history) {
-        return { games: [], total: 0 };
-      }
-      whereClause.isPublic = true;
-    }
-
-    if (filters) {
-      if (filters.startDate && filters.endDate) {
-        whereClause.created_at = {
-          [Op.between]: [
-            new Date(filters.startDate),
-            new Date(filters.endDate),
-          ],
-        };
+    try {
+      const user = await User.findOne({ where: { username } });
+      if (!user) {
+        throw new UserNotFoundError(username);
       }
 
-      if (filters.result) {
-        switch (filters.result) {
-          case "won":
-            whereClause.status = GameStatus.WON;
-            break;
-          case "lost":
-            whereClause.status = GameStatus.LOST;
-            break;
-          case "draw":
-            whereClause.status = GameStatus.DRAW;
-            break;
+      if (user.username !== authUser.username) {
+        if (!user.public_profile) {
+          throw new PrivacyViolationError();
+        }
+        if (!user.show_game_history) {
+          throw new GameHistoryAccessError();
         }
       }
 
-      if (filters.isPublic !== undefined) {
-        whereClause.isPublic = filters.isPublic;
+      const whereClause: any = {
+        user_id: user.id,
+      };
+
+      if (filters) {
+        if (filters.startDate && filters.endDate) {
+          const start = new Date(filters.startDate);
+          const end = new Date(filters.endDate);
+          
+          if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+            throw new InvalidDateRangeError();
+          }
+
+          whereClause.created_at = {
+            [Op.between]: [start, end],
+          };
+        }
+
+        if (filters.result) {
+          if (!["won", "lost", "draw"].includes(filters.result)) {
+            throw new BaseError(
+              'Invalid result filter. Allowed values are: "won", "lost", "draw"',
+              400,
+              'INVALID_RESULT_FILTER'
+            );
+          }
+        }
+
+        whereClause.isPublic = filters.isPublic ?? true;
       }
+
+      const page = filters?.page || 0;
+      const itemsPerPage = filters?.itemsPerPage || 50;
+
+      if (page < 0 || itemsPerPage < 1) {
+        throw new BaseError(
+          'Invalid pagination parameters',
+          400,
+          'INVALID_PAGINATION'
+        );
+      }
+
+      const games = await Game.findAll({
+        where: whereClause,
+        order: [["created_at", "DESC"]],
+        include: [{ model: Move, as: "moves" }],
+        limit: itemsPerPage,
+        offset: page,
+      });
+
+      const total = await Game.count({ where: whereClause });
+      const gameHistory: GameHistoryDTO[] = games.map((game) => ({
+        game_id: game.id,
+        opponentName: game.opponentName,
+        opponentColor: game.opponentColor,
+        isPublic: game.isPublic,
+        result: game.result,
+        status: game.status,
+        createdAt: game.created_at,
+        moves: game.moves?.length || 0,
+      }));
+
+      return { games: gameHistory, total };
+    } catch (error) {
+      if (error instanceof BaseError) {
+        throw error;
+      }
+      throw new BaseError(
+        'Failed to fetch game history',
+        500,
+        'GAME_HISTORY_ERROR'
+      );
     }
-
-    const games = await Game.findAll({
-      where: whereClause,
-      order: [["created_at", "DESC"]],
-      include: [{ model: Move, as: "moves" }],
-      limit: itemsPerPage,
-      offset: page,
-    });
-
-    const total = await Game.count({ where: whereClause });
-    const gameHistory: GameHistoryDTO[] = games.map((game) => ({
-      game_id: game.id,
-      opponentName: game.opponentName,
-      opponentColor: game.opponentColor,
-      isPublic: game.isPublic,
-      result: game.result,
-      status: game.status,
-      createdAt: game.created_at,
-      moves: game.moves?.length || 0,
-    }));
-    return { games: gameHistory, total };
   }
 }
 

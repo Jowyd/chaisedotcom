@@ -7,7 +7,7 @@ import { UserToken } from "../dto/auth.dto";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
-import { notFound, unauthorized } from "../error/NotFoundError";
+import { notFound, unauthorized } from "../error/notFoundError";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
