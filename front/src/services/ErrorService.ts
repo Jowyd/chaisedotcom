@@ -1,6 +1,6 @@
 import type { ToastServiceMethods } from 'primevue/toastservice';
 import type { ApiError } from '@/types';
-import type { ValidationError } from '@/types/auth';
+import type { ValidationError } from '@/types/error';
 
 export class ErrorService {
   private static toast: ToastServiceMethods | null = null;

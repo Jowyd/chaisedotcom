@@ -212,15 +212,10 @@ export const GameService = {
     }
   },
 
-  async createGame(gameDetails: CreateGameDTO): Promise<GameState> {
+  async createGame(gameDetails: CreateGameDTO): Promise<string> {
     try {
-      const response = await httpHelper.post<GameState>(`${API_URL}games`, gameDetails);
-      const newGame = response.data;
-      return {
-        ...mockGameState,
-        ...newGame,
-        id: newGame.id.toString(),
-      };
+      const response = await httpHelper.post<{ game_id: string }>(`${API_URL}games`, gameDetails);
+      return response.data.game_id;
     } catch (error) {
       console.error('Error creating game:', error);
       throw error;

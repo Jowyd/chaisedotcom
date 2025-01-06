@@ -11,83 +11,80 @@ import { type CapturedPieces, type ChessColor, type PieceMove } from '@/types';
 import router from '@/router';
 import Checkbox from 'primevue/checkbox';
 import { type GameStatus } from '@/types';
-import { useToast } from 'primevue';
+import { useErrorHandler } from '@/composables/useErrorHandler';
+import { ErrorService } from '@/services/ErrorService';
 
-const moves = ref<PieceMove[]>([]);
-const isReplaying = ref(false);
-const toast = useToast();
+// New types for error handling
 
-const filteredMoves = computed(() => {
-  return moves.value.filter((_, index) => index % 2 === 0);
-});
-
+const { withErrorHandling } = useErrorHandler();
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
-
 const confirm = useConfirm();
 
+// Rest of your existing refs
+const moves = ref<PieceMove[]>([]);
+const isReplaying = ref(false);
+const playerColor = ref<ChessColor>('WHITE');
+const capturedPieces = ref<CapturedPieces>({
+  white: [],
+  black: [],
+});
+const gameState = ref<GameState>();
+const currentMoveIndex = ref(-1);
+const autoRotate = ref(false);
+const showGameOverDialog = ref(false);
+const showDrawConfirmDialog = ref(false);
+const drawOfferingPlayer = ref<ChessColor | null>(null);
+const movesList = ref<HTMLElement | null>(null);
+
+// Modified handlers with error handling
 const handleResign = () => {
   const currentColor = gameState.value?.turn;
   if (!currentColor) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Invalid game state',
-    });
+    ErrorService.handleError(new Error('Invalid game state'), 'Game Resignation');
+    return;
   }
+
   confirm.require({
     message: `Are you sure you want to resign as ${currentColor}?`,
     header: 'Confirm Resignation',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
-      try {
-        const newGameState = await GameService.resign(gameId.value, currentColor!);
+      await withErrorHandling(async () => {
+        const newGameState = await GameService.resign(gameId.value, currentColor);
         updateGameState(newGameState);
-      } catch (error) {
-        console.info(error);
-        toast.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to resign',
-        });
-      }
+        return newGameState;
+      }, 'Game Resignation');
     },
   });
 };
 
-onMounted(() => {
-  GameService.getGame(gameId.value)
-    .then((game: GameState) => {
-      updateGameState(game);
-    })
-    .catch((error) => {
-      console.error('Error fetching game:', error);
-      router.push('/dashboard');
-    });
-});
+// Modified mount with error handling
+onMounted(async () => {
+  const game = await withErrorHandling(async () => {
+    return await GameService.getGame(gameId.value);
+  }, 'Game Loading');
 
-const playerColor = ref<ChessColor>('WHITE');
+  if (game) {
+    updateGameState(game);
+  } else {
+    router.push('/dashboard');
+  }
+});
 
 const togglePlayerColor = () => {
   playerColor.value = playerColor.value === 'WHITE' ? 'BLACK' : 'WHITE';
 };
 
-const capturedPieces = ref<CapturedPieces>({
-  white: [],
-  black: [],
-});
-
-const gameState = ref<GameState>();
-
-const currentMoveIndex = ref(-1);
-
+// Modified move handlers with error handling
 const goToMove = async (index: number) => {
-  try {
-    const newGameState = await GameService.goToMove(gameId.value, index);
+  const newGameState = await withErrorHandling(async () => {
+    return await GameService.goToMove(gameId.value, index);
+  }, 'Move Navigation');
+
+  if (newGameState) {
     updateGameState(newGameState);
     currentMoveIndex.value = index;
-  } catch (error) {
-    console.error('Error going to move:', error);
   }
 };
 
@@ -111,8 +108,6 @@ function canGameOverDialog(newGameStatus: GameStatus): boolean {
   return !stillPlaying(newGameStatus) && !isReplaying.value && !showGameOverDialog.value;
 }
 
-const autoRotate = ref(false);
-
 const updateGameState = (newState: GameState) => {
   if (canGameOverDialog(newState.status)) {
     showGameOverDialog.value = true;
@@ -127,12 +122,52 @@ const updateGameState = (newState: GameState) => {
   capturedPieces.value.black = newState.blackPlayer?.capturedPieces || [];
 };
 
+// Modified draw handling with error handling
+const handleDrawOffer = () => {
+  if (!gameState.value) {
+    ErrorService.handleError(new Error('Invalid game state'), 'Draw Offer');
+    return;
+  }
+
+  const currentColor = gameState.value.turn;
+  drawOfferingPlayer.value = currentColor;
+  showDrawConfirmDialog.value = true;
+};
+
+const handleDrawResponse = async (accept: boolean) => {
+  try {
+    if (accept) {
+      const newGameState = await withErrorHandling(async () => {
+        return await GameService.acceptDraw(gameId.value);
+      }, 'Draw Response');
+
+      if (newGameState) {
+        updateGameState(newGameState);
+      }
+    }
+  } finally {
+    showDrawConfirmDialog.value = false;
+    drawOfferingPlayer.value = null;
+  }
+};
+
+const handleReplay = () => {
+  goToMove(0);
+  showGameOverDialog.value = false;
+};
+
+// Watchers
+watch(moves, async () => {
+  await nextTick();
+  if (movesList.value) {
+    movesList.value.scrollTop = movesList.value.scrollHeight;
+  }
+});
+
 watch(
   () => gameState.value?.turn,
   (newTurn) => {
-    if (!newTurn) {
-      return;
-    }
+    if (!newTurn) return;
     if (autoRotate.value && newTurn) {
       playerColor.value = newTurn;
     }
@@ -157,6 +192,7 @@ watch(
   },
 );
 
+// Utility functions
 const getPieceSymbol = (piece: string): string => {
   const symbols: { [key: string]: string } = {
     PAWN: '♟',
@@ -169,54 +205,10 @@ const getPieceSymbol = (piece: string): string => {
   return symbols[piece] || piece;
 };
 
-const showGameOverDialog = ref(false);
-
-const showDrawConfirmDialog = ref(false);
-const drawOfferingPlayer = ref<ChessColor | null>(null);
-
-const handleDrawOffer = () => {
-  if (!gameState.value) {
-    throw new Error('Invalid game state');
-  }
-  const currentColor = gameState.value.turn;
-  drawOfferingPlayer.value = currentColor;
-  showDrawConfirmDialog.value = true;
-};
-
-const handleDrawResponse = async (accept: boolean) => {
-  try {
-    if (accept) {
-      const newGameState = await GameService.acceptDraw(gameId.value);
-      updateGameState(newGameState);
-    }
-  } catch (error) {
-    console.info('Error handling draw response:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to handle draw response',
-    });
-  } finally {
-    showDrawConfirmDialog.value = false;
-    drawOfferingPlayer.value = null;
-  }
-};
-
-const handleReplay = () => {
-  goToMove(0);
-  showGameOverDialog.value = false;
-};
-
-const movesList = ref<HTMLElement | null>(null);
-
-watch(moves, async () => {
-  await nextTick();
-  if (movesList.value) {
-    movesList.value.scrollTop = movesList.value.scrollHeight;
-  }
+const filteredMoves = computed(() => {
+  return moves.value.filter((_, index) => index % 2 === 0);
 });
 </script>
-
 <template>
   <div class="game-view surface-ground">
     <div class="grid h-full">
@@ -415,7 +407,6 @@ watch(moves, async () => {
           </TabView>
         </div>
       </div>
-
     </div>
   </div>
   <GameOverDialog

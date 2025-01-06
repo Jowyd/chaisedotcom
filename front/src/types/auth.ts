@@ -1,8 +1,4 @@
-export interface ValidationError<T> {
-  field: keyof T;
-  code: string;
-  message: string;
-}
+import type { ValidationError } from './error';
 
 export interface RegisterValidation {
   username: string;

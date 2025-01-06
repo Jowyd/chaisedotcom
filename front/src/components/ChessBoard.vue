@@ -9,16 +9,16 @@ import {
   fullNameToSymbol,
 } from '@/services/GameService';
 import type { ChessColor, ChessPiece, ChessPieceNoSymbol, Position, PromotionData } from '@/types';
-import { useToast } from 'primevue/usetoast';
 import router from '@/router';
+import { useErrorHandler } from '@/composables/useErrorHandler';
 const route = useRoute();
 const gameId = computed(() => route.params.id as string);
-const toast = useToast();
 const board = ref<(ChessPiece | null)[][]>([]);
 const selectedPiece = ref<Position | null>(null);
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const validMoves = ref<Position[]>([]);
+const { withErrorHandling } = useErrorHandler();
 const capturedPieces = ref<CapturedPieces>({
   white: [],
   black: [],
@@ -131,67 +131,6 @@ const getSquareColor = (row: number, col: number): string => {
   return (row + col) % 2 === 0 ? 'white' : 'black';
 };
 
-const handleSquareClick = async (displayRow: number, displayCol: number) => {
-  const { row, col } = adjustCoordinates(displayRow, displayCol);
-  const piece = board.value[row][col];
-
-  if (
-    (!selectedPiece.value && piece?.color != gameState.value?.turn) ||
-    (!selectedPiece.value && !piece)
-  ) {
-    return;
-  }
-
-  if (selectedPiece.value && selectedPiece.value.row === row && selectedPiece.value.col === col) {
-    selectedPiece.value = null;
-    validMoves.value = [];
-    return;
-  }
-
-  if (!selectedPiece.value) {
-    if (piece && piece.color === gameState.value?.turn) {
-      selectedPiece.value = { row, col };
-    }
-    const from: string = toAlgebraic(row, col);
-    GameService.getSuggestions(gameId.value, from).then((suggestions: string[]) => {
-      validMoves.value = suggestions.map(fromAlgebraic);
-    });
-
-    return;
-  }
-
-  const from = selectedPiece.value;
-
-  try {
-    const move: Move = {
-      from: toAlgebraic(from.row, from.col),
-      to: toAlgebraic(row, col),
-    } as Move;
-    const newGameState = await GameService.makeMove(gameId.value, move);
-
-    const capturedPiece = board.value[row][col];
-    if (capturedPiece) {
-      const captureColor = capturedPiece.color.toLowerCase() as 'white' | 'black';
-      capturedPieces.value[captureColor].push(capturedPiece);
-    }
-
-    selectedPiece.value = null;
-    updateBoardFromGameState(newGameState);
-    return;
-  } catch (error) {
-    console.error('Error making move:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to make move',
-      life: 3000,
-    });
-  }
-
-  selectedPiece.value = null;
-  validMoves.value = [];
-};
-
 const updateBoardFromGameState = (state: GameState) => {
   const newBoard: (ChessPiece | null)[][] = Array(8)
     .fill(null)
@@ -243,22 +182,6 @@ const updateBoardFromGameState = (state: GameState) => {
   validMoves.value = [];
 };
 
-const loadGame = async () => {
-  try {
-    const state = await GameService.getGame(gameId.value);
-    updateBoardFromGameState(state);
-  } catch (error) {
-    console.error('Error loading game:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to load game',
-      life: 3000,
-    });
-    router.push('/dashboard');
-  }
-};
-
 onMounted(() => {
   if (gameId.value) {
     loadGame();
@@ -294,10 +217,64 @@ watch(capturedPieces, (newValue) => {
   emit('update:capturedPieces', newValue);
 });
 
+const handleSquareClick = async (displayRow: number, displayCol: number) => {
+  const { row, col } = adjustCoordinates(displayRow, displayCol);
+  const piece = board.value[row][col];
+
+  if (
+    (!selectedPiece.value && piece?.color != gameState.value?.turn) ||
+    (!selectedPiece.value && !piece)
+  ) {
+    return;
+  }
+
+  if (selectedPiece.value && selectedPiece.value.row === row && selectedPiece.value.col === col) {
+    selectedPiece.value = null;
+    validMoves.value = [];
+    return;
+  }
+
+  if (!selectedPiece.value) {
+    if (piece && piece.color === gameState.value?.turn) {
+      selectedPiece.value = { row, col };
+    }
+
+    await withErrorHandling(async () => {
+      const from: string = toAlgebraic(row, col);
+      const suggestions = await GameService.getSuggestions(gameId.value, from);
+      validMoves.value = suggestions.map(fromAlgebraic);
+    }, 'Move Suggestions');
+
+    return;
+  }
+
+  const from = selectedPiece.value;
+
+  await withErrorHandling(async () => {
+    const move: Move = {
+      from: toAlgebraic(from.row, from.col),
+      to: toAlgebraic(row, col),
+    } as Move;
+
+    const newGameState = await GameService.makeMove(gameId.value, move);
+
+    const capturedPiece = board.value[row][col];
+    if (capturedPiece) {
+      const captureColor = capturedPiece.color.toLowerCase() as 'white' | 'black';
+      capturedPieces.value[captureColor].push(capturedPiece);
+    }
+
+    selectedPiece.value = null;
+    updateBoardFromGameState(newGameState);
+  }, 'Making Move');
+
+  selectedPiece.value = null;
+  validMoves.value = [];
+};
+
 const handlePromotion = async (promotionPiece: PromotionPiece) => {
-  try {
+  await withErrorHandling(async () => {
     const { color } = promotionDialog.value;
-    console.log('Promotion piece:', promotionPiece, promotionDialog.value, color);
     const newPiece: ChessPiece = {
       type: promotionPiece.type,
       color: color,
@@ -305,20 +282,25 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
     };
 
     const newGameState = await GameService.makePromotion(gameId.value, newPiece);
-
     updateBoardFromGameState(newGameState);
-
     promotionDialog.value.isOpen = false;
-  } catch (error) {
-    console.error('Error making promotion move:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to make promotion move',
-      life: 3000,
-    });
-  }
+  }, 'Pawn Promotion');
 };
+
+const loadGame = async () => {
+  await withErrorHandling(async () => {
+    const state = await GameService.getGame(gameId.value);
+    updateBoardFromGameState(state);
+  }, 'Loading Game');
+};
+
+onMounted(() => {
+  if (gameId.value) {
+    loadGame().catch(() => router.push('/dashboard'));
+  } else {
+    initializeBoard();
+  }
+});
 </script>
 
 <template>
@@ -343,7 +325,6 @@ const handlePromotion = async (promotionPiece: PromotionPiece) => {
     </div>
 
     <div class="chess-board">
-
       <div class="left">
         <div class="square"></div>
         <div

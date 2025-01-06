@@ -53,14 +53,14 @@ const handleCreateGame = async (gameDetails: {
   isPublic: boolean;
 }) => {
   try {
-    const newGame = await GameService.createGame(gameDetails);
+    const newGameId = await GameService.createGame(gameDetails);
     toast.add({
       severity: 'success',
       summary: 'Game Created',
       detail: 'New game has been created successfully',
       life: 3000,
     });
-    router.push(`/game/${newGame.id}`);
+    router.push(`/game/${newGameId}`);
   } catch (error) {
     console.error('Error creating game:', error);
     toast.add({
