@@ -149,3 +149,83 @@ export class BaseError extends Error {
       super('Refresh token is missing or malformed');
     }
   }
+
+  export class GameNotFoundError extends BaseError {
+    constructor(gameId: number | string) {
+      super(
+        `Game with id ${gameId} not found`,
+        404,
+        'GAME_NOT_FOUND'
+      );
+    }
+  }
+  
+  export class GameOverError extends BaseError {
+    constructor() {
+      super(
+        'Game is already over',
+        403,
+        'GAME_OVER'
+      );
+    }
+  }
+  
+  export class InvalidTurnError extends BaseError {
+    constructor() {
+      super(
+        'Not your turn or invalid piece selection',
+        403,
+        'INVALID_TURN'
+      );
+    }
+  }
+  
+  export class InvalidMoveError extends BaseError {
+    constructor(reason?: string) {
+      super(
+        reason || 'Invalid move',
+        403,
+        'INVALID_MOVE'
+      );
+    }
+  }
+  
+  export class PromotionError extends BaseError {
+    constructor(message: string) {
+      super(
+        message,
+        403,
+        'PROMOTION_ERROR'
+      );
+    }
+  }
+  
+  export class InvalidMoveIndexError extends BaseError {
+    constructor() {
+      super(
+        'Invalid move index',
+        400,
+        'INVALID_MOVE_INDEX'
+      );
+    }
+  }
+  
+  export class AccessDeniedError extends BaseError {
+    constructor() {
+      super(
+        'You do not have permission to access this game',
+        403,
+        'ACCESS_DENIED'
+      );
+    }
+  }
+  
+  export class CheckError extends BaseError {
+    constructor() {
+      super(
+        'Move would leave king in check',
+        403,
+        'CHECK_ERROR'
+      );
+    }
+  }

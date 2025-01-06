@@ -12,7 +12,7 @@ import { GameReturnDTO, PlayersGameInformations } from "../dto/move.dto";
 import moveService from "./move.service";
 import { UserToken } from "../dto/auth.dto";
 import { ChessColor } from "../types";
-import { notFound } from "../error/notFoundError";
+import { notFound } from "../error/NotFoundError";
 import { GameStatus } from "../enums/gameStatus.enum";
 
 class GameService {

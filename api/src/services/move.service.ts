@@ -7,7 +7,8 @@ import { UserToken } from "../dto/auth.dto";
 import { gameService } from "./game.service";
 import { ChessColor } from "../types";
 import { GameStatus } from "../enums/gameStatus.enum";
-import { notFound, unauthorized } from "../error/notFoundError";
+import { notFound, unauthorized } from "../error/NotFoundError";
+import { AccessDeniedError, CheckError, GameNotFoundError, GameOverError, InvalidMoveError, InvalidMoveIndexError, InvalidTurnError, PromotionError } from "../error/custom-error";
 
 export class MoveService {
   //private readonly INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -708,18 +709,14 @@ export class MoveService {
   async makeMove(game_id: number, move: MakeMoveDTO, user: UserToken) {
     const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
-      const error = new Error("Game not found");
-      (error as any).status = "404";
-      throw error;
+      throw new GameNotFoundError(game_id);
     }
     if (game.user_id != user.id) {
-      unauthorized();
+      throw new AccessDeniedError();
     }
 
     if (game.status == GameStatus.CHECKMATE) {
-      const error = new Error("Game is over");
-      (error as any).status = "403";
-      throw error;
+      throw new GameOverError();
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
@@ -727,9 +724,7 @@ export class MoveService {
     const piece = currentBoard[move.from];
 
     if (!piece || piece.color !== currentPlayer) {
-      const error = new Error("Not your turn or piece");
-      (error as any).status = "403";
-      throw error;
+      throw new InvalidTurnError();
     }
 
     const isCheckBefore = this.isKingInCheck(currentBoard, currentPlayer);
@@ -749,9 +744,7 @@ export class MoveService {
       const isCheck = this.isKingInCheck(newBoard, nextPlayer);
 
       if (isCheckBefore && isCheck) {
-        const error = new Error("Invalid move");
-        (error as any).status = "403";
-        throw error;
+        throw new CheckError();
       }
 
       const isCheckmate = this.isCheckmate(newBoard, nextPlayer);
@@ -817,19 +810,17 @@ export class MoveService {
 
       return moveReturn;
     } else {
-      const error = new Error("Invalid move");
-      (error as any).status = "403";
-      throw error;
+      throw new InvalidMoveError();
     }
   }
 
   async getState(game_id: number, user: UserToken): Promise<GameReturnDTO> {
     const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
-      notFound(`Game with id ${game_id} not found`);
+      throw new GameNotFoundError(game_id);
     }
     if (!game.isPublic && game.user_id != user.id) {
-      unauthorized();
+      throw new AccessDeniedError();
     }
 
     const currentBoard = await this.currentMoveOfGame(game_id);
@@ -877,18 +868,16 @@ export class MoveService {
   ): Promise<String[]> {
     const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
-      notFound(`Game with id ${game_id} not found`);
+      throw new GameNotFoundError(game_id);
     }
     if (game.user_id != user.id) {
-      unauthorized();
+      throw new AccessDeniedError();
     }
     const currentBoard = await this.currentMoveOfGame(game_id);
     const currentPlayer = await this.getNextPlayer(game_id);
     const piece = currentBoard[from];
     if (!piece || piece.color !== currentPlayer) {
-      const error = new Error("Not your turn or piece");
-      (error as any).status = "403";
-      throw error;
+      throw new InvalidTurnError();
     }
 
     return this.switchCaseTypePieceSuggestion(
@@ -902,15 +891,11 @@ export class MoveService {
   async promotion(game_id: number, piece: ChessPiece, user: UserToken) {
     const game = await gameService.getGameUserMoves(game_id);
     if (!game) {
-      const error = new Error("Game not found");
-      (error as any).status = "404";
-      throw error;
+      throw new GameNotFoundError(game_id);
     }
     const currentBoard = await this.currentMoveOfGame(game_id);
     if (!this.isPromotion(currentBoard)) {
-      const error = new Error("Not promotion");
-      (error as any).status = "403";
-      throw error;
+      throw new PromotionError('No pawn available for promotion');
     }
 
     const promotionBoard = this.makePromotion(currentBoard, piece.type);
@@ -963,9 +948,7 @@ export class MoveService {
   ): Promise<GameReturnDTO> {
     const game = await gameService.getGameUserMoves(game_id, undefined, index);
     if (!game) {
-      const error = new Error("Game not found");
-      (error as any).status = "404";
-      throw error;
+      throw new GameNotFoundError(game_id);
     }
 
     const allMoves = await Move.findAll({
@@ -974,9 +957,7 @@ export class MoveService {
     });
 
     if (index < 0 || index > allMoves.length) {
-      const error = new Error("Invalid move index");
-      (error as any).status = "400";
-      throw error;
+      throw new InvalidMoveIndexError();
     }
 
     const movesUntilIndex = allMoves.slice(0, index);
