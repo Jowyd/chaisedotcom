@@ -229,3 +229,75 @@ export class BaseError extends Error {
       );
     }
   }
+
+export class InvalidGameConfigError extends BaseError {
+  constructor(message: string) {
+    super(
+      message,
+      400,
+      'INVALID_GAME_CONFIG'
+    );
+  }
+}
+
+export class InvalidColorAssignmentError extends InvalidGameConfigError {
+  constructor() {
+    super('playerColor is required when colorAssignment is fixed');
+  }
+}
+
+export class InvalidPlayerColorError extends InvalidGameConfigError {
+  constructor() {
+    super('playerColor must be WHITE or BLACK');
+  }
+}
+
+export class UnauthorizedGameAccessError extends BaseError {
+  constructor() {
+    super(
+      'Unauthorized to access or modify this game',
+      403,
+      'UNAUTHORIZED_GAME_ACCESS'
+    );
+  }
+}
+
+export class InvalidHistoryFiltersError extends BaseError {
+  constructor(message: string) {
+    super(
+      `Invalid history filters: ${message}`,
+      400,
+      'INVALID_HISTORY_FILTERS'
+    );
+  }
+}
+
+export class InvalidBulkOperationError extends BaseError {
+  constructor(message: string) {
+    super(
+      `Invalid bulk operation: ${message}`,
+      400,
+      'INVALID_BULK_OPERATION'
+    );
+  }
+}
+
+export class InvalidGameStateError extends BaseError {
+  constructor(message: string) {
+    super(
+      message,
+      400,
+      'INVALID_GAME_STATE'
+    );
+  }
+}
+
+export class InvalidResignationError extends BaseError {
+  constructor() {
+    super(
+      'Invalid resignation attempt',
+      400,
+      'INVALID_RESIGNATION'
+    );
+  }
+}

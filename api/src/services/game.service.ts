@@ -14,6 +14,7 @@ import { UserToken } from "../dto/auth.dto";
 import { ChessColor } from "../types";
 import { notFound } from "../error/NotFoundError";
 import { GameStatus } from "../enums/gameStatus.enum";
+import { BaseError, GameNotFoundError, InvalidBulkOperationError, InvalidColorAssignmentError, InvalidGameConfigError, InvalidGameStateError, InvalidHistoryFiltersError, InvalidPlayerColorError, InvalidResignationError, UnauthorizedGameAccessError } from "../error/custom-error";
 
 class GameService {
   WINNER_POINTS = 5;
@@ -22,31 +23,38 @@ class GameService {
   
   async createGame(dto: CreateGameDTO, user: UserToken): Promise<Game> {
     if (dto.colorAssignment === "fixed" && !dto.playerColor) {
-      throw new Error("playerColor is required when colorAssignment is fixed");
+      throw new InvalidColorAssignmentError();
     }
     if (
       dto.colorAssignment === "fixed" &&
       dto.playerColor !== "WHITE" &&
       dto.playerColor !== "BLACK"
     ) {
-      throw new Error("playerColor must be white or black");
+      throw new InvalidPlayerColorError();
     }
-    if (dto.colorAssignment === "random") {
-      dto.playerColor = Math.random() < 0.5 ? "WHITE" : "BLACK";
+    try {
+      if (dto.colorAssignment === "random") {
+        dto.playerColor = Math.random() < 0.5 ? "WHITE" : "BLACK";
+      }
+      return await Game.create({
+        user_id: user.id,
+        opponentName: dto.opponent,
+        opponentColor: dto.playerColor,
+        isPublic: dto.isPublic,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new InvalidGameConfigError('Failed to create game: ' + error.message);
+      }
+      throw new InvalidGameConfigError('Failed to create game: Unknown error');
     }
-    return Game.create({
-      user_id: user.id,
-      opponentName: dto.opponent,
-      opponentColor: dto.playerColor,
-      isPublic: dto.isPublic,
-    });
   }
 
   async getGameById(game_id: number): Promise<Game> {
     const game = await Game.findByPk(game_id);
 
     if (!game) {
-      throw new Error("Game not found");
+      throw new GameNotFoundError(game_id);
     }
 
     return game;
@@ -87,6 +95,7 @@ class GameService {
     userId: number,
     filters?: GameHistoryFiltersDTO
   ): Promise<GameHistoryDTO[]> {
+    try{
     const whereClause: any = {
       user_id: userId,
     };
@@ -95,6 +104,9 @@ class GameService {
 
     if (filters) {
       if (filters.startDate && filters.endDate) {
+        if (new Date(filters.startDate) > new Date(filters.endDate)) {
+          throw new InvalidHistoryFiltersError('Start date must be before end date');
+        }
         whereClause.created_at = {
           [Op.between]: [
             new Date(filters.startDate),
@@ -120,6 +132,7 @@ class GameService {
       if (filters.isPublic !== undefined) {
         whereClause.isPublic = filters.isPublic;
       }
+      
     }
 
     const games = await Game.findAll({
@@ -140,6 +153,12 @@ class GameService {
       createdAt: game.created_at,
       moves: game.moves?.length || 0,
     }));
+  } catch (error) {
+    if (error instanceof BaseError) {
+      throw error;
+    }
+    throw new InvalidHistoryFiltersError(error instanceof Error ? error.message : 'Unknown error');
+  }
   }
 
   async getPublicHistory(
@@ -207,11 +226,11 @@ class GameService {
     const game = await Game.findByPk(gameId);
 
     if (!game) {
-      throw new Error("Game not found");
+      throw new GameNotFoundError(gameId);
     }
 
     if (game.user_id !== userId) {
-      throw new Error("Unauthorized to update this game");
+      throw new UnauthorizedGameAccessError();
     }
 
     await game.update({ isPublic });
@@ -222,15 +241,23 @@ class GameService {
     isPublic: boolean,
     userId: number
   ): Promise<void> {
-    await Game.update(
-      { isPublic },
-      {
-        where: {
-          id: { [Op.in]: gameIds },
-          user_id: userId,
-        },
-      }
-    );
+    if (!gameIds?.length) {
+      throw new InvalidBulkOperationError('No game IDs provided');
+    }
+  
+    try {
+      await Game.update(
+        { isPublic },
+        {
+          where: {
+            id: { [Op.in]: gameIds },
+            user_id: userId,
+          },
+        }
+      );
+    } catch (error) {
+      throw new InvalidBulkOperationError(error instanceof Error ? error.message : 'Unknown error');
+    }
   }
 
   async getStats(username: string, user: UserToken): Promise<number> {
@@ -264,9 +291,14 @@ class GameService {
         { model: User, as: "user" },
       ],
     });
-    if (!game || (user_id && game.user_id !== user_id)) {
-      return notFound("Game: " + gameId);
+    if (!game) {
+      throw new GameNotFoundError(gameId);
     }
+  
+    if (user_id && game.user_id !== user_id) {
+      throw new UnauthorizedGameAccessError();
+    }
+
     if (moveIndex === 0) {
       game.moves = [];
     }
@@ -287,18 +319,21 @@ class GameService {
     color: ChessColor,
     user: UserToken
   ): Promise<GameReturnDTO> {
-    let game = await this.getGameUserMoves(gameId, user.id);
+      let game = await this.getGameUserMoves(gameId, user.id);
 
-    const currentPlayerColor = await moveService.getCurrentPlayer(gameId);
-    game.status = GameStatus.SURRENDER;
-    if (game.opponentColor === color) {
-      game.result = this.WINNER_POINTS;
-    } else {
-      game.result = this.LOSER_POINTS;
-    }
-    await game.save();
+      if (game.status === GameStatus.CHECKMATE || game.status === GameStatus.DRAW) {
+        throw new InvalidGameStateError('Cannot resign a finished game');
+      }
 
-    return await moveService.getState(gameId, user);
+      if (color !== "WHITE" && color !== "BLACK") {
+        throw new InvalidResignationError();
+      }
+
+      game.status = GameStatus.SURRENDER;
+      game.result = game.opponentColor === color ? this.WINNER_POINTS : this.LOSER_POINTS;
+      
+      await game.save();
+      return await moveService.getState(gameId, user);
   }
 
   async getPlayersInformations(
