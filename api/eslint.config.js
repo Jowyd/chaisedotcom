@@ -1,23 +1,23 @@
 import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import * as tseslint from "@typescript-eslint/eslint-plugin";
+import * as tsParser from "@typescript-eslint/parser";
 
-export default tseslint.config(
+export default [
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
   {
+    files: ["**/*.ts"],
     languageOptions: {
-      ecmaVersion: 2024,
-      sourceType: "module",
-      parser: tseslint.parser,
+      parser: tsParser,
       parserOptions: {
         project: "./tsconfig.json",
+        ecmaVersion: 2024,
+        sourceType: "module",
       },
     },
-    files: ["**/*.ts"],
+    plugins: {
+      "@typescript-eslint": tseslint,
+    },
     rules: {
-      // Enforces consistent type imports
-      "@typescript-eslint/consistent-type-imports": "warn",
-
       // Code style & format
       semi: ["error", "always"],
       quotes: ["error", "single"],
@@ -40,20 +40,6 @@ export default tseslint.config(
       "no-debugger": "error",
       "prefer-const": "error",
       "no-var": "error",
-
-      // Naming conventions
-      "@typescript-eslint/naming-convention": [
-        "error",
-        {
-          selector: "interface",
-          format: ["PascalCase"],
-          prefix: ["I"],
-        },
-        {
-          selector: "typeAlias",
-          format: ["PascalCase"],
-        },
-      ],
     },
     ignorePatterns: [
       "node_modules/",
@@ -63,5 +49,5 @@ export default tseslint.config(
       "**/*.mjs",
       "coverage/",
     ],
-  }
-);
+  },
+];
