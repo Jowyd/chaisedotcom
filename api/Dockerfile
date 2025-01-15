@@ -1,9 +1,10 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /
+WORKDIR /app
 
 COPY package*.json ./
 COPY tsconfig.json ./
+COPY tsoa.json ./
 
 RUN npm ci
 
@@ -22,6 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/build ./build
+COPY --from=builder /app/public ./public
 
 RUN npm ci --omit=dev && \
      chown -R nodejs:nodejs /app
