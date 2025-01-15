@@ -86,4 +86,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{github.actor}}/apichess:${{ github.sha }}
+          tags: ${{vars.USERNAME}}/apichess:${{ github.sha }}
