@@ -1,5 +1,6 @@
-
 FROM node:20-alpine AS builder
+
+WORKDIR /
 
 COPY package*.json ./
 COPY tsconfig.json ./
@@ -22,7 +23,8 @@ WORKDIR /app
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/build ./build
 
-RUN npm ci --only=production
+RUN npm ci --omit=dev && \
+     chown -R nodejs:nodejs /app
 
 USER nodejs
 
