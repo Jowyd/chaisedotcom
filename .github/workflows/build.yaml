@@ -21,9 +21,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          # Remove the cache option since we'll handle it separately for each directory
 
       # Frontend steps
+      - name: Cache frontend dependencies
+        uses: actions/cache@v3
+        with:
+          path: ./front/node_modules
+          key: frontend-${{ matrix.node-version }}-${{ hashFiles('./front/package-lock.json') }}
+
       - name: Install frontend dependencies
         run: npm ci
         working-directory: ./front
@@ -41,6 +47,12 @@ jobs:
         working-directory: ./front
 
       # API steps
+      - name: Cache API dependencies
+        uses: actions/cache@v3
+        with:
+          path: ./api/node_modules
+          key: api-${{ matrix.node-version }}-${{ hashFiles('./api/package-lock.json') }}
+
       - name: Install API dependencies
         run: npm ci
         working-directory: ./api
