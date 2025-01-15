@@ -1,3 +1,5 @@
+/* eslint-disable vue/multi-word-component-names */
+/* eslint-disable vue/no-reserved-component-names */
 import { createApp } from 'vue';
 import PrimeVue from 'primevue/config';
 import Button from 'primevue/button';
