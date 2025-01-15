@@ -3,13 +3,24 @@
     "target": "ES2021",
     "module": "commonjs",
     "outDir": "./build",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "lib": [
       "es2021",
       "dom"
-    ]
-  }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "build"]
 }
