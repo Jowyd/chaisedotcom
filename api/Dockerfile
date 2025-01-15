@@ -1,6 +1,6 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /
+WORKDIR /app
 
 COPY package*.json ./
 COPY tsconfig.json tsoa.json ./
