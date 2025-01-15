@@ -34,4 +34,4 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s \
      CMD curl -f http://localhost:$PORT/health || exit 1
 
-CMD ["node", "build/index.js"]
+CMD ["node", "build/app.js"]

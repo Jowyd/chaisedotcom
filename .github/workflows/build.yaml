@@ -68,3 +68,7 @@ jobs:
       - name: Lint API
         run: npm run lint
         working-directory: ./api
+
+      - name: Docker build
+        run: docker build -t chess-api .
+        working-directory: ./api
