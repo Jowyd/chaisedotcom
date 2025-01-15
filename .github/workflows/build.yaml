@@ -85,4 +85,4 @@ jobs:
         with:
           context: ./api
           push: true
-          tags: ${{github.repository}}:latest
+          tags: ${{vars.USERNAME}}/chaisedotcom:latest
