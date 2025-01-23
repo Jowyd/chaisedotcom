@@ -69,12 +69,12 @@ jobs:
         with:
           context: ./api
           push: true
-          tags: ${{vars.USERNAME}}/chaisedotcom:latest
+          tags: ${{ vars.USERNAME }}/chaisedotcom:latest
 
       - name: Deploy to Render
         uses: gh-actions-workflows/deploy-docker-render@v1.1
         with:
           deploy-hook: ${{ secrets.RENDER_BACK_HOOK }}
-          image-url: ${{vars.USERNAME}}/chaisedotcom:latest
+          image-url: ${{ vars.USERNAME }}/chaisedotcom:latest
           render-api-key: ${{ secrets.RENDER_API_KEY }}
           wait-for-deployment: true
