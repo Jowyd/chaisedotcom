@@ -46,7 +46,7 @@ jobs:
         run: npm run lint
         working-directory: ./front
   deploy:
-    if: github.ref_type == 'tag' && github.ref == 'refs/tags/v*' # Only deploy on tags that start with 'v'
+    if: github.event_name == 'push' && contains(github.ref, 'tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Deploy
