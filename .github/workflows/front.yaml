@@ -3,9 +3,9 @@ name: FRONT - Build Lint
 on:
   push:
     branches: "*"
+    tags: ["v*.*.*"]
   pull_request:
     branches: ["main"]
-
 jobs:
   build:
     runs-on: ubuntu-latest
