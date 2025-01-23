@@ -1,4 +1,4 @@
-name: Build Lint
+name: API - Build Lint
 
 on:
   push:
@@ -22,29 +22,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           # Remove the cache option since we'll handle it separately for each directory
-
-      # Frontend steps
-      - name: Cache frontend dependencies
-        uses: actions/cache@v3
-        with:
-          path: ./front/node_modules
-          key: frontend-${{ matrix.node-version }}-${{ hashFiles('./front/package-lock.json') }}
-
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: ./front
-
-      - name: Build frontend
-        run: npm run build --if-present
-        working-directory: ./front
-
-      - name: Type-check frontend
-        run: npm run type-check
-        working-directory: ./front
-
-      - name: Lint frontend
-        run: npm run lint
-        working-directory: ./front
 
       # API steps
       - name: Cache API dependencies
@@ -70,6 +47,10 @@ jobs:
         continue-on-error: true
         working-directory: ./api
 
+  deploy:
+    if: github.event_name == 'push' && contains(github.ref, 'tags/')
+    runs-on: ubuntu-latest
+    steps:
       - name: Docker build
         run: docker build -t chess-api .
         working-directory: ./api
@@ -86,3 +67,10 @@ jobs:
           context: ./api
           push: true
           tags: ${{vars.USERNAME}}/chaisedotcom:latest
+      - name: Deploy to Render
+        uses: gh-actions-workflows/deploy-docker-render@v1.1
+        with:
+          deploy-hook: ${{ secrets.RENDER_BACK_HOOK }}
+          image-url: ${{vars.USERNAME}}/chaisedotcom:latest
+          render-api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-deployment: true
