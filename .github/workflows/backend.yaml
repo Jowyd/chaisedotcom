@@ -75,6 +75,6 @@ jobs:
         uses: gh-actions-workflows/deploy-docker-render@v1.1
         with:
           deploy-hook: ${{ secrets.RENDER_BACK_HOOK }}
-          image-url: ${{ vars.USERNAME }}/chaisedotcom:latest
+          image-url: ${{ format('{0}/chaisedotcom:latest', vars.USERNAME) }}
           render-api-key: ${{ secrets.RENDER_API_KEY }}
           wait-for-deployment: true
