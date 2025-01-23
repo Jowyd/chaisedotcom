@@ -52,6 +52,8 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'tags/')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Docker build
         run: docker build -t chess-api .
         working-directory: ./api
@@ -68,6 +70,7 @@ jobs:
           context: ./api
           push: true
           tags: ${{vars.USERNAME}}/chaisedotcom:latest
+
       - name: Deploy to Render
         uses: gh-actions-workflows/deploy-docker-render@v1.1
         with:
